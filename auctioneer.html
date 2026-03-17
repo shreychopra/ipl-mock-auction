@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>IPL Auction 2026 · Auctioneer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700;900&family=Barlow+Condensed:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#0a0c10; --surface:#12151c; --surface2:#1a1f2b; --surface3:#222838;
+      --border:#2a3045; --gold:#f0b429; --gold2:#ffd166; --blue:#3d7fff;
+      --green:#00c896; --red:#ff4c6a; --text:#e8ecf4; --text2:#8a94aa; --text3:#5a6278;
+      --radius:14px; --radius-sm:8px;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden}
+    ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+
+    .screen{display:none;min-height:100dvh;flex-direction:column;animation:fadeIn .3s ease}
+    .screen.active{display:flex}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+    /* ── SETUP ── */
+    .setup-hero{background:linear-gradient(160deg,#0d1829 0%,#0a0c10 60%);padding:48px 24px 32px;text-align:center;position:relative;overflow:hidden}
+    .setup-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(240,180,41,.12) 0%,transparent 70%)}
+    .trophy-icon{font-size:56px;display:block;margin-bottom:12px;filter:drop-shadow(0 0 24px rgba(240,180,41,.5))}
+    .setup-hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(38px,10vw,56px);letter-spacing:3px;color:var(--gold);line-height:1;position:relative}
+    .setup-hero p{color:var(--text2);font-size:14px;margin-top:8px;letter-spacing:1px;text-transform:uppercase;position:relative}
+    .auctioneer-badge{display:inline-block;background:rgba(255,76,106,.15);border:1px solid rgba(255,76,106,.4);color:var(--red);font-size:11px;font-weight:700;padding:4px 12px;border-radius:99px;letter-spacing:1px;margin-top:10px;position:relative}
+
+    .setup-body{padding:24px;flex:1;overflow-y:auto}
+    .section-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px}
+    label{display:block;font-size:13px;color:var(--text2);margin-bottom:6px;font-weight:500}
+    input[type=text],input[type=number],select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:15px;font-family:'Barlow',sans-serif;padding:12px 14px;outline:none;transition:border-color .2s}
+    input:focus,select:focus{border-color:var(--gold)}
+    select option{background:var(--surface2)}
+    .team-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .team-input-group{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px}
+    .team-input-group .team-num{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin-bottom:6px}
+    .team-input-group input{background:transparent;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:4px 0;font-size:14px;font-weight:600}
+    .team-input-group input:focus{border-bottom-color:var(--gold)}
+
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0}
+    .toggle-label{font-size:14px;color:var(--text);font-weight:500}
+    .toggle-sub{font-size:12px;color:var(--text3);margin-top:2px}
+    .toggle{position:relative;width:44px;height:26px;flex-shrink:0}
+    .toggle input{opacity:0;width:0;height:0}
+    .toggle-slider{position:absolute;inset:0;background:var(--surface3);border-radius:99px;transition:.25s;cursor:pointer}
+    .toggle-slider::before{content:'';position:absolute;width:20px;height:20px;border-radius:50%;background:var(--text3);top:3px;left:3px;transition:.25s}
+    .toggle input:checked+.toggle-slider{background:var(--gold)}
+    .toggle input:checked+.toggle-slider::before{transform:translateX(18px);background:#fff}
+    .timer-options{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:none}
+    .timer-options.visible{display:block}
+
+    .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:16px;border:none;border-radius:var(--radius);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s}
+    .btn-primary{background:linear-gradient(135deg,var(--gold) 0%,#e8a000 100%);color:#0a0c10}
+    .btn-primary:active{transform:scale(.98);opacity:.9}
+    .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+    .btn-danger{background:rgba(255,76,106,.15);color:var(--red);border:1px solid rgba(255,76,106,.3)}
+    .btn-sm{padding:10px 16px;font-size:14px;border-radius:var(--radius-sm);width:auto}
+    .btn-success{background:linear-gradient(135deg,var(--green) 0%,#00a87a 100%);color:#0a0c10}
+    .start-btn{margin:8px 24px 32px}
+    .divider{height:1px;background:var(--border);margin:16px 0}
+
+    .bid-inc-btn{flex:1;min-width:60px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;padding:8px 4px;border-radius:var(--radius-sm);cursor:pointer;text-align:center;transition:all .15s;letter-spacing:.5px}
+    .bid-inc-btn:active,.bid-inc-btn.selected{background:var(--gold);color:#0a0c10;border-color:var(--gold)}
+
+    /* ── AUCTION ── */
+    #auctionScreen{background:var(--bg)}
+    .auction-header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:12px}
+    .auction-header h2{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;flex:1}
+    .badge{background:var(--gold);color:#0a0c10;font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;letter-spacing:.5px;white-space:nowrap}
+    .badge-red{background:rgba(255,76,106,.2)!important;color:var(--red)!important;border:1px solid rgba(255,76,106,.4)}
+    .badge-blue{background:var(--blue)!important;color:#fff!important}
+
+    .tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto}
+    .tab{flex-shrink:0;padding:12px 20px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+    .tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+    .tab-content{display:none;flex:1;overflow-y:auto}
+    .tab-content.active{display:block}
+
+    /* current player card */
+    .current-player-card{margin:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+    .player-card-header{background:linear-gradient(135deg,#1a2340 0%,#121828 100%);padding:20px;display:flex;align-items:center;gap:16px}
+    .player-avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--surface3),var(--surface2));display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;border:2px solid var(--border)}
+    .player-info h3{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;letter-spacing:.5px}
+    .player-meta{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+    .pill{font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;letter-spacing:.5px}
+    .pill-role{background:rgba(61,127,255,.15);color:var(--blue);border:1px solid rgba(61,127,255,.3)}
+    .pill-nat{background:rgba(240,180,41,.1);color:var(--gold2);border:1px solid rgba(240,180,41,.2)}
+    .bid-section{padding:16px 20px}
+    .bid-amounts{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .bid-amount-box{text-align:center;flex:1}
+    .bid-amount-box .label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
+    .bid-amount-box .amount{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--gold)}
+    .bid-amount-box .amount.current{color:var(--green);font-size:40px}
+    .bid-divider{width:1px;height:50px;background:var(--border)}
+    .current-bidder{text-align:center;padding:8px 20px;font-size:13px;color:var(--text2)}
+    .current-bidder strong{color:var(--text)}
+
+    /* timer */
+    .timer-bar-wrap{padding:0 20px 16px}
+    .timer-display{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .timer-count{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--text)}
+    .timer-count.urgent{color:var(--red);animation:pulse .5s ease-in-out infinite alternate}
+    @keyframes pulse{from{opacity:1}to{opacity:.5}}
+    .timer-bar{height:6px;background:var(--surface3);border-radius:99px;overflow:hidden}
+    .timer-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--gold));border-radius:99px;transition:width 1s linear}
+    .timer-fill.urgent{background:var(--red)}
+
+    /* bids from teams */
+    .incoming-bids{padding:0 16px 12px}
+    .incoming-bids-title{font-size:11px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+    .bid-feed{display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto}
+    .bid-feed-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border-radius:var(--radius-sm);border-left:3px solid var(--gold);animation:slideIn .3s ease}
+    @keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+    .bid-feed-team{font-size:13px;font-weight:700;flex:1}
+    .bid-feed-amount{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--green)}
+
+    .auctioneer-actions{display:flex;gap:10px;padding:0 16px 20px}
+    .auctioneer-actions .btn{font-size:14px;padding:12px}
+
+    /* teams tab */
+    .teams-list{padding:16px;display:flex;flex-direction:column;gap:12px}
+    .team-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+    .team-card-header{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer}
+    .team-color-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+    .team-card-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.5px;flex:1}
+    .team-card-budget{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold)}
+    .team-card-body{border-top:1px solid var(--border);padding:12px 16px;display:none}
+    .team-card-body.open{display:block}
+    .team-stats{display:flex;gap:16px;margin-bottom:12px}
+    .team-stat .val{font-family:'Bebas Neue',sans-serif;font-size:22px}
+    .team-stat .lbl{font-size:10px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase}
+    .player-acq-row{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:6px}
+    .player-acq-name{font-size:13px;font-weight:600}
+    .player-acq-role{font-size:11px;color:var(--text3)}
+    .player-acq-price{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--green)}
+
+    /* players tab */
+    .player-list-filters{padding:12px 16px;display:flex;gap:8px;overflow-x:auto}
+    .filter-chip{flex-shrink:0;padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700;letter-spacing:.5px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);cursor:pointer;transition:all .15s}
+    .filter-chip.active{background:var(--gold);color:#0a0c10;border-color:var(--gold)}
+    .player-list{padding:0 16px 16px;display:flex;flex-direction:column;gap:8px}
+    .player-list-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:12px}
+    .player-list-item.sold-item{opacity:.5}
+    .player-list-item.current-item{border-color:var(--gold);background:rgba(240,180,41,.06)}
+    .player-list-info{flex:1}
+    .player-list-name{font-size:14px;font-weight:700}
+    .player-list-sub{font-size:11px;color:var(--text3);margin-top:2px}
+    .player-list-price{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold2);text-align:right}
+    .status-pending{color:var(--text3)}
+    .status-live{color:var(--gold)}
+    .status-sold{color:var(--green)}
+    .status-unsold{color:var(--red)}
+
+    /* sold/unsold overlays */
+    .sold-overlay{position:fixed;inset:0;background:rgba(10,12,16,.95);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;opacity:0;pointer-events:none;transition:opacity .3s}
+    .sold-overlay.show{opacity:1;pointer-events:all}
+    .sold-hammer{font-size:80px;margin-bottom:16px;animation:hammerDrop .5s ease}
+    @keyframes hammerDrop{0%{transform:rotate(-45deg) scale(.5);opacity:0}60%{transform:rotate(10deg) scale(1.1)}100%{transform:rotate(0) scale(1);opacity:1}}
+    .sold-overlay h2{font-family:'Bebas Neue',sans-serif;font-size:56px;letter-spacing:4px;color:var(--gold);line-height:1}
+    .sold-player-name{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;margin-top:8px}
+    .sold-to{font-size:14px;color:var(--text2);margin-top:4px}
+    .sold-price-big{font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--green);margin:12px 0;line-height:1}
+    .unsold-overlay{position:fixed;inset:0;background:rgba(10,12,16,.92);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;opacity:0;pointer-events:none;transition:opacity .3s}
+    .unsold-overlay.show{opacity:1;pointer-events:all}
+    .unsold-overlay h2{font-family:'Bebas Neue',sans-serif;font-size:56px;letter-spacing:4px;color:var(--red);line-height:1;margin-top:12px}
+
+    /* end */
+    #endScreen{background:var(--bg);align-items:center;padding:32px 24px;text-align:center}
+    .end-trophy{font-size:80px;margin-bottom:16px;filter:drop-shadow(0 0 32px rgba(240,180,41,.6))}
+    #endScreen h1{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:3px;color:var(--gold)}
+    .final-teams{width:100%;margin-top:24px;display:flex;flex-direction:column;gap:12px;text-align:left}
+    .final-team-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+    .final-team-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .final-team-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700}
+    .final-team-spent{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold)}
+    .final-player{font-size:13px;color:var(--text2);padding:4px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between}
+    .final-player:last-child{border:none}
+    .final-player-price{color:var(--green);font-weight:600}
+
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 20px;font-size:13px;font-weight:600;z-index:200;opacity:0;transition:all .3s;white-space:nowrap}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+    /* connection status */
+    .conn-bar{padding:8px 16px;font-size:12px;font-weight:700;letter-spacing:.5px;text-align:center;display:none}
+    .conn-bar.connecting{display:block;background:rgba(240,180,41,.1);color:var(--gold);border-bottom:1px solid rgba(240,180,41,.2)}
+    .conn-bar.connected{display:block;background:rgba(0,200,150,.08);color:var(--green);border-bottom:1px solid rgba(0,200,150,.2)}
+    .conn-bar.error{display:block;background:rgba(255,76,106,.1);color:var(--red);border-bottom:1px solid rgba(255,76,106,.2)}
+
+    .empty-state{text-align:center;padding:40px 20px;color:var(--text3)}
+    .empty-state .emoji{font-size:40px;margin-bottom:12px}
+
+    /* next player search */
+    .next-player-search{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border)}
+    .next-player-search input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:14px;padding:10px 14px;width:100%;outline:none}
+    .next-player-search input:focus{border-color:var(--gold)}
+    .search-results{max-height:200px;overflow-y:auto;margin-top:8px;display:flex;flex-direction:column;gap:6px}
+    .search-result-item{padding:10px 12px;background:var(--surface2);border-radius:var(--radius-sm);cursor:pointer;display:flex;justify-content:space-between;align-items:center;border:1px solid transparent}
+    .search-result-item:hover,.search-result-item:active{border-color:var(--gold);background:rgba(240,180,41,.05)}
+    .search-result-name{font-size:14px;font-weight:600}
+    .search-result-sub{font-size:11px;color:var(--text3)}
+    .no-bid-actions{padding:16px;display:flex;gap:10px;align-items:center}
+  </style>
+</head>
+<body>
+
+<!-- ══ SETUP SCREEN ══ -->
+<div id="setupScreen" class="screen active">
+  <div class="setup-hero">
+    <span class="trophy-icon">🏆</span>
+    <h1>IPL Auction 2026</h1>
+    <span class="auctioneer-badge">🎙 AUCTIONEER VIEW</span>
+  </div>
+  <div class="setup-body">
+
+    <!-- Firebase Config -->
+    <div class="card" style="border-color:rgba(240,180,41,.3)">
+      <div class="section-title">🔥 Firebase Setup</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.6">
+        Paste your Firebase config values below. Get them from<br>
+        <strong style="color:var(--gold)">Firebase Console → Project Settings → Your Apps → Web App → SDK config</strong>
+      </p>
+      <label>API Key</label>
+      <input type="text" id="fb_apiKey" placeholder="AIzaSy..." />
+      <div style="height:10px"></div>
+      <label>Database URL</label>
+      <input type="text" id="fb_databaseURL" placeholder="https://your-project-default-rtdb.firebaseio.com" />
+      <div style="height:10px"></div>
+      <label>Project ID</label>
+      <input type="text" id="fb_projectId" placeholder="your-project-id" />
+      <div style="height:10px"></div>
+      <label>App ID</label>
+      <input type="text" id="fb_appId" placeholder="1:123456:web:abc..." />
+      <p style="font-size:11px;color:var(--text3);margin-top:10px">
+        ℹ️ These are saved in your browser so you only enter them once.
+      </p>
+      <button class="btn btn-secondary btn-sm" style="margin-top:12px;width:auto" onclick="saveFirebaseConfig()">💾 Save Config</button>
+    </div>
+
+    <!-- Teams -->
+    <div class="card">
+      <div class="section-title">Teams</div>
+      <label>Number of Teams (2–10)</label>
+      <input type="number" id="numTeams" min="2" max="10" value="4" oninput="updateTeamInputs()"/>
+      <div style="margin-top:16px">
+        <div class="section-title">Team Names</div>
+        <div class="team-grid" id="teamNamesGrid"></div>
+      </div>
+    </div>
+
+    <!-- Budget & Increment -->
+    <div class="card">
+      <div class="section-title">Auction Settings</div>
+      <label>Budget per Team (₹ Crores)</label>
+      <input type="number" id="teamBudget" value="100" min="10" max="9999"/>
+      <div style="height:14px"></div>
+      <label>Starting Bid Increment (₹ Crores)</label>
+      <select id="startIncrement">
+        <option value="0.2">₹0.2 Cr</option>
+        <option value="0.5" selected>₹0.5 Cr</option>
+        <option value="1">₹1 Cr</option>
+        <option value="2">₹2 Cr</option>
+      </select>
+    </div>
+
+    <!-- Timer -->
+    <div class="card">
+      <div class="section-title">Bid Timer</div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Enable Countdown Timer</div>
+          <div class="toggle-sub">Auto-close bids when time runs out</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="enableTimer" onchange="toggleTimerOptions()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="timer-options" id="timerOptions">
+        <label>Seconds per bid round</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px" id="timerPresets">
+          <button class="bid-inc-btn" onclick="selectTimer(15)">15s</button>
+          <button class="bid-inc-btn" onclick="selectTimer(30)">30s</button>
+          <button class="bid-inc-btn selected" onclick="selectTimer(45)">45s</button>
+          <button class="bid-inc-btn" onclick="selectTimer(60)">60s</button>
+          <button class="bid-inc-btn" onclick="selectTimer(90)">90s</button>
+        </div>
+        <div style="margin-top:10px">
+          <label>Or enter custom seconds</label>
+          <input type="number" id="customTimer" value="45" min="5" max="300"/>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <button class="btn btn-primary start-btn" onclick="startAuction()">
+    <span>🔨</span> Launch Auction
+  </button>
+</div>
+
+<!-- ══ AUCTION SCREEN ══ -->
+<div id="auctionScreen" class="screen">
+  <div class="conn-bar connecting" id="connBar">⟳ Connecting to Firebase...</div>
+  <div class="auction-header">
+    <div style="flex:1">
+      <div style="font-size:11px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase">🎙 Auctioneer</div>
+      <h2 id="auctionTitle">Ready</h2>
+    </div>
+    <span class="badge" id="playerCountBadge">0/225</span>
+    <span class="badge badge-blue" id="liveBadge" style="display:none">● LIVE</span>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('bid')">🔨 Auction</div>
+    <div class="tab" onclick="switchTab('teams')">👥 Teams</div>
+    <div class="tab" onclick="switchTab('players')">📋 Players</div>
+  </div>
+
+  <!-- BID TAB -->
+  <div id="tab-bid" class="tab-content active">
+
+    <!-- No active player -->
+    <div id="noBidState">
+      <div class="next-player-search">
+        <div style="font-size:11px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Search &amp; Select Next Player</div>
+        <input type="text" id="playerSearch" placeholder="Type player name..." oninput="searchPlayers()" />
+        <div class="search-results" id="searchResults"></div>
+      </div>
+      <div class="no-bid-actions">
+        <button class="btn btn-primary" style="flex:1" onclick="nextRandomPlayer()">🎲 Random Player</button>
+      </div>
+    </div>
+
+    <!-- Active player -->
+    <div id="activeBidState" style="display:none">
+      <div class="current-player-card">
+        <div class="player-card-header">
+          <div class="player-avatar" id="playerAvatar">👤</div>
+          <div class="player-info">
+            <h3 id="currentPlayerName">—</h3>
+            <div class="player-meta">
+              <span class="pill pill-role" id="playerRole">—</span>
+              <span class="pill pill-nat" id="playerNat">—</span>
+            </div>
+          </div>
+        </div>
+        <div class="bid-section">
+          <div class="bid-amounts">
+            <div class="bid-amount-box">
+              <div class="label">Base</div>
+              <div class="amount" id="basePrice">₹0</div>
+            </div>
+            <div class="bid-divider"></div>
+            <div class="bid-amount-box">
+              <div class="label">Current Bid</div>
+              <div class="amount current" id="currentBid">₹0</div>
+            </div>
+          </div>
+        </div>
+        <div class="current-bidder" id="currentBidder">No bids yet</div>
+        <div class="timer-bar-wrap" id="timerSection" style="display:none">
+          <div class="timer-display">
+            <div style="font-size:12px;color:var(--text3);font-weight:700;letter-spacing:1px">TIME LEFT</div>
+            <div class="timer-count" id="timerCount">45</div>
+          </div>
+          <div class="timer-bar"><div class="timer-fill" id="timerFill" style="width:100%"></div></div>
+        </div>
+      </div>
+
+      <!-- Incoming bids feed -->
+      <div class="incoming-bids">
+        <div class="incoming-bids-title">📡 Live Bids from Teams</div>
+        <div class="bid-feed" id="bidFeed">
+          <div style="color:var(--text3);font-size:13px;padding:8px 0">Waiting for bids...</div>
+        </div>
+      </div>
+
+      <div style="padding:4px 16px 6px;font-size:11px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase">Increment</div>
+      <div style="display:flex;gap:8px;padding:0 16px 12px;flex-wrap:wrap" id="incrementBtns">
+        <button class="bid-inc-btn selected" onclick="selectIncrement(0.2)">+₹0.2</button>
+        <button class="bid-inc-btn" onclick="selectIncrement(0.5)">+₹0.5</button>
+        <button class="bid-inc-btn" onclick="selectIncrement(1)">+₹1Cr</button>
+        <button class="bid-inc-btn" onclick="selectIncrement(2)">+₹2Cr</button>
+        <button class="bid-inc-btn" onclick="selectIncrement(5)">+₹5Cr</button>
+      </div>
+
+      <div class="auctioneer-actions">
+        <button class="btn btn-success btn-sm" onclick="soldNow()" style="flex:2">🔨 SOLD!</button>
+        <button class="btn btn-danger btn-sm" onclick="markUnsold()" style="flex:1">✗ Unsold</button>
+        <button class="btn btn-secondary btn-sm" onclick="skipPlayer()" style="flex:1">Skip</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEAMS TAB -->
+  <div id="tab-teams" class="tab-content">
+    <div class="teams-list" id="teamsListContainer"></div>
+  </div>
+
+  <!-- PLAYERS TAB -->
+  <div id="tab-players" class="tab-content">
+    <div class="player-list-filters" id="playerFilters">
+      <div class="filter-chip active" onclick="filterPlayers('All')">All</div>
+      <div class="filter-chip" onclick="filterPlayers('Pending')">Pending</div>
+      <div class="filter-chip" onclick="filterPlayers('Sold')">Sold</div>
+      <div class="filter-chip" onclick="filterPlayers('Unsold')">Unsold</div>
+      <div class="filter-chip" onclick="filterPlayers('Batter')">Batters</div>
+      <div class="filter-chip" onclick="filterPlayers('Bowler')">Bowlers</div>
+      <div class="filter-chip" onclick="filterPlayers('All-Rounder')">All-Rounders</div>
+      <div class="filter-chip" onclick="filterPlayers('WK-Batter')">WK</div>
+    </div>
+    <div class="player-list" id="playersListContainer"></div>
+  </div>
+</div>
+
+<!-- ══ END SCREEN ══ -->
+<div id="endScreen" class="screen">
+  <div class="end-trophy">🏆</div>
+  <h1>Auction Complete!</h1>
+  <div style="color:var(--text2);font-size:14px;margin-top:8px" id="endSummary"></div>
+  <div class="final-teams" id="finalTeamsContainer"></div>
+  <button class="btn btn-secondary" style="margin-top:24px;max-width:300px" onclick="resetAuction()">🔁 New Auction</button>
+</div>
+
+<!-- SOLD OVERLAY -->
+<div class="sold-overlay" id="soldOverlay">
+  <div class="sold-hammer">🔨</div>
+  <h2>SOLD!</h2>
+  <div class="sold-player-name" id="soldPlayerName"></div>
+  <div class="sold-to">sold to <strong id="soldToTeam" style="color:var(--gold)"></strong></div>
+  <div class="sold-price-big" id="soldPrice"></div>
+  <div style="color:var(--text2);font-size:18px">CRORES</div>
+  <button class="btn btn-primary" style="margin-top:24px;max-width:280px" onclick="hideSoldOverlay()">Next Player →</button>
+</div>
+
+<!-- UNSOLD OVERLAY -->
+<div class="unsold-overlay" id="unsoldOverlay">
+  <div style="font-size:60px">😔</div>
+  <h2>UNSOLD</h2>
+  <div class="sold-player-name" id="unsoldPlayerName" style="margin-top:8px"></div>
+  <button class="btn btn-secondary" style="margin-top:24px;max-width:280px" onclick="hideUnsoldOverlay()">Continue →</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase compat SDKs (global, no module needed) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+// ── PLAYER DATA ──
+const IPL_PLAYERS = [
+  { id: 1, name: "Akeal Hosein", role: "Bowler", nationality: "WI", basePrice: 2.0 },
+  { id: 2, name: "Aman Khan", role: "All-Rounder", nationality: "Indian", basePrice: 0.4 },
+  { id: 3, name: "Anshul Kamboj", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 4, name: "Ayush Mhatre", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 5, name: "Dewald Brevis", role: "Batter", nationality: "SA", basePrice: 0.2 },
+  { id: 6, name: "Gurjapneet Singh", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 7, name: "Jamie Overton", role: "Bowler", nationality: "ENG", basePrice: 0.2 },
+  { id: 8, name: "Kartik Sharma", role: "WK-Batter", nationality: "Indian", basePrice: 14.2 },
+  { id: 9, name: "Khaleel Ahmed", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 10, name: "Matt Henry", role: "Bowler", nationality: "NZ", basePrice: 2.0 },
+  { id: 11, name: "Matthew Short", role: "All-Rounder", nationality: "AUS", basePrice: 1.5 },
+  { id: 12, name: "MS Dhoni", role: "WK-Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 13, name: "Mukesh Choudhary", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 14, name: "Nathan Ellis", role: "Bowler", nationality: "AUS", basePrice: 0.2 },
+  { id: 15, name: "Noor Ahmad", role: "Bowler", nationality: "AFG", basePrice: 0.2 },
+  { id: 16, name: "Prashant Veer", role: "All-Rounder", nationality: "Indian", basePrice: 14.2 },
+  { id: 17, name: "Rahul Chahar", role: "Bowler", nationality: "Indian", basePrice: 1.0 },
+  { id: 18, name: "Ramakrishna Ghosh", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 19, name: "Ruturaj Gaikwad", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 20, name: "Sanju Samson", role: "WK-Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 21, name: "Sarfaraz Khan", role: "Batter", nationality: "Indian", basePrice: 0.75 },
+  { id: 22, name: "Shivam Dube", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 23, name: "Shreyas Gopal", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 24, name: "Urvil Patel", role: "WK-Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 25, name: "Zak Foulkes", role: "All-Rounder", nationality: "NZ", basePrice: 0.75 },
+  { id: 26, name: "Anuj Rawat", role: "WK-Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 27, name: "Arshad Khan", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 28, name: "Ashok Sharma", role: "Bowler", nationality: "Indian", basePrice: 0.9 },
+  { id: 29, name: "Glenn Phillips", role: "All-Rounder", nationality: "NZ", basePrice: 0.2 },
+  { id: 30, name: "Gurnoor Singh Brar", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 31, name: "Ishant Sharma", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 32, name: "Jason Holder", role: "All-Rounder", nationality: "WI", basePrice: 7.0 },
+  { id: 33, name: "Jayant Yadav", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 34, name: "Jos Buttler", role: "WK-Batter", nationality: "ENG", basePrice: 0.2 },
+  { id: 35, name: "Kagiso Rabada", role: "Bowler", nationality: "SA", basePrice: 0.2 },
+  { id: 36, name: "Kumar Kushagra", role: "WK-Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 37, name: "Luke Wood", role: "Bowler", nationality: "ENG", basePrice: 0.75 },
+  { id: 38, name: "Manav Suthar", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 39, name: "Mohammed Siraj", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 40, name: "Nishant Sindhu", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 41, name: "Prasidh Krishna", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 42, name: "Prithviraj Yarra", role: "Bowler", nationality: "Indian", basePrice: 0.3 },
+  { id: 43, name: "Rahul Tewatia", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 44, name: "Rashid Khan", role: "Bowler", nationality: "AFG", basePrice: 0.2 },
+  { id: 45, name: "Sai Kishore", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 46, name: "Sai Sudharsan", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 47, name: "Shahrukh Khan", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 48, name: "Shubman Gill", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 49, name: "Tom Banton", role: "Batter", nationality: "ENG", basePrice: 2.0 },
+  { id: 50, name: "Washington Sundar", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 51, name: "Ajinkya Rahane", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 52, name: "Akash Deep", role: "Bowler", nationality: "Indian", basePrice: 1.0 },
+  { id: 53, name: "Angkrish Raghuvanshi", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 54, name: "Anukul Roy", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 55, name: "Blessing Muzarabani", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 56, name: "Cameron Green", role: "All-Rounder", nationality: "AUS", basePrice: 25.2 },
+  { id: 57, name: "Daksh Kamra", role: "All-Rounder", nationality: "Indian", basePrice: 0.3 },
+  { id: 58, name: "Finn Allen", role: "WK-Batter", nationality: "NZ", basePrice: 2.0 },
+  { id: 59, name: "Harshit Rana", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 60, name: "Kartik Tyagi", role: "Bowler", nationality: "Indian", basePrice: 0.3 },
+  { id: 61, name: "Manish Pandey", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 62, name: "Matheesha Pathirana", role: "Bowler", nationality: "SL", basePrice: 18.0 },
+  { id: 63, name: "Prashant Solanki", role: "Bowler", nationality: "Indian", basePrice: 0.3 },
+  { id: 64, name: "Rachin Ravindra", role: "All-Rounder", nationality: "Indian", basePrice: 2.0 },
+  { id: 65, name: "Rahul Tripathi", role: "Batter", nationality: "Indian", basePrice: 0.75 },
+  { id: 66, name: "Ramandeep Singh", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 67, name: "Rinku Singh", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 68, name: "Rovman Powell", role: "All-Rounder", nationality: "WI", basePrice: 0.2 },
+  { id: 69, name: "Sarthak Ranjan", role: "All-Rounder", nationality: "Indian", basePrice: 0.3 },
+  { id: 70, name: "Sunil Narine", role: "All-Rounder", nationality: "WI", basePrice: 0.2 },
+  { id: 71, name: "Tejasvi Singh", role: "WK-Batter", nationality: "Indian", basePrice: 3.0 },
+  { id: 72, name: "Tim Seifert", role: "WK-Batter", nationality: "NZ", basePrice: 1.5 },
+  { id: 73, name: "Umran Malik", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 74, name: "Vaibhav Arora", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 75, name: "Varun Chakaravarthy", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 76, name: "Abdul Samad", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 77, name: "Aiden Markram", role: "Batter", nationality: "SA", basePrice: 0.2 },
+  { id: 78, name: "Akash Singh", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 79, name: "Akshat Raghuwanshi", role: "Batter", nationality: "Indian", basePrice: 2.2 },
+  { id: 80, name: "Anrich Nortje", role: "Bowler", nationality: "SA", basePrice: 2.0 },
+  { id: 81, name: "Arjun Tendulkar", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 82, name: "Arshin Kulkarni", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 83, name: "Avesh Khan", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 84, name: "Ayush Badoni", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 85, name: "Digvesh Rathi", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 86, name: "Himmat Singh", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 87, name: "Josh Inglis", role: "Batter", nationality: "AUS", basePrice: 8.6 },
+  { id: 88, name: "M. Siddharth", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 89, name: "Matthew Breetzke", role: "Batter", nationality: "SA", basePrice: 0.2 },
+  { id: 90, name: "Mayank Yadav", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 91, name: "Mitchell Marsh", role: "Batter", nationality: "AUS", basePrice: 0.2 },
+  { id: 92, name: "Mohammed Shami", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 93, name: "Mohsin Khan", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 94, name: "Mukul Choudhary", role: "WK-Batter", nationality: "Indian", basePrice: 2.6 },
+  { id: 95, name: "Naman Tiwari", role: "All-Rounder", nationality: "Indian", basePrice: 1.0 },
+  { id: 96, name: "Nicholas Pooran", role: "WK-Batter", nationality: "WI", basePrice: 0.2 },
+  { id: 97, name: "Prince Yadav", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 98, name: "Rishabh Pant", role: "WK-Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 99, name: "Shahbaz Ahamad", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 100, name: "Wanindu Hasaranga", role: "All-Rounder", nationality: "SL", basePrice: 2.0 },
+  { id: 101, name: "Allah Ghazanfar", role: "Bowler", nationality: "AFG", basePrice: 0.2 },
+  { id: 102, name: "Ashwani Kumar", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 103, name: "Atharva Ankolekar", role: "All-Rounder", nationality: "Indian", basePrice: 0.3 },
+  { id: 104, name: "Corbin Bosch", role: "All-Rounder", nationality: "SA", basePrice: 0.2 },
+  { id: 105, name: "Danish Malewar", role: "Batter", nationality: "Indian", basePrice: 0.3 },
+  { id: 106, name: "Deepak Chahar", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 107, name: "Hardik Pandya", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 108, name: "Jasprit Bumrah", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 109, name: "Mayank Markande", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 110, name: "Mayank Rawat", role: "All-Rounder", nationality: "Indian", basePrice: 0.3 },
+  { id: 111, name: "Mitchell Santner", role: "All-Rounder", nationality: "NZ", basePrice: 0.2 },
+  { id: 112, name: "Mohammad Izhar", role: "Bowler", nationality: "Indian", basePrice: 0.3 },
+  { id: 113, name: "Naman Dhir", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 114, name: "Quinton De Kock", role: "WK-Batter", nationality: "SA", basePrice: 1.0 },
+  { id: 115, name: "Raghu Sharma", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 116, name: "Raj Bawa", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 117, name: "Robin Minz", role: "WK-Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 118, name: "Rohit Sharma", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 119, name: "Ryan Rickelton", role: "WK-Batter", nationality: "SA", basePrice: 0.2 },
+  { id: 120, name: "Shardul Thakur", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 121, name: "Sherfane Rutherford", role: "Batter", nationality: "WI", basePrice: 0.2 },
+  { id: 122, name: "Surya Kumar Yadav", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 123, name: "Tilak Varma", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 124, name: "Trent Boult", role: "Bowler", nationality: "NZ", basePrice: 0.2 },
+  { id: 125, name: "Will Jacks", role: "All-Rounder", nationality: "AUS", basePrice: 0.2 },
+  { id: 126, name: "Arshdeep Singh", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 127, name: "Azmatullah Omarzai", role: "All-Rounder", nationality: "AFG", basePrice: 0.2 },
+  { id: 128, name: "Ben Dwarshuis", role: "All-Rounder", nationality: "AUS", basePrice: 4.4 },
+  { id: 129, name: "Cooper Connolly", role: "All-Rounder", nationality: "AUS", basePrice: 3.0 },
+  { id: 130, name: "Harnoor Pannu", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 131, name: "Harpreet Brar", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 132, name: "Lockie Ferguson", role: "Bowler", nationality: "NZ", basePrice: 0.2 },
+  { id: 133, name: "Marco Jansen", role: "All-Rounder", nationality: "SA", basePrice: 0.2 },
+  { id: 134, name: "Marcus Stoinis", role: "All-Rounder", nationality: "AUS", basePrice: 0.2 },
+  { id: 135, name: "Mitch Owen", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 136, name: "Musheer Khan", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 137, name: "Nehal Wadhera", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 138, name: "Prabhsimran Singh", role: "WK-Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 139, name: "Pravin Dubey", role: "Bowler", nationality: "Indian", basePrice: 0.3 },
+  { id: 140, name: "Priyansh Arya", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 141, name: "Pyla Avinash", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 142, name: "Shashank Singh", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 143, name: "Shreyas Iyer", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 144, name: "Suryansh Shedge", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 145, name: "Vishal Nishad", role: "Bowler", nationality: "Indian", basePrice: 0.3 },
+  { id: 146, name: "Vishnu Vinod", role: "WK-Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 147, name: "Vyshak Vijaykumar", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 148, name: "Xavier Bartlett", role: "Bowler", nationality: "AUS", basePrice: 0.2 },
+  { id: 149, name: "Yash Thakur", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 150, name: "Yuzvendra Chahal", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 151, name: "Adam Milne", role: "Bowler", nationality: "NZ", basePrice: 2.4 },
+  { id: 152, name: "Aman Rao", role: "Batter", nationality: "Indian", basePrice: 0.3 },
+  { id: 153, name: "Brijesh Sharma", role: "Bowler", nationality: "Indian", basePrice: 0.3 },
+  { id: 154, name: "Dhruv Jurel", role: "WK-Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 155, name: "Donovan Ferreira", role: "WK-Batter", nationality: "SA", basePrice: 0.2 },
+  { id: 156, name: "Jofra Archer", role: "Bowler", nationality: "ENG", basePrice: 0.2 },
+  { id: 157, name: "Kuldeep Sen", role: "Bowler", nationality: "Indian", basePrice: 0.75 },
+  { id: 158, name: "Kwena Maphaka", role: "Bowler", nationality: "SA", basePrice: 0.2 },
+  { id: 159, name: "Lhuan-dre Pretorius", role: "Batter", nationality: "SA", basePrice: 0.2 },
+  { id: 160, name: "Nandre Burger", role: "Bowler", nationality: "SA", basePrice: 0.2 },
+  { id: 161, name: "Ravi Bishnoi", role: "Bowler", nationality: "Indian", basePrice: 7.2 },
+  { id: 162, name: "Ravi Singh", role: "WK-Batter", nationality: "Indian", basePrice: 0.95 },
+  { id: 163, name: "Ravindra Jadeja", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 164, name: "Riyan Parag", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 165, name: "Sam Curran", role: "All-Rounder", nationality: "ENG", basePrice: 0.2 },
+  { id: 166, name: "Sandeep Sharma", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 167, name: "Shimron Hetmyer", role: "Batter", nationality: "WI", basePrice: 0.2 },
+  { id: 168, name: "Shubham Dubey", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 169, name: "Sushant Mishra", role: "Bowler", nationality: "Indian", basePrice: 0.9 },
+  { id: 170, name: "Tushar Deshpande", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 171, name: "Vaibhav Suryavanshi", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 172, name: "Vignesh Puthur", role: "Bowler", nationality: "Indian", basePrice: 0.3 },
+  { id: 173, name: "Yash Raj Punja", role: "Bowler", nationality: "Indian", basePrice: 0.3 },
+  { id: 174, name: "Yashasvi Jaiswal", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 175, name: "Yudhvir Singh Charak", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 176, name: "Abhinandan Singh", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 177, name: "Bhuvneshwar Kumar", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 178, name: "Devdutt Padikkal", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 179, name: "Jacob Bethell", role: "All-Rounder", nationality: "ENG", basePrice: 0.2 },
+  { id: 180, name: "Jacob Duffy", role: "Bowler", nationality: "NZ", basePrice: 2.0 },
+  { id: 181, name: "Jitesh Sharma", role: "WK-Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 182, name: "Jordan Cox", role: "Batter", nationality: "ENG", basePrice: 0.75 },
+  { id: 183, name: "Josh Hazlewood", role: "Bowler", nationality: "AUS", basePrice: 0.2 },
+  { id: 184, name: "Kanishk Chouhan", role: "All-Rounder", nationality: "Indian", basePrice: 0.3 },
+  { id: 185, name: "Krunal Pandya", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 186, name: "Mangesh Yadav", role: "All-Rounder", nationality: "Indian", basePrice: 5.2 },
+  { id: 187, name: "Nuwan Thushara", role: "Bowler", nationality: "SL", basePrice: 0.2 },
+  { id: 188, name: "Phil Salt", role: "WK-Batter", nationality: "ENG", basePrice: 0.2 },
+  { id: 189, name: "Rajat Patidar", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 190, name: "Rasikh Salam", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 191, name: "Romario Shepherd", role: "All-Rounder", nationality: "WI", basePrice: 0.2 },
+  { id: 192, name: "Satvik Deswal", role: "All-Rounder", nationality: "Indian", basePrice: 0.3 },
+  { id: 193, name: "Suyash Sharma", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 194, name: "Swapnil Singh", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 195, name: "Tim David", role: "All-Rounder", nationality: "AUS", basePrice: 0.2 },
+  { id: 196, name: "Venkatesh Iyer", role: "All-Rounder", nationality: "Indian", basePrice: 7.0 },
+  { id: 197, name: "Vicky Ostwal", role: "All-Rounder", nationality: "Indian", basePrice: 0.3 },
+  { id: 198, name: "Vihaan Malhotra", role: "All-Rounder", nationality: "Indian", basePrice: 0.3 },
+  { id: 199, name: "Virat Kohli", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 200, name: "Yash Dayal", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 201, name: "Abhishek Sharma", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 202, name: "Amit Kumar", role: "Bowler", nationality: "Indian", basePrice: 0.3 },
+  { id: 203, name: "Aniket Verma", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 204, name: "Brydon Carse", role: "All-Rounder", nationality: "ENG", basePrice: 0.2 },
+  { id: 205, name: "Eshan Malinga", role: "Bowler", nationality: "SL", basePrice: 0.2 },
+  { id: 206, name: "Harsh Dubey", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 207, name: "Harshal Patel", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 208, name: "Heinrich Klaasen", role: "WK-Batter", nationality: "SA", basePrice: 0.2 },
+  { id: 209, name: "Ishan Kishan", role: "WK-Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 210, name: "Jack Edwards", role: "All-Rounder", nationality: "AUS", basePrice: 3.0 },
+  { id: 211, name: "Jaydev Unadkat", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 212, name: "Kamindu Mendis", role: "All-Rounder", nationality: "SL", basePrice: 0.2 },
+  { id: 213, name: "Liam Livingstone", role: "All-Rounder", nationality: "ENG", basePrice: 13.0 },
+  { id: 214, name: "Nitish Kumar Reddy", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
+  { id: 215, name: "Pat Cummins", role: "Bowler", nationality: "AUS", basePrice: 0.2 },
+  { id: 216, name: "R Smaran", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 217, name: "Salil Arora", role: "WK-Batter", nationality: "Indian", basePrice: 1.5 },
+  { id: 218, name: "Shivam Mavi", role: "Bowler", nationality: "Indian", basePrice: 0.75 },
+  { id: 219, name: "Travis Head", role: "Batter", nationality: "Indian", basePrice: 0.2 },
+  { id: 220, name: "Zeeshan Ansari", role: "Bowler", nationality: "Indian", basePrice: 0.2 },
+  { id: 221, name: "Onkar Tarmale", role: "Bowler", nationality: "Indian", basePrice: 0.3 },
+  { id: 222, name: "Praful Hinge", role: "Bowler", nationality: "Indian", basePrice: 0.3 },
+  { id: 223, name: "Sakib Hussain", role: "Bowler", nationality: "Indian", basePrice: 0.3 },
+  { id: 224, name: "Krains Fuletra", role: "Bowler", nationality: "Indian", basePrice: 0.3 },
+  { id: 225, name: "Shivang Kumar", role: "All-Rounder", nationality: "Indian", basePrice: 0.3 },
+];
+
+const TEAM_COLORS = ['#1a74e4','#ff4c6a','#00c896','#f0b429','#9c6fff','#ff8c42','#00d4ff','#ff6bae','#b4f261','#ffd166'];
+const ROLE_EMOJI = {'Batter':'🏏','Bowler':'🎳','All-Rounder':'⚡','WK-Batter':'🧤'};
+
+let db, dbRef;
+let S = {
+  teams:[], players:[], currentPlayerId:null,
+  currentBid:0, currentBidderIdx:-1,
+  timerEnabled:false, timerSeconds:45,
+  selectedIncrement:0.5, filter:'All',
+  timerInterval:null, timerLeft:0
+};
+
+// ── Firebase config helpers ──
+function saveFirebaseConfig() {
+  var cfg = {
+    apiKey: document.getElementById('fb_apiKey').value.trim(),
+    databaseURL: document.getElementById('fb_databaseURL').value.trim(),
+    projectId: document.getElementById('fb_projectId').value.trim(),
+    appId: document.getElementById('fb_appId').value.trim(),
+  };
+  if (!cfg.apiKey || !cfg.databaseURL || !cfg.projectId) {
+    alert('Please fill in API Key, Database URL and Project ID.');
+    return;
+  }
+  localStorage.setItem('ipl_fb_config', JSON.stringify(cfg));
+  showToast('✅ Config saved! Now tap Launch Auction.');
+}
+
+function loadSavedConfig() {
+  var s = JSON.parse(localStorage.getItem('ipl_fb_config') || '{}');
+  if (s.apiKey) document.getElementById('fb_apiKey').value = s.apiKey;
+  if (s.databaseURL) document.getElementById('fb_databaseURL').value = s.databaseURL;
+  if (s.projectId) document.getElementById('fb_projectId').value = s.projectId;
+  if (s.appId) document.getElementById('fb_appId').value = s.appId;
+}
+
+function initFirebase() {
+  var saved = JSON.parse(localStorage.getItem('ipl_fb_config') || '{}');
+  if (!saved.apiKey || !saved.databaseURL) return false;
+  try {
+    var cfg = {
+      apiKey: saved.apiKey,
+      authDomain: saved.projectId + '.firebaseapp.com',
+      databaseURL: saved.databaseURL,
+      projectId: saved.projectId,
+      storageBucket: saved.projectId + '.appspot.com',
+      appId: saved.appId || 'app'
+    };
+    if (!firebase.apps.length) firebase.initializeApp(cfg);
+    db = firebase.database();
+    dbRef = db.ref('auction');
+    return true;
+  } catch(e) { console.error('Firebase init error:', e); alert('Firebase error: ' + e.message); return false; }
+}
+
+// ── Setup UI ──
+function updateTeamInputs() {
+  var n = Math.min(10, Math.max(2, parseInt(document.getElementById('numTeams').value) || 4));
+  var grid = document.getElementById('teamNamesGrid');
+  grid.innerHTML = '';
+  for (var i = 0; i < n; i++) {
+    grid.innerHTML += '<div class="team-input-group"><div class="team-num">Team '+(i+1)+'</div><input type="text" id="teamName'+i+'" value="Team '+(i+1)+'" /></div>';
+  }
+}
+
+function toggleTimerOptions() {
+  document.getElementById('timerOptions').classList.toggle('visible', document.getElementById('enableTimer').checked);
+}
+
+function selectTimer(s) {
+  document.getElementById('customTimer').value = s;
+  document.querySelectorAll('#timerPresets .bid-inc-btn').forEach(function(b){ b.classList.remove('selected'); });
+  event.target.classList.add('selected');
+}
+
+// ── Launch Auction ──
+function startAuction() {
+  if (!initFirebase()) { showToast('⚠️ Save Firebase config first!'); return; }
+  var n = Math.min(10, Math.max(2, parseInt(document.getElementById('numTeams').value)||4));
+  var budget = parseFloat(document.getElementById('teamBudget').value)||100;
+  S.timerEnabled = document.getElementById('enableTimer').checked;
+  S.timerSeconds = parseInt(document.getElementById('customTimer').value)||45;
+  S.selectedIncrement = parseFloat(document.getElementById('startIncrement').value);
+
+  var teams = [];
+  for (var i = 0; i < n; i++) {
+    var el = document.getElementById('teamName'+i);
+    teams.push({ name: el ? el.value : 'Team '+(i+1), budget: budget, spent: 0, players: [], color: TEAM_COLORS[i] });
+  }
+  var players = IPL_PLAYERS.map(function(p){ return Object.assign({}, p, {status:'pending', soldTo:null, soldPrice:0}); });
+
+  var initialState = {
+    teams: teams, players: players,
+    currentPlayerId: null, currentBid: 0, currentBidderIdx: -1,
+    timerEnabled: S.timerEnabled, timerSeconds: S.timerSeconds,
+    selectedIncrement: S.selectedIncrement,
+    auctionActive: true, auctionEnded: false
+  };
+
+  setConnBar('connecting');
+  dbRef.set(initialState, function(err) {
+    if (err) { alert('Firebase write failed: ' + err.message); return; }
+    S.teams = teams; S.players = players;
+    showScreen('auctionScreen');
+    listenToState();
+    renderTeamsTab();
+    renderPlayersTab();
+  });
+}
+
+// ── Firebase listener ──
+function listenToState() {
+  setConnBar('connecting');
+  dbRef.on('value', function(snap) {
+    setConnBar('connected');
+    var data = snap.val();
+    if (!data) return;
+    if (data.teams) S.teams = data.teams;
+    if (data.players) S.players = data.players;
+    S.currentPlayerId = data.currentPlayerId || null;
+    S.currentBid = data.currentBid || 0;
+    S.currentBidderIdx = (data.currentBidderIdx !== undefined) ? data.currentBidderIdx : -1;
+    renderAll();
+  }, function(err) { setConnBar('error'); console.error(err); });
+}
+
+function pushState(patch) {
+  if (!dbRef) return;
+  dbRef.update(patch, function(err){ if(err) console.error('Firebase write error', err); });
+}
+
+function setConnBar(state) {
+  var bar = document.getElementById('connBar');
+  bar.className = 'conn-bar ' + state;
+  bar.textContent = state === 'connecting' ? '⟳ Connecting to Firebase...'
+    : state === 'connected' ? '✓ Connected — Live'
+    : '✗ Firebase error — check config';
+}
+
+// ── Auction logic ──
+function nextRandomPlayer() {
+  var pending = S.players.filter(function(p){ return p.status==='pending'; });
+  if (!pending.length) { endAuction(); return; }
+  var p = pending[Math.floor(Math.random()*pending.length)];
+  loadPlayer(p.id);
+}
+
+function searchPlayers() {
+  var q = document.getElementById('playerSearch').value.toLowerCase();
+  var res = document.getElementById('searchResults');
+  if (!q) { res.innerHTML=''; return; }
+  var matches = S.players.filter(function(p){ return p.status==='pending' && p.name.toLowerCase().indexOf(q)>=0; }).slice(0,8);
+  res.innerHTML = matches.map(function(p){
+    return '<div class="search-result-item" onclick="loadPlayer('+p.id+')">'
+      +'<div><div class="search-result-name">'+p.name+'</div>'
+      +'<div class="search-result-sub">'+p.role+' · '+p.nationality+' · Base ₹'+p.basePrice+'Cr</div></div>'
+      +'<div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold)">₹'+p.basePrice+'Cr</div>'
+      +'</div>';
+  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:8px">No pending players found</div>';
+}
+
+function loadPlayer(id) {
+  var p = S.players.find(function(x){ return x.id===id; });
+  if (!p || p.status!=='pending') return;
+  document.getElementById('playerSearch').value='';
+  document.getElementById('searchResults').innerHTML='';
+  stopTimer();
+  pushState({ currentPlayerId: id, currentBid: p.basePrice, currentBidderIdx: -1 });
+  S.currentPlayerId = id; S.currentBid = p.basePrice; S.currentBidderIdx = -1;
+  showActiveBidState();
+  if (S.timerEnabled) startTimer();
+}
+
+function showActiveBidState() {
+  document.getElementById('noBidState').style.display='none';
+  document.getElementById('activeBidState').style.display='block';
+  document.getElementById('liveBadge').style.display='inline-block';
+  renderCurrentPlayer();
+}
+
+function renderCurrentPlayer() {
+  var p = S.players.find(function(x){ return x.id===S.currentPlayerId; });
+  if (!p) return;
+  document.getElementById('currentPlayerName').textContent = p.name;
+  document.getElementById('playerRole').textContent = p.role;
+  document.getElementById('playerNat').textContent = p.nationality;
+  document.getElementById('playerAvatar').textContent = ROLE_EMOJI[p.role]||'👤';
+  document.getElementById('basePrice').textContent = '₹'+p.basePrice+'Cr';
+  document.getElementById('currentBid').textContent = '₹'+S.currentBid.toFixed(2)+'Cr';
+  document.getElementById('auctionTitle').textContent = p.name;
+  updatePlayerCount();
+  renderBidFeed();
+}
+
+function renderBidFeed() {
+  var feed = document.getElementById('bidFeed');
+  if (S.currentBidderIdx < 0) {
+    feed.innerHTML='<div style="color:var(--text3);font-size:13px;padding:8px 0">Waiting for bids...</div>';
+    document.getElementById('currentBidder').innerHTML='No bids yet — <em>be the first!</em>';
+    return;
+  }
+  var team = S.teams[S.currentBidderIdx];
+  if (!team) return;
+  feed.innerHTML = '<div class="bid-feed-item" style="border-left-color:'+team.color+'">'
+    +'<div class="bid-feed-team" style="color:'+team.color+'">'+team.name+'</div>'
+    +'<div class="bid-feed-amount">₹'+S.currentBid.toFixed(2)+'Cr</div>'
+    +'</div>';
+  document.getElementById('currentBidder').innerHTML = 'Leading: <strong style="color:'+team.color+'">'+team.name+'</strong>';
+}
+
+function selectIncrement(val) {
+  S.selectedIncrement = val;
+  document.querySelectorAll('#incrementBtns .bid-inc-btn').forEach(function(b){ b.classList.remove('selected'); });
+  event.target.classList.add('selected');
+  pushState({ selectedIncrement: val });
+}
+
+function soldNow() {
+  if (!S.currentPlayerId) return;
+  if (S.currentBidderIdx < 0) { showToast('No bid placed yet!'); return; }
+  stopTimer();
+  var pidx = S.players.findIndex(function(x){ return x.id===S.currentPlayerId; });
+  S.players[pidx].status='sold';
+  S.players[pidx].soldTo=S.currentBidderIdx;
+  S.players[pidx].soldPrice=S.currentBid;
+  S.teams[S.currentBidderIdx].spent += S.currentBid;
+  S.teams[S.currentBidderIdx].players.push(Object.assign({}, S.players[pidx]));
+
+  var team = S.teams[S.currentBidderIdx];
+  document.getElementById('soldPlayerName').textContent=S.players[pidx].name;
+  document.getElementById('soldToTeam').textContent=team.name;
+  document.getElementById('soldToTeam').style.color=team.color;
+  document.getElementById('soldPrice').textContent=S.currentBid.toFixed(2);
+  document.getElementById('soldOverlay').classList.add('show');
+
+  pushState({ players: S.players, teams: S.teams, currentPlayerId: null, currentBid:0, currentBidderIdx:-1,
+    lastSold: { player: S.players[pidx].name, team: team.name, price: S.currentBid } });
+  S.currentPlayerId=null; S.currentBidderIdx=-1;
+}
+
+function hideSoldOverlay() {
+  document.getElementById('soldOverlay').classList.remove('show');
+  document.getElementById('noBidState').style.display='block';
+  document.getElementById('activeBidState').style.display='none';
+  document.getElementById('liveBadge').style.display='none';
+  document.getElementById('playerSearch').value='';
+  document.getElementById('searchResults').innerHTML='';
+  updatePlayerCount();
+}
+
+function markUnsold() {
+  if (!S.currentPlayerId) return;
+  stopTimer();
+  var pidx = S.players.findIndex(function(x){ return x.id===S.currentPlayerId; });
+  S.players[pidx].status='unsold';
+  document.getElementById('unsoldPlayerName').textContent=S.players[pidx].name;
+  document.getElementById('unsoldOverlay').classList.add('show');
+  pushState({ players: S.players, currentPlayerId:null, currentBid:0, currentBidderIdx:-1 });
+  S.currentPlayerId=null; S.currentBidderIdx=-1;
+}
+
+function hideUnsoldOverlay() {
+  document.getElementById('unsoldOverlay').classList.remove('show');
+  document.getElementById('noBidState').style.display='block';
+  document.getElementById('activeBidState').style.display='none';
+  document.getElementById('liveBadge').style.display='none';
+  document.getElementById('playerSearch').value='';
+  updatePlayerCount();
+}
+
+function skipPlayer() {
+  stopTimer();
+  pushState({ currentPlayerId:null, currentBid:0, currentBidderIdx:-1 });
+  S.currentPlayerId=null; S.currentBidderIdx=-1;
+  document.getElementById('noBidState').style.display='block';
+  document.getElementById('activeBidState').style.display='none';
+  document.getElementById('liveBadge').style.display='none';
+  updatePlayerCount();
+}
+
+// ── Timer ──
+function startTimer() {
+  S.timerLeft = S.timerSeconds;
+  document.getElementById('timerSection').style.display='block';
+  updateTimerUI();
+  S.timerInterval = setInterval(function(){
+    S.timerLeft--;
+    updateTimerUI();
+    if (S.timerLeft<=0) { stopTimer(); if(S.currentBidderIdx>=0) soldNow(); else markUnsold(); }
+  }, 1000);
+}
+function stopTimer() { clearInterval(S.timerInterval); S.timerInterval=null; }
+function updateTimerUI() {
+  var el=document.getElementById('timerCount'), fill=document.getElementById('timerFill');
+  el.textContent=S.timerLeft;
+  fill.style.width=(S.timerLeft/S.timerSeconds*100)+'%';
+  var u=S.timerLeft<=10;
+  el.classList.toggle('urgent',u); fill.classList.toggle('urgent',u);
+}
+
+// ── Render ──
+function renderAll() {
+  if (S.currentPlayerId && document.getElementById('activeBidState').style.display!=='none') {
+    renderCurrentPlayer();
+  }
+  renderTeamsTab();
+  renderPlayersTab();
+  updatePlayerCount();
+}
+
+function updatePlayerCount() {
+  var done = S.players.filter(function(p){ return p.status!=='pending'; }).length;
+  document.getElementById('playerCountBadge').textContent=done+'/'+S.players.length;
+}
+
+function renderTeamsTab() {
+  var c=document.getElementById('teamsListContainer');
+  c.innerHTML=S.teams.map(function(t,i){
+    return '<div class="team-card">'
+      +'<div class="team-card-header" onclick="toggleTeamCard('+i+')">'
+      +'<div class="team-color-dot" style="background:'+t.color+'"></div>'
+      +'<div class="team-card-name">'+t.name+'</div>'
+      +'<div><div class="team-card-budget">₹'+(t.budget-t.spent).toFixed(2)+'Cr</div>'
+      +'<div style="font-size:10px;color:var(--text3);text-align:right">'+t.players.length+' players</div></div>'
+      +'</div>'
+      +'<div class="team-card-body" id="team-body-'+i+'">'
+      +'<div class="team-stats">'
+      +'<div class="team-stat"><div class="val">₹'+t.budget+'Cr</div><div class="lbl">Budget</div></div>'
+      +'<div class="team-stat"><div class="val">₹'+t.spent.toFixed(2)+'Cr</div><div class="lbl">Spent</div></div>'
+      +'<div class="team-stat"><div class="val">₹'+(t.budget-t.spent).toFixed(2)+'Cr</div><div class="lbl">Left</div></div>'
+      +'<div class="team-stat"><div class="val">'+t.players.length+'</div><div class="lbl">Players</div></div>'
+      +'</div>'
+      +(t.players.length ? t.players.map(function(p){
+        return '<div class="player-acq-row"><div><div class="player-acq-name">'+p.name+'</div><div class="player-acq-role">'+p.role+'</div></div><div class="player-acq-price">₹'+p.soldPrice.toFixed(2)+'Cr</div></div>';
+      }).join('') : '<div class="empty-state"><div class="emoji">🛒</div><p>No players yet</p></div>')
+      +'</div></div>';
+  }).join('');
+}
+
+function toggleTeamCard(i) { var b=document.getElementById('team-body-'+i); if(b) b.classList.toggle('open'); }
+
+var activeFilter='All';
+function filterPlayers(f) {
+  activeFilter=f;
+  document.querySelectorAll('.filter-chip').forEach(function(c){ c.classList.remove('active'); });
+  event.target.classList.add('active');
+  renderPlayersTab();
+}
+
+function renderPlayersTab() {
+  var roles=['Batter','Bowler','All-Rounder','WK-Batter'];
+  var filtered = S.players.filter(function(p){
+    if(activeFilter==='All') return true;
+    if(activeFilter==='Pending') return p.status==='pending';
+    if(activeFilter==='Sold') return p.status==='sold';
+    if(activeFilter==='Unsold') return p.status==='unsold';
+    if(roles.indexOf(activeFilter)>=0) return p.role===activeFilter;
+    return true;
+  });
+  var c=document.getElementById('playersListContainer');
+  if(!filtered.length){c.innerHTML='<div class="empty-state"><div class="emoji">🔍</div><p>No players</p></div>';return;}
+  c.innerHTML=filtered.map(function(p){
+    var isCur=p.id===S.currentPlayerId;
+    var soldTeam=p.soldTo!=null && S.teams[p.soldTo] ? S.teams[p.soldTo].name : '';
+    var status=p.status==='sold'?'<span class="status-sold">✓ '+soldTeam+'</span>'
+      :p.status==='unsold'?'<span class="status-unsold">✗ Unsold</span>'
+      :isCur?'<span class="status-live">● Live</span>'
+      :'<span class="status-pending">Pending</span>';
+    var price=p.status==='sold'?'₹'+p.soldPrice.toFixed(2)+'Cr':'₹'+p.basePrice+'Cr';
+    return '<div class="player-list-item '+(p.status==='sold'?'sold-item':'')+' '+(isCur?'current-item':'')+'">'
+      +'<div style="font-size:22px">'+(ROLE_EMOJI[p.role]||'👤')+'</div>'
+      +'<div class="player-list-info"><div class="player-list-name">'+p.name+'</div>'
+      +'<div class="player-list-sub">'+p.role+' · '+p.nationality+'</div>'
+      +'<div style="margin-top:4px">'+status+'</div></div>'
+      +'<div class="player-list-price">'+price+'</div></div>';
+  }).join('');
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(t){ t.classList.remove('active'); });
+  event.target.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='teams') renderTeamsTab();
+  if(name==='players') renderPlayersTab();
+}
+
+function endAuction() {
+  pushState({ auctionEnded: true });
+  var sold=S.players.filter(function(p){ return p.status==='sold'; }).length;
+  var unsold=S.players.filter(function(p){ return p.status==='unsold'; }).length;
+  document.getElementById('endSummary').textContent=sold+' sold · '+unsold+' unsold';
+  document.getElementById('finalTeamsContainer').innerHTML=S.teams.map(function(t){
+    return '<div class="final-team-card">'
+      +'<div class="final-team-header">'
+      +'<div class="final-team-name" style="border-left:3px solid '+t.color+';padding-left:10px">'+t.name+'</div>'
+      +'<div class="final-team-spent">₹'+t.spent.toFixed(2)+'Cr</div>'
+      +'</div>'
+      +(t.players.length ? t.players.map(function(p){
+        return '<div class="final-player"><span>'+p.name+' <span style="color:var(--text3);font-size:11px">('+p.role+')</span></span><span class="final-player-price">₹'+p.soldPrice.toFixed(2)+'Cr</span></div>';
+      }).join('') : '<div style="color:var(--text3);font-size:13px">No players</div>')
+      +'</div>';
+  }).join('');
+  showScreen('endScreen');
+}
+
+function resetAuction() { showScreen('setupScreen'); }
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+
+var toastTO;
+function showToast(msg) {
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTO); toastTO=setTimeout(function(){ t.classList.remove('show'); }, 2800);
+}
+
+// ── Init ──
+window.addEventListener('DOMContentLoaded', function() {
+  loadSavedConfig();
+  updateTeamInputs();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>IPL Auction 2026 · Team View</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700;900&family=Barlow+Condensed:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#0a0c10; --surface:#12151c; --surface2:#1a1f2b; --surface3:#222838;
+      --border:#2a3045; --gold:#f0b429; --gold2:#ffd166; --blue:#3d7fff;
+      --green:#00c896; --red:#ff4c6a; --text:#e8ecf4; --text2:#8a94aa; --text3:#5a6278;
+      --team-color:#f0b429; --radius:14px; --radius-sm:8px;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;overflow-x:hidden}
+
+    .screen{display:none;min-height:100dvh;flex-direction:column;animation:fadeIn .3s ease}
+    .screen.active{display:flex}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+    /* conn bar */
+    .conn-bar{padding:8px 16px;font-size:12px;font-weight:700;letter-spacing:.5px;text-align:center;display:none}
+    .conn-bar.connecting{display:block;background:rgba(240,180,41,.1);color:var(--gold);border-bottom:1px solid rgba(240,180,41,.2)}
+    .conn-bar.connected{display:block;background:rgba(0,200,150,.08);color:var(--green);border-bottom:1px solid rgba(0,200,150,.2)}
+    .conn-bar.error{display:block;background:rgba(255,76,106,.1);color:var(--red);border-bottom:1px solid rgba(255,76,106,.2)}
+
+    /* ── JOIN SCREEN ── */
+    #joinScreen{background:var(--bg);justify-content:center;align-items:center;padding:32px 24px}
+    .join-hero{text-align:center;margin-bottom:40px}
+    .join-hero .trophy{font-size:64px;filter:drop-shadow(0 0 24px rgba(240,180,41,.5));display:block;margin-bottom:16px}
+    .join-hero h1{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:3px;color:var(--gold)}
+    .join-hero p{font-size:13px;color:var(--text2);margin-top:6px;letter-spacing:1px;text-transform:uppercase}
+    .join-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;width:100%;max-width:380px}
+    .join-card h2{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;margin-bottom:20px;color:var(--text2);letter-spacing:.5px}
+    label{display:block;font-size:13px;color:var(--text2);margin-bottom:6px;font-weight:500}
+    input[type=text]{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:15px;font-family:'Barlow',sans-serif;padding:12px 14px;outline:none;transition:border-color .2s}
+    input:focus{border-color:var(--gold)}
+    .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:16px;border:none;border-radius:var(--radius);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s;margin-top:16px}
+    .btn-primary{background:linear-gradient(135deg,var(--gold) 0%,#e8a000 100%);color:#0a0c10}
+    .btn-primary:active{transform:scale(.97)}
+    .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+    .btn-bid-main{background:linear-gradient(135deg,var(--team-color) 0%,color-mix(in srgb, var(--team-color) 70%, black) 100%);color:#0a0c10;font-size:26px;padding:24px;border-radius:18px;border:none;cursor:pointer;transition:all .15s;width:100%;font-family:'Bebas Neue',sans-serif;letter-spacing:2px}
+    .btn-bid-main:active{transform:scale(.96)}
+    .btn-bid-main:disabled{opacity:.3;cursor:not-allowed;transform:none}
+    .team-select-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+    .team-select-btn{background:var(--surface2);border:2px solid var(--border);border-radius:var(--radius-sm);padding:14px 10px;text-align:center;cursor:pointer;transition:all .2s;font-size:14px;font-weight:700}
+    .team-select-btn:active{transform:scale(.97)}
+    .team-select-btn.selected{border-color:var(--team-color)}
+    .divider{height:1px;background:var(--border);margin:16px 0}
+
+    /* firebase config */
+    .fb-section{margin-bottom:20px}
+    .fb-section summary{font-size:13px;color:var(--text3);cursor:pointer;padding:4px 0;font-weight:600;letter-spacing:.5px}
+    .fb-section input{margin-bottom:8px}
+
+    /* ── WAITING SCREEN ── */
+    #waitingScreen{align-items:center;justify-content:center;text-align:center;padding:32px}
+    .waiting-pulse{font-size:64px;animation:waitPulse 2s ease-in-out infinite}
+    @keyframes waitPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.7}}
+    #waitingScreen h2{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:2px;margin-top:20px;color:var(--text2)}
+    #waitingScreen p{font-size:14px;color:var(--text3);margin-top:8px}
+
+    /* ── BIDDING SCREEN ── */
+    #biddingScreen{background:var(--bg)}
+    .bid-header{padding:14px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .bid-header-team{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--team-color)}
+    .budget-pill{font-family:'Bebas Neue',sans-serif;font-size:16px;background:rgba(0,0,0,.3);border:1px solid var(--border);padding:4px 12px;border-radius:99px}
+
+    /* player card */
+    .live-player-card{margin:16px;background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .3s}
+    .live-player-card.has-bid{border-color:var(--team-color)}
+    .player-banner{background:linear-gradient(135deg,#1a2340,#121828);padding:20px;display:flex;align-items:center;gap:16px}
+    .player-avi{width:68px;height:68px;border-radius:50%;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;border:2px solid var(--border)}
+    .player-info h3{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700}
+    .player-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+    .pill{font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px}
+    .pill-role{background:rgba(61,127,255,.15);color:var(--blue);border:1px solid rgba(61,127,255,.3)}
+    .pill-nat{background:rgba(240,180,41,.1);color:var(--gold2);border:1px solid rgba(240,180,41,.2)}
+
+    .price-row{display:flex;padding:16px 20px;gap:0}
+    .price-box{flex:1;text-align:center}
+    .price-label{font-size:10px;color:var(--text3);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px}
+    .price-val{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--gold)}
+    .price-val.current{color:var(--green);font-size:44px}
+    .price-divider{width:1px;background:var(--border);margin:8px 0}
+
+    .leader-bar{padding:8px 20px 14px;text-align:center;font-size:13px;color:var(--text2)}
+    .leader-bar strong{color:var(--text)}
+    .leader-bar.my-lead{color:var(--green)}
+    .leader-bar.my-lead strong{color:var(--green)}
+
+    /* timer */
+    .timer-wrap{padding:0 20px 14px}
+    .timer-top{display:flex;justify-content:space-between;margin-bottom:6px}
+    .timer-label{font-size:10px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase}
+    .timer-num{font-family:'Bebas Neue',sans-serif;font-size:26px}
+    .timer-num.urgent{color:var(--red);animation:pulse .5s infinite alternate}
+    @keyframes pulse{from{opacity:1}to{opacity:.5}}
+    .timer-track{height:6px;background:var(--surface3);border-radius:99px;overflow:hidden}
+    .timer-bar-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--gold));border-radius:99px;transition:width 1s linear}
+    .timer-bar-fill.urgent{background:var(--red)}
+
+    /* bid controls */
+    .bid-controls{padding:16px}
+    .inc-label{font-size:11px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+    .inc-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+    .inc-btn{flex:1;min-width:55px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;padding:9px 4px;border-radius:var(--radius-sm);cursor:pointer;text-align:center;transition:all .15s}
+    .inc-btn.selected,.inc-btn:active{background:var(--team-color);color:#0a0c10;border-color:var(--team-color)}
+
+    /* my squad tab */
+    .squad-list{padding:16px;display:flex;flex-direction:column;gap:8px}
+    .squad-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+    .squad-name{font-size:14px;font-weight:700}
+    .squad-role{font-size:11px;color:var(--text3);margin-top:2px}
+    .squad-price{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--green)}
+    .budget-summary{margin:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+    .budget-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px}
+    .budget-row:last-child{border:none}
+    .budget-row .val{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold)}
+
+    /* tabs */
+    .tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border)}
+    .tab{flex:1;padding:12px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;text-align:center}
+    .tab.active{color:var(--team-color);border-bottom-color:var(--team-color)}
+    .tab-content{display:none;flex:1;overflow-y:auto}
+    .tab-content.active{display:block}
+
+    /* sold flash */
+    .sold-flash{position:fixed;inset:0;background:rgba(10,12,16,.94);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;opacity:0;pointer-events:none;transition:opacity .3s}
+    .sold-flash.show{opacity:1;pointer-events:all}
+    .sold-flash h2{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:4px;color:var(--gold)}
+    .sold-flash .sf-player{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;margin-top:8px}
+    .sold-flash .sf-to{font-size:14px;color:var(--text2);margin-top:4px}
+    .sold-flash .sf-price{font-family:'Bebas Neue',sans-serif;font-size:64px;color:var(--green);line-height:1;margin:12px 0}
+    .unsold-flash{position:fixed;inset:0;background:rgba(10,12,16,.9);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;opacity:0;pointer-events:none;transition:opacity .3s}
+    .unsold-flash.show{opacity:1;pointer-events:all}
+    .unsold-flash h2{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:4px;color:var(--red);margin-top:12px}
+
+    /* won badge */
+    .won-badge{background:rgba(0,200,150,.15);border:1px solid rgba(0,200,150,.4);color:var(--green);padding:10px 16px;border-radius:var(--radius-sm);font-size:14px;font-weight:700;text-align:center;margin:0 16px 12px}
+    .empty-state{text-align:center;padding:40px 20px;color:var(--text3)}
+  </style>
+</head>
+<body>
+
+<!-- ══ JOIN SCREEN ══ -->
+<div id="joinScreen" class="screen active">
+  <div class="join-hero">
+    <span class="trophy">🏏</span>
+    <h1>IPL Auction</h1>
+    <p>2026 · Team View</p>
+  </div>
+  <div class="join-card">
+
+    <!-- Firebase config (collapsible) -->
+    <details class="fb-section">
+      <summary>🔥 Firebase Config (set once)</summary>
+      <div style="margin-top:12px">
+        <label>API Key</label>
+        <input type="text" id="fb_apiKey" placeholder="AIzaSy..."/>
+        <label>Database URL</label>
+        <input type="text" id="fb_databaseURL" placeholder="https://your-project-default-rtdb.firebaseio.com"/>
+        <label>Project ID</label>
+        <input type="text" id="fb_projectId" placeholder="your-project-id"/>
+        <label>App ID</label>
+        <input type="text" id="fb_appId" placeholder="1:123456:web:abc..."/>
+        <button class="btn btn-secondary" style="margin-top:8px;font-size:14px;padding:10px" onclick="saveFirebaseConfig()">💾 Save Config</button>
+      </div>
+    </details>
+    <div class="divider"></div>
+
+    <h2>Select Your Team</h2>
+    <div id="teamSelectGrid" class="team-select-grid">
+      <div style="color:var(--text3);font-size:13px;grid-column:span 2;text-align:center;padding:16px">
+        ⟳ Waiting for auction to start...
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="joinAsTeam()" id="joinBtn" disabled>Join Auction →</button>
+  </div>
+</div>
+
+<!-- ══ WAITING SCREEN ══ -->
+<div id="waitingScreen" class="screen">
+  <div class="conn-bar connecting" id="waitConnBar">⟳ Connecting...</div>
+  <div class="waiting-pulse">⏳</div>
+  <h2>Waiting for player...</h2>
+  <p id="waitingTeamName" style="margin-top:12px;color:var(--team-color);font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700"></p>
+  <p style="margin-top:8px">The auctioneer will bring up the next player</p>
+  <div style="margin-top:32px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;max-width:300px;width:100%">
+    <div style="font-size:11px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Your Budget</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--team-color)" id="waitBudget">—</div>
+  </div>
+</div>
+
+<!-- ══ BIDDING SCREEN ══ -->
+<div id="biddingScreen" class="screen">
+  <div class="conn-bar connected" id="bidConnBar">✓ Live</div>
+  <div class="bid-header">
+    <div class="bid-header-team" id="bidHeaderTeam">Team Name</div>
+    <div class="budget-pill">₹<span id="budgetLeft">—</span>Cr left</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchBidTab('live')">🔴 Live</div>
+    <div class="tab" onclick="switchBidTab('squad')">🏏 My Squad</div>
+  </div>
+
+  <!-- LIVE TAB -->
+  <div id="btab-live" class="tab-content active">
+    <div class="live-player-card" id="livePlayerCard">
+      <div class="player-banner">
+        <div class="player-avi" id="bidPlayerAvi">👤</div>
+        <div class="player-info">
+          <h3 id="bidPlayerName">—</h3>
+          <div class="player-meta">
+            <span class="pill pill-role" id="bidPlayerRole">—</span>
+            <span class="pill pill-nat" id="bidPlayerNat">—</span>
+          </div>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="price-box">
+          <div class="price-label">Base Price</div>
+          <div class="price-val" id="bidBasePrice">₹0</div>
+        </div>
+        <div class="price-divider"></div>
+        <div class="price-box">
+          <div class="price-label">Current Bid</div>
+          <div class="price-val current" id="bidCurrentPrice">₹0</div>
+        </div>
+      </div>
+      <div class="leader-bar" id="leaderBar">No bids yet</div>
+      <div class="timer-wrap" id="timerWrap" style="display:none">
+        <div class="timer-top">
+          <div class="timer-label">Time Left</div>
+          <div class="timer-num" id="bidTimerNum">45</div>
+        </div>
+        <div class="timer-track"><div class="timer-bar-fill" id="bidTimerFill" style="width:100%"></div></div>
+      </div>
+    </div>
+
+    <div class="bid-controls">
+      <div class="inc-label">Bid Increment</div>
+      <div class="inc-row" id="bidIncRow">
+        <button class="inc-btn selected" onclick="selectInc(0.2)">+₹0.2</button>
+        <button class="inc-btn" onclick="selectInc(0.5)">+₹0.5</button>
+        <button class="inc-btn" onclick="selectInc(1)">+₹1Cr</button>
+        <button class="inc-btn" onclick="selectInc(2)">+₹2Cr</button>
+        <button class="inc-btn" onclick="selectInc(5)">+₹5Cr</button>
+      </div>
+      <button class="btn-bid-main" id="bigBidBtn" onclick="placeBid()">
+        🔨 BID ₹<span id="bidBtnAmount">0</span>Cr
+      </button>
+      <div style="text-align:center;margin-top:10px;font-size:12px;color:var(--text3)" id="bidHint">Tap to raise the bid</div>
+    </div>
+  </div>
+
+  <!-- SQUAD TAB -->
+  <div id="btab-squad" class="tab-content">
+    <div class="budget-summary" id="budgetSummary"></div>
+    <div class="squad-list" id="squadList"></div>
+  </div>
+</div>
+
+<!-- SOLD FLASH -->
+<div class="sold-flash" id="soldFlash">
+  <div style="font-size:64px">🔨</div>
+  <h2>SOLD!</h2>
+  <div class="sf-player" id="sfPlayer"></div>
+  <div class="sf-to">to <strong id="sfTo" style="color:var(--gold)"></strong></div>
+  <div class="sf-price" id="sfPrice"></div>
+  <div style="color:var(--text2);font-size:16px">CRORES</div>
+</div>
+
+<!-- UNSOLD FLASH -->
+<div class="unsold-flash" id="unsoldFlash">
+  <div style="font-size:64px">😔</div>
+  <h2>UNSOLD</h2>
+  <div class="sf-player" id="ufPlayer" style="margin-top:8px;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700"></div>
+</div>
+
+<!-- Firebase compat SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+const ROLE_EMOJI = {'Batter':'🏏','Bowler':'🎳','All-Rounder':'⚡','WK-Batter':'🧤'};
+let db, dbRef;
+let myTeamIdx = null;
+let selectedInc = 0.2;
+let lastPlayerId = null;
+let lastSoldKey = null;
+let G = { teams:[], players:[], currentPlayerId:null, currentBid:0, currentBidderIdx:-1, timerEnabled:false, timerSeconds:45, auctionEnded:false };
+
+function saveFirebaseConfig() {
+  var cfg = {
+    apiKey: document.getElementById('fb_apiKey').value.trim(),
+    databaseURL: document.getElementById('fb_databaseURL').value.trim(),
+    projectId: document.getElementById('fb_projectId').value.trim(),
+    appId: document.getElementById('fb_appId').value.trim(),
+  };
+  if (!cfg.apiKey || !cfg.databaseURL || !cfg.projectId) {
+    alert('Please fill in API Key, Database URL and Project ID.');
+    return;
+  }
+  localStorage.setItem('ipl_fb_config', JSON.stringify(cfg));
+  location.reload();
+}
+
+function loadSavedConfig() {
+  var s = JSON.parse(localStorage.getItem('ipl_fb_config') || '{}');
+  if (s.apiKey) document.getElementById('fb_apiKey').value = s.apiKey;
+  if (s.databaseURL) document.getElementById('fb_databaseURL').value = s.databaseURL;
+  if (s.projectId) document.getElementById('fb_projectId').value = s.projectId;
+  if (s.appId) document.getElementById('fb_appId').value = s.appId;
+}
+
+function initFirebase() {
+  var s = JSON.parse(localStorage.getItem('ipl_fb_config') || '{}');
+  if (!s.apiKey || !s.databaseURL) return false;
+  try {
+    var cfg = { apiKey:s.apiKey, authDomain:s.projectId+'.firebaseapp.com', databaseURL:s.databaseURL, projectId:s.projectId, storageBucket:s.projectId+'.appspot.com', appId:s.appId||'app' };
+    if (!firebase.apps.length) firebase.initializeApp(cfg);
+    db = firebase.database();
+    dbRef = db.ref('auction');
+    return true;
+  } catch(e) { console.error(e); return false; }
+}
+
+function loadTeams() {
+  if (!initFirebase()) return;
+  dbRef.on('value', function(snap) {
+    var data = snap.val();
+    if (!data) return;
+    G = Object.assign(G, data);
+    if (myTeamIdx !== null) {
+      handleStateChange(data);
+    } else if (data.teams) {
+      renderTeamSelect(data.teams);
+    }
+  });
+}
+
+function renderTeamSelect(teams) {
+  var grid = document.getElementById('teamSelectGrid');
+  var emojis = ['🦁','🐯','🐺','🦅','🐍','🐉','🦊','🦁','⚡','🌊'];
+  grid.innerHTML = teams.map(function(t,i){
+    return '<div class="team-select-btn" id="tsb-'+i+'" style="border-color:'+(i===myTeamIdx?t.color:'var(--border)')+';" onclick="selectTeam('+i+',''+t.color+'')">'
+      +'<div style="font-size:20px;margin-bottom:4px">'+(emojis[i]||'🏏')+'</div>'
+      +'<div style="font-weight:700;font-size:14px">'+t.name+'</div>'
+      +'<div style="font-size:11px;color:var(--text3);margin-top:2px">₹'+(t.budget-t.spent).toFixed(1)+'Cr</div>'
+      +'</div>';
+  }).join('');
+  document.getElementById('joinBtn').disabled = myTeamIdx === null;
+}
+
+function selectTeam(idx, color) {
+  myTeamIdx = idx;
+  document.querySelectorAll('.team-select-btn').forEach(function(b,i){
+    b.style.borderColor = (i===idx) ? color : 'var(--border)';
+  });
+  document.getElementById('joinBtn').disabled = false;
+  document.documentElement.style.setProperty('--team-color', color);
+  document.getElementById('joinBtn').textContent = 'Join as ' + G.teams[idx].name + ' →';
+}
+
+function joinAsTeam() {
+  if (myTeamIdx === null) return;
+  if (!db) { alert('Save Firebase config first!'); return; }
+  var team = G.teams[myTeamIdx];
+  document.documentElement.style.setProperty('--team-color', team.color);
+  showScreen('waitingScreen');
+  document.getElementById('waitingTeamName').textContent = team.name;
+  document.getElementById('waitConnBar').className='conn-bar connected';
+  document.getElementById('waitConnBar').textContent='✓ Connected — Waiting for auctioneer';
+  updateWaitBudget();
+}
+
+function handleStateChange(data) {
+  if (data.auctionEnded) { showAuctionEnded(); return; }
+  if (data.lastSold) {
+    var key = data.lastSold.player + '|' + data.lastSold.price;
+    if (key !== lastSoldKey) { lastSoldKey = key; showSoldFlash(data.lastSold); }
+  }
+  if (!data.currentPlayerId) {
+    if (document.getElementById('biddingScreen').classList.contains('active')) {
+      showScreen('waitingScreen');
+      updateWaitBudget();
+    }
+    return;
+  }
+  if (data.currentPlayerId !== lastPlayerId) {
+    lastPlayerId = data.currentPlayerId;
+    showScreen('biddingScreen');
+    renderBiddingScreen(data);
+  } else {
+    updateBidInfo(data);
+  }
+  updateBudgetDisplay();
+}
+
+function renderBiddingScreen(data) {
+  var p = G.players.find(function(x){ return x.id===data.currentPlayerId; });
+  if (!p) return;
+  document.getElementById('bidPlayerName').textContent = p.name;
+  document.getElementById('bidPlayerRole').textContent = p.role;
+  document.getElementById('bidPlayerNat').textContent = p.nationality;
+  document.getElementById('bidPlayerAvi').textContent = ROLE_EMOJI[p.role]||'👤';
+  document.getElementById('bidBasePrice').textContent = '₹'+p.basePrice+'Cr';
+  document.getElementById('bidHeaderTeam').textContent = G.teams[myTeamIdx] ? G.teams[myTeamIdx].name : '';
+  selectedInc = data.selectedIncrement || 0.2;
+  document.getElementById('timerWrap').style.display = data.timerEnabled ? 'block' : 'none';
+  updateBidInfo(data);
+  updateBudgetDisplay();
+}
+
+function updateBidInfo(data) {
+  var currentBid = data.currentBid || 0;
+  var bidderIdx = (data.currentBidderIdx !== undefined) ? data.currentBidderIdx : -1;
+  document.getElementById('bidCurrentPrice').textContent = '₹'+currentBid.toFixed(2)+'Cr';
+  var nextBid = (currentBid + selectedInc).toFixed(2);
+  document.getElementById('bidBtnAmount').textContent = nextBid;
+
+  var myTeam = G.teams[myTeamIdx];
+  var canAfford = myTeam && (myTeam.budget - myTeam.spent) >= currentBid + selectedInc;
+  var iAmLeading = bidderIdx === myTeamIdx;
+  var btn = document.getElementById('bigBidBtn');
+  btn.disabled = !canAfford || iAmLeading;
+
+  var leaderBar = document.getElementById('leaderBar');
+  if (bidderIdx < 0) {
+    leaderBar.textContent = 'No bids yet — be first!';
+    leaderBar.className = 'leader-bar';
+  } else if (iAmLeading) {
+    leaderBar.innerHTML = "<strong>You're leading!</strong> 🎉";
+    leaderBar.className = 'leader-bar my-lead';
+    document.getElementById('livePlayerCard').classList.add('has-bid');
+  } else {
+    leaderBar.innerHTML = 'Leading: <strong>'+(G.teams[bidderIdx]?G.teams[bidderIdx].name:'?')+'</strong>';
+    leaderBar.className = 'leader-bar';
+    document.getElementById('livePlayerCard').classList.remove('has-bid');
+  }
+  document.getElementById('bidHint').textContent = !canAfford && !iAmLeading ? '⚠️ Not enough budget' : iAmLeading ? "You're the highest bidder!" : 'Tap to raise the bid';
+
+  if (data.timerEnabled && data.timerLeft !== undefined) {
+    var tl = data.timerLeft || 0;
+    var ts = data.timerSeconds || 45;
+    var el = document.getElementById('bidTimerNum');
+    var fill = document.getElementById('bidTimerFill');
+    el.textContent = tl;
+    fill.style.width = (tl/ts*100)+'%';
+    el.classList.toggle('urgent', tl<=10);
+    fill.classList.toggle('urgent', tl<=10);
+  }
+}
+
+function placeBid() {
+  if (!dbRef || myTeamIdx === null) return;
+  var currentBid = G.currentBid || 0;
+  var newBid = parseFloat((currentBid + selectedInc).toFixed(2));
+  var myTeam = G.teams[myTeamIdx];
+  if (!myTeam || newBid > myTeam.budget - myTeam.spent) return;
+  dbRef.update({ currentBid: newBid, currentBidderIdx: myTeamIdx });
+}
+
+function selectInc(val) {
+  selectedInc = val;
+  document.querySelectorAll('.inc-btn').forEach(function(b){ b.classList.remove('selected'); });
+  event.target.classList.add('selected');
+  var currentBid = G.currentBid || 0;
+  document.getElementById('bidBtnAmount').textContent = (currentBid + val).toFixed(2);
+}
+
+function updateBudgetDisplay() {
+  var t = G.teams[myTeamIdx];
+  if (!t) return;
+  document.getElementById('budgetLeft').textContent = (t.budget-t.spent).toFixed(2);
+  renderSquadTab();
+}
+
+function updateWaitBudget() {
+  var t = G.teams[myTeamIdx];
+  if (t) document.getElementById('waitBudget').textContent = '₹'+(t.budget-t.spent).toFixed(2)+'Cr';
+}
+
+function renderSquadTab() {
+  var t = G.teams[myTeamIdx];
+  if (!t) return;
+  document.getElementById('budgetSummary').innerHTML =
+    '<div class="budget-row"><span>Total Budget</span><span class="val">₹'+t.budget+'Cr</span></div>'
+    +'<div class="budget-row"><span>Spent</span><span class="val" style="color:var(--red)">₹'+t.spent.toFixed(2)+'Cr</span></div>'
+    +'<div class="budget-row"><span>Remaining</span><span class="val" style="color:var(--green)">₹'+(t.budget-t.spent).toFixed(2)+'Cr</span></div>'
+    +'<div class="budget-row"><span>Players</span><span class="val">'+t.players.length+'</span></div>';
+  document.getElementById('squadList').innerHTML = t.players.length
+    ? t.players.map(function(p){
+        return '<div class="squad-item"><div><div class="squad-name">'+p.name+'</div><div class="squad-role">'+p.role+' · '+p.nationality+'</div></div><div class="squad-price">₹'+p.soldPrice.toFixed(2)+'Cr</div></div>';
+      }).join('')
+    : '<div class="empty-state"><div style="font-size:36px">🛒</div><p style="margin-top:8px">No players yet</p></div>';
+}
+
+function switchBidTab(name) {
+  document.querySelectorAll('.tabs .tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(t){ t.classList.remove('active'); });
+  event.target.classList.add('active');
+  document.getElementById('btab-'+name).classList.add('active');
+  if(name==='squad') renderSquadTab();
+}
+
+function showSoldFlash(sold) {
+  document.getElementById('sfPlayer').textContent = sold.player;
+  document.getElementById('sfTo').textContent = sold.team;
+  document.getElementById('sfPrice').textContent = parseFloat(sold.price).toFixed(2);
+  var fl = document.getElementById('soldFlash');
+  fl.classList.add('show');
+  setTimeout(function(){ fl.classList.remove('show'); }, 3000);
+}
+
+function showAuctionEnded() {
+  showScreen('waitingScreen');
+  document.querySelector('#waitingScreen h2').textContent = 'Auction Over!';
+  document.querySelector('#waitingScreen p').textContent = 'Thanks for playing 🏆';
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+  loadSavedConfig();
+  loadTeams();
+});
+</script>
+</body>
+</html>
