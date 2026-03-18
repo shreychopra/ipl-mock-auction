@@ -428,11 +428,38 @@
 <!-- ════ WAIT SCREEN ════ -->
 <div id="waitScreen" class="screen">
   <div class="conn-bar cb-live" id="waitConnBar">✓ Connected</div>
-  <div class="wait-pulse">⏳</div>
-  <h2>Waiting for player...</h2>
-  <p>The auctioneer will bring up the next player</p>
-  <div class="wait-team" id="waitTeamName">—</div>
-  <div class="wait-info"><div class="wl">Your Budget</div><div class="wv" id="waitBudget">—</div></div>
+  <div class="tabs" style="background:var(--surface);border-bottom:1px solid var(--border)">
+    <div class="tab on" onclick="wTab('status',this)">⏳ Status</div>
+    <div class="tab" onclick="wTab('pool',this)">📋 Player Pool</div>
+    <div class="tab" onclick="wTab('squad',this)">🏏 My Squad</div>
+  </div>
+
+  <!-- STATUS -->
+  <div id="wpane-status" class="tab-pane on" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 22px;flex:1">
+    <div class="wait-pulse">⏳</div>
+    <h2 style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;color:var(--text2);margin-top:18px">Waiting for player...</h2>
+    <p style="font-size:14px;color:var(--text3);margin-top:7px">The auctioneer will bring up the next player</p>
+    <div class="wait-team" id="waitTeamName">—</div>
+    <div class="wait-info"><div class="wl">Your Budget</div><div class="wv" id="waitBudget">—</div></div>
+  </div>
+
+  <!-- POOL -->
+  <div id="wpane-pool" class="tab-pane">
+    <div class="frow">
+      <div class="fc on" onclick="wPoolFilter('All',this)">All</div>
+      <div class="fc" onclick="wPoolFilter('Batter',this)">Batters</div>
+      <div class="fc" onclick="wPoolFilter('Bowler',this)">Bowlers</div>
+      <div class="fc" onclick="wPoolFilter('All-Rounder',this)">AR</div>
+      <div class="fc" onclick="wPoolFilter('WK-Batter',this)">WK</div>
+    </div>
+    <div class="pl-list" id="wPoolList"><div class="empty">Loading pool...</div></div>
+  </div>
+
+  <!-- MY SQUAD (wait screen) -->
+  <div id="wpane-squad" class="tab-pane">
+    <div class="squad-budget" id="wSquadBudget"></div>
+    <div class="squad-list" id="wSquadList"></div>
+  </div>
 </div>
 
 <!-- ════ PARTICIPANT BID SCREEN ════ -->
@@ -1031,9 +1058,9 @@ function bringPlayer(id){
   document.getElementById('searchResults').innerHTML='';
   stopTimer();
   // First bid is at base price
-  var firstBid=p.base;
-  pushRoom({currentPlayerId:id,currentBid:firstBid,currentBidderIdx:-1});
-  G.currentPlayerId=id; G.currentBid=firstBid; G.currentBidderIdx=-1;
+  // currentBid starts at 0 — no bid placed yet. First bid will be at base price.
+  pushRoom({currentPlayerId:id,currentBid:0,currentBidderIdx:-1});
+  G.currentPlayerId=id; G.currentBid=0; G.currentBidderIdx=-1;
   document.getElementById('noBidDiv').style.display='none';
   document.getElementById('activeBidDiv').style.display='block';
   document.getElementById('hostLive').style.display='inline-block';
@@ -1051,10 +1078,10 @@ function renderActiveBid(data){
   document.getElementById('hNat').textContent=p.nat;
   document.getElementById('hBase').textContent=fmtL(p.base);
   var cb=data.currentBid||0;
-  document.getElementById('hCurrent').textContent=fmtL(cb);
+  document.getElementById('hCurrent').textContent = cb===0 ? '— No bid yet' : fmtL(cb);
   document.getElementById('hostTitle').textContent=p.name;
-  // show next bid amount
-  var nb=nextBid(cb);
+  // first bid = base price; subsequent bids use nextBid()
+  var nb = cb===0 ? p.base : nextBid(cb);
   document.getElementById('hNextBidAmt').textContent=fmtL(nb);
   updateHostCount();
   var bi=(data.currentBidderIdx!==undefined)?data.currentBidderIdx:-1;
@@ -1277,6 +1304,9 @@ function listenParticipant(){
     if(data.auctionEnded){showParticipantEnd();return;}
 
     updateWaitBudget();
+    // refresh pool/squad if visible
+    if(document.getElementById('wpane-pool') && document.getElementById('wpane-pool').classList.contains('on')) renderWPool();
+    if(document.getElementById('wpane-squad') && document.getElementById('wpane-squad').classList.contains('on')) renderWSquad();
 
     if(!data.currentPlayerId){
       if(document.getElementById('pBidScreen').classList.contains('active')){
@@ -1319,7 +1349,9 @@ function updatePBidInfo(data){
   var cb=data.currentBid||0;
   var bi=(data.currentBidderIdx!==undefined)?data.currentBidderIdx:-1;
   document.getElementById('pCurrent').textContent=fmtL(cb);
-  var nb=nextBid(cb);
+  // When no bid yet (cb=0), first bid is at base price
+  var p2=(G.players||[]).find(function(x){return x.id===G.currentPlayerId;});
+  var nb=(cb===0 && p2) ? p2.base : nextBid(cb);
   document.getElementById('pBidAmt').textContent=nb;
   var mt=G.teams&&G.teams[myTeamIdx];
   var canAfford=mt&&(mt.budget-mt.spent)>=nb;
@@ -1343,7 +1375,8 @@ function placeBid(){
   roomRef.once('value',function(snap){
     var data=snap.val(); if(!data) return;
     var cb=data.currentBid||0;
-    var nb=nextBid(cb);
+    var p0=(data.players||[]).find(function(x){return x.id===data.currentPlayerId;});
+    var nb=(cb===0 && p0) ? p0.base : nextBid(cb);
     var mt=G.teams&&G.teams[myTeamIdx];
     if(!mt||nb>mt.budget-mt.spent){toast('Not enough budget!');return;}
     roomRef.update({currentBid:nb,currentBidderIdx:myTeamIdx});
@@ -1432,6 +1465,60 @@ function renderFinalList(){
       }).join(''):'<div style="color:var(--text3);font-size:13px">No players</div>')
       +'</div>';
   }).join('');
+}
+
+// ── WAIT SCREEN TABS ──
+var wPoolCat='All';
+
+function wTab(name,el){
+  document.querySelectorAll('#waitScreen .tab').forEach(function(t){t.classList.remove('on');});
+  document.querySelectorAll('#waitScreen .tab-pane').forEach(function(t){t.classList.remove('on');});
+  el.classList.add('on');
+  document.getElementById('wpane-'+name).classList.add('on');
+  if(name==='pool') renderWPool();
+  if(name==='squad') renderWSquad();
+}
+
+function wPoolFilter(f,el){
+  wPoolCat=f;
+  document.querySelectorAll('#wpane-pool .fc').forEach(function(c){c.classList.remove('on');});
+  el.classList.add('on');
+  renderWPool();
+}
+
+function renderWPool(){
+  var list=(G.players||[]).filter(function(p){
+    return p.status==='pending'&&(wPoolCat==='All'||p.role===wPoolCat);
+  }).sort(function(a,b){return a.name.localeCompare(b.name);});
+  var c=document.getElementById('wPoolList');
+  if(!c) return;
+  if(!list.length){c.innerHTML='<div class="empty">No pending players</div>';return;}
+  c.innerHTML=list.map(function(p){
+    return '<div class="pl-item"><div style="font-size:19px">'+(EMOJI[p.role]||'👤')+'</div>'
+      +'<div class="pl-info"><div class="pl-name">'+p.name+'</div>'
+      +'<div class="pl-sub">'+p.role+' · '+p.nat+'</div>'
+      +'<span class="s-p pl-st">Base: '+fmtL(p.base)+'</span></div>'
+      +'<div class="pl-price">'+fmtL(p.base)+'</div></div>';
+  }).join('');
+}
+
+function renderWSquad(){
+  if(myTeamIdx===null||!G.teams) return;
+  var t=G.teams[myTeamIdx]; if(!t) return;
+  var bs=document.getElementById('wSquadBudget');
+  var sl=document.getElementById('wSquadList');
+  if(!bs||!sl) return;
+  bs.innerHTML=
+    '<div class="brow"><span>Budget</span><span class="bv">'+fmtL(t.budget)+'</span></div>'
+    +'<div class="brow"><span>Spent</span><span class="bv" style="color:var(--red)">'+fmtL(t.spent)+'</span></div>'
+    +'<div class="brow"><span>Remaining</span><span class="bv" style="color:var(--green)">'+fmtL(t.budget-t.spent)+'</span></div>'
+    +'<div class="brow"><span>Players</span><span class="bv">'+t.players.length+'</span></div>';
+  sl.innerHTML=t.players.length
+    ?t.players.map(function(p){
+      return '<div class="sq-item"><div><div class="sq-name">'+p.name+'</div><div class="sq-role">'+p.role+' · '+p.nat+'</div></div>'
+        +'<div class="sq-price">'+fmtL(p.soldPrice)+'</div></div>';
+    }).join('')
+    :'<div class="empty">No players yet</div>';
 }
 
 window.addEventListener('DOMContentLoaded',function(){});
