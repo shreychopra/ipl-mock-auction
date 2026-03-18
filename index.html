@@ -826,8 +826,19 @@ var toastTO;
 var pendingSold=null;
 
 function showScreen(id){
+  var already = document.getElementById(id).classList.contains('active');
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById(id).classList.add('active');
+  // initialise wait screen tabs on first show
+  if(id==='waitScreen' && !already){
+    var panes=document.querySelectorAll('#waitScreen .tab-pane');
+    var tabs=document.querySelectorAll('#waitScreen .tab');
+    panes.forEach(function(p){p.classList.remove('on');});
+    tabs.forEach(function(t){t.classList.remove('on');});
+    var sp=document.getElementById('wpane-status');
+    if(sp){sp.classList.add('on');}
+    if(tabs[0]){tabs[0].classList.add('on');}
+  }
 }
 function toast(msg,dur){
   var t=document.getElementById('toast');
@@ -1309,9 +1320,20 @@ function listenParticipant(){
     if(document.getElementById('wpane-squad') && document.getElementById('wpane-squad').classList.contains('on')) renderWSquad();
 
     if(!data.currentPlayerId){
+      // No active player — go to wait screen, keeping current tab active
       if(document.getElementById('pBidScreen').classList.contains('active')){
         showScreen('waitScreen');
+        // restore whichever wait tab was last active (default: status)
+        var activeWTab = document.querySelector('#waitScreen .tab.on');
+        if(!activeWTab){
+          var st=document.getElementById('wpane-status');
+          var tabs=document.querySelectorAll('#waitScreen .tab');
+          if(st&&tabs[0]){st.classList.add('on');tabs[0].classList.add('on');}
+        }
       }
+      updateWaitBudget();
+      renderWPool();
+      renderWSquad();
       return;
     }
     if(data.currentPlayerId!==lastPlayerId){
@@ -1348,7 +1370,7 @@ function renderParticipantBid(data){
 function updatePBidInfo(data){
   var cb=data.currentBid||0;
   var bi=(data.currentBidderIdx!==undefined)?data.currentBidderIdx:-1;
-  document.getElementById('pCurrent').textContent=fmtL(cb);
+  document.getElementById('pCurrent').textContent = cb===0 ? '—' : fmtL(cb);
   // When no bid yet (cb=0), first bid is at base price
   var p2=(G.players||[]).find(function(x){return x.id===G.currentPlayerId;});
   var nb=(cb===0 && p2) ? p2.base : nextBid(cb);
