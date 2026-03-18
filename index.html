@@ -154,22 +154,7 @@
   <div class="join-card">
 
     <!-- Firebase config (collapsible) -->
-    <details class="fb-section">
-      <summary>🔥 Firebase Config (set once)</summary>
-      <div style="margin-top:12px">
-        <label>API Key</label>
-        <input type="text" id="fb_apiKey" placeholder="AIzaSy..."/>
-        <label>Database URL</label>
-        <input type="text" id="fb_databaseURL" placeholder="https://your-project-default-rtdb.firebaseio.com"/>
-        <label>Project ID</label>
-        <input type="text" id="fb_projectId" placeholder="your-project-id"/>
-        <label>App ID</label>
-        <input type="text" id="fb_appId" placeholder="1:123456:web:abc..."/>
-        <button class="btn btn-secondary" style="margin-top:8px;font-size:14px;padding:10px" onclick="saveFirebaseConfig()">💾 Save Config</button>
-      </div>
-    </details>
-    <div class="divider"></div>
-
+    
     <h2>Select Your Team</h2>
     <div id="teamSelectGrid" class="team-select-grid">
       <div style="color:var(--text3);font-size:13px;grid-column:span 2;text-align:center;padding:16px">
@@ -283,254 +268,188 @@
 <!-- Firebase compat SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
 <script>
-const ROLE_EMOJI = {'Batter':'🏏','Bowler':'🎳','All-Rounder':'⚡','WK-Batter':'🧤'};
-let db, dbRef;
-let myTeamIdx = null;
-let selectedInc = 0.2;
-let lastPlayerId = null;
-let lastSoldKey = null;
-let G = { teams:[], players:[], currentPlayerId:null, currentBid:0, currentBidderIdx:-1, timerEnabled:false, timerSeconds:45, auctionEnded:false };
 
-function saveFirebaseConfig() {
-  var cfg = {
-    apiKey: document.getElementById('fb_apiKey').value.trim(),
-    databaseURL: document.getElementById('fb_databaseURL').value.trim(),
-    projectId: document.getElementById('fb_projectId').value.trim(),
-    appId: document.getElementById('fb_appId').value.trim(),
-  };
-  if (!cfg.apiKey || !cfg.databaseURL || !cfg.projectId) {
-    alert('Please fill in API Key, Database URL and Project ID.');
-    return;
-  }
-  localStorage.setItem('ipl_fb_config', JSON.stringify(cfg));
-  location.reload();
-}
+var FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAcfJjyEmSUVkk-oXipxVkmsHzq1vwOcwc",
+  authDomain: "ipl-auction-64c8e.firebaseapp.com",
+  databaseURL: "https://ipl-auction-64c8e-default-rtdb.firebaseio.com",
+  projectId: "ipl-auction-64c8e",
+  storageBucket: "ipl-auction-64c8e.appspot.com",
+  appId: "1:152098475113:web:1ca6675ccf43e8d568a6f8"
+};
 
-function loadSavedConfig() {
-  var s = JSON.parse(localStorage.getItem('ipl_fb_config') || '{}');
-  if (s.apiKey) document.getElementById('fb_apiKey').value = s.apiKey;
-  if (s.databaseURL) document.getElementById('fb_databaseURL').value = s.databaseURL;
-  if (s.projectId) document.getElementById('fb_projectId').value = s.projectId;
-  if (s.appId) document.getElementById('fb_appId').value = s.appId;
-}
+var ROLE_EMOJI = {"Batter":"🏏","Bowler":"🎳","All-Rounder":"⚡","WK-Batter":"🧤"};
+var db, dbRef;
+var myTeamIdx = null;
+var selectedInc = 0.2;
+var lastPlayerId = null;
+var lastSoldKey = null;
+var G = { teams:[], players:[], currentPlayerId:null, currentBid:0, currentBidderIdx:-1, timerEnabled:false, timerSeconds:45 };
 
-function initFirebase() {
-  var s = JSON.parse(localStorage.getItem('ipl_fb_config') || '{}');
-  if (!s.apiKey || !s.databaseURL) return false;
-  try {
-    var cfg = { apiKey:s.apiKey, authDomain:s.projectId+'.firebaseapp.com', databaseURL:s.databaseURL, projectId:s.projectId, storageBucket:s.projectId+'.appspot.com', appId:s.appId||'app' };
-    if (!firebase.apps.length) firebase.initializeApp(cfg);
-    db = firebase.database();
-    dbRef = db.ref('auction');
-    return true;
-  } catch(e) { console.error(e); return false; }
-}
+firebase.initializeApp(FIREBASE_CONFIG);
+db = firebase.database();
+dbRef = db.ref("auction");
 
 function loadTeams() {
-  if (!initFirebase()) return;
-  dbRef.on('value', function(snap) {
+  dbRef.on("value", function(snap) {
     var data = snap.val();
     if (!data) return;
     G = Object.assign(G, data);
-    if (myTeamIdx !== null) {
-      handleStateChange(data);
-    } else if (data.teams) {
-      renderTeamSelect(data.teams);
-    }
+    if (myTeamIdx !== null) { handleStateChange(data); }
+    else if (data.teams) { renderTeamSelect(data.teams); }
   });
 }
 
 function renderTeamSelect(teams) {
-  var grid = document.getElementById('teamSelectGrid');
-  var emojis = ['🦁','🐯','🐺','🦅','🐍','🐉','🦊','🦁','⚡','🌊'];
+  var grid = document.getElementById("teamSelectGrid");
+  var emojis = ["🦁","🐯","🐺","🦅","🐍","🐉","🦊","🦈","⚡","🌊"];
   grid.innerHTML = teams.map(function(t,i){
-    return '<div class="team-select-btn" id="tsb-'+i+'" style="border-color:'+(i===myTeamIdx?t.color:'var(--border)')+';" onclick="selectTeam('+i+',''+t.color+'')">'
-      +'<div style="font-size:20px;margin-bottom:4px">'+(emojis[i]||'🏏')+'</div>'
-      +'<div style="font-weight:700;font-size:14px">'+t.name+'</div>'
-      +'<div style="font-size:11px;color:var(--text3);margin-top:2px">₹'+(t.budget-t.spent).toFixed(1)+'Cr</div>'
-      +'</div>';
-  }).join('');
-  document.getElementById('joinBtn').disabled = myTeamIdx === null;
+    return "<div class='team-select-btn' id='tsb-"+i+"' style='border-color:"+(i===myTeamIdx?t.color:"var(--border)")+"' onclick="selectTeam("+i+",'"+t.color+"')">"
+      +"<div style='font-size:20px;margin-bottom:4px'>"+(emojis[i]||"🏏")+"</div>"
+      +"<div style='font-weight:700;font-size:14px'>"+t.name+"</div>"
+      +"<div style='font-size:11px;color:var(--text3);margin-top:2px'>₹"+(t.budget-t.spent).toFixed(1)+"Cr</div>"
+      +"</div>";
+  }).join("");
+  document.getElementById("joinBtn").disabled = myTeamIdx === null;
 }
 
 function selectTeam(idx, color) {
   myTeamIdx = idx;
-  document.querySelectorAll('.team-select-btn').forEach(function(b,i){
-    b.style.borderColor = (i===idx) ? color : 'var(--border)';
-  });
-  document.getElementById('joinBtn').disabled = false;
-  document.documentElement.style.setProperty('--team-color', color);
-  document.getElementById('joinBtn').textContent = 'Join as ' + G.teams[idx].name + ' →';
+  document.querySelectorAll(".team-select-btn").forEach(function(b,i){ b.style.borderColor = i===idx ? color : "var(--border)"; });
+  document.documentElement.style.setProperty("--team-color", color);
+  document.getElementById("joinBtn").disabled = false;
+  document.getElementById("joinBtn").textContent = "Join as " + G.teams[idx].name + " →";
 }
 
 function joinAsTeam() {
   if (myTeamIdx === null) return;
-  if (!db) { alert('Save Firebase config first!'); return; }
   var team = G.teams[myTeamIdx];
-  document.documentElement.style.setProperty('--team-color', team.color);
-  showScreen('waitingScreen');
-  document.getElementById('waitingTeamName').textContent = team.name;
-  document.getElementById('waitConnBar').className='conn-bar connected';
-  document.getElementById('waitConnBar').textContent='✓ Connected — Waiting for auctioneer';
+  document.documentElement.style.setProperty("--team-color", team.color);
+  showScreen("waitingScreen");
+  document.getElementById("waitingTeamName").textContent = team.name;
+  document.getElementById("waitConnBar").className = "conn-bar connected";
+  document.getElementById("waitConnBar").textContent = "✓ Connected — Waiting for auctioneer";
   updateWaitBudget();
 }
 
 function handleStateChange(data) {
   if (data.auctionEnded) { showAuctionEnded(); return; }
   if (data.lastSold) {
-    var key = data.lastSold.player + '|' + data.lastSold.price;
+    var key = data.lastSold.player+"|"+data.lastSold.price;
     if (key !== lastSoldKey) { lastSoldKey = key; showSoldFlash(data.lastSold); }
   }
   if (!data.currentPlayerId) {
-    if (document.getElementById('biddingScreen').classList.contains('active')) {
-      showScreen('waitingScreen');
-      updateWaitBudget();
-    }
+    if (document.getElementById("biddingScreen").classList.contains("active")) { showScreen("waitingScreen"); updateWaitBudget(); }
     return;
   }
   if (data.currentPlayerId !== lastPlayerId) {
     lastPlayerId = data.currentPlayerId;
-    showScreen('biddingScreen');
+    showScreen("biddingScreen");
     renderBiddingScreen(data);
-  } else {
-    updateBidInfo(data);
-  }
+  } else { updateBidInfo(data); }
   updateBudgetDisplay();
 }
 
 function renderBiddingScreen(data) {
   var p = G.players.find(function(x){ return x.id===data.currentPlayerId; });
   if (!p) return;
-  document.getElementById('bidPlayerName').textContent = p.name;
-  document.getElementById('bidPlayerRole').textContent = p.role;
-  document.getElementById('bidPlayerNat').textContent = p.nationality;
-  document.getElementById('bidPlayerAvi').textContent = ROLE_EMOJI[p.role]||'👤';
-  document.getElementById('bidBasePrice').textContent = '₹'+p.basePrice+'Cr';
-  document.getElementById('bidHeaderTeam').textContent = G.teams[myTeamIdx] ? G.teams[myTeamIdx].name : '';
+  document.getElementById("bidPlayerName").textContent = p.name;
+  document.getElementById("bidPlayerRole").textContent = p.role;
+  document.getElementById("bidPlayerNat").textContent = p.nationality;
+  document.getElementById("bidPlayerAvi").textContent = ROLE_EMOJI[p.role]||"👤";
+  document.getElementById("bidBasePrice").textContent = "₹"+p.basePrice+"Cr";
+  document.getElementById("bidHeaderTeam").textContent = G.teams[myTeamIdx] ? G.teams[myTeamIdx].name : "";
   selectedInc = data.selectedIncrement || 0.2;
-  document.getElementById('timerWrap').style.display = data.timerEnabled ? 'block' : 'none';
+  document.getElementById("timerWrap").style.display = data.timerEnabled ? "block" : "none";
   updateBidInfo(data);
-  updateBudgetDisplay();
 }
 
 function updateBidInfo(data) {
-  var currentBid = data.currentBid || 0;
-  var bidderIdx = (data.currentBidderIdx !== undefined) ? data.currentBidderIdx : -1;
-  document.getElementById('bidCurrentPrice').textContent = '₹'+currentBid.toFixed(2)+'Cr';
-  var nextBid = (currentBid + selectedInc).toFixed(2);
-  document.getElementById('bidBtnAmount').textContent = nextBid;
-
-  var myTeam = G.teams[myTeamIdx];
-  var canAfford = myTeam && (myTeam.budget - myTeam.spent) >= currentBid + selectedInc;
-  var iAmLeading = bidderIdx === myTeamIdx;
-  var btn = document.getElementById('bigBidBtn');
-  btn.disabled = !canAfford || iAmLeading;
-
-  var leaderBar = document.getElementById('leaderBar');
-  if (bidderIdx < 0) {
-    leaderBar.textContent = 'No bids yet — be first!';
-    leaderBar.className = 'leader-bar';
-  } else if (iAmLeading) {
-    leaderBar.innerHTML = "<strong>You're leading!</strong> 🎉";
-    leaderBar.className = 'leader-bar my-lead';
-    document.getElementById('livePlayerCard').classList.add('has-bid');
-  } else {
-    leaderBar.innerHTML = 'Leading: <strong>'+(G.teams[bidderIdx]?G.teams[bidderIdx].name:'?')+'</strong>';
-    leaderBar.className = 'leader-bar';
-    document.getElementById('livePlayerCard').classList.remove('has-bid');
-  }
-  document.getElementById('bidHint').textContent = !canAfford && !iAmLeading ? '⚠️ Not enough budget' : iAmLeading ? "You're the highest bidder!" : 'Tap to raise the bid';
-
-  if (data.timerEnabled && data.timerLeft !== undefined) {
-    var tl = data.timerLeft || 0;
-    var ts = data.timerSeconds || 45;
-    var el = document.getElementById('bidTimerNum');
-    var fill = document.getElementById('bidTimerFill');
-    el.textContent = tl;
-    fill.style.width = (tl/ts*100)+'%';
-    el.classList.toggle('urgent', tl<=10);
-    fill.classList.toggle('urgent', tl<=10);
-  }
+  var cb = data.currentBid || 0;
+  var bi = (data.currentBidderIdx !== undefined) ? data.currentBidderIdx : -1;
+  document.getElementById("bidCurrentPrice").textContent = "₹"+cb.toFixed(2)+"Cr";
+  document.getElementById("bidBtnAmount").textContent = (cb + selectedInc).toFixed(2);
+  var mt = G.teams[myTeamIdx];
+  var canAfford = mt && (mt.budget - mt.spent) >= cb + selectedInc;
+  var iLead = bi === myTeamIdx;
+  document.getElementById("bigBidBtn").disabled = !canAfford || iLead;
+  var lb = document.getElementById("leaderBar");
+  if (bi < 0) { lb.textContent = "No bids yet — be first!"; lb.className = "leader-bar"; document.getElementById("livePlayerCard").classList.remove("has-bid"); }
+  else if (iLead) { lb.innerHTML = "<strong>You're leading! 🎉</strong>"; lb.className = "leader-bar my-lead"; document.getElementById("livePlayerCard").classList.add("has-bid"); }
+  else { lb.innerHTML = "Leading: <strong>"+(G.teams[bi]?G.teams[bi].name:"?")+"</strong>"; lb.className = "leader-bar"; document.getElementById("livePlayerCard").classList.remove("has-bid"); }
+  document.getElementById("bidHint").textContent = (!canAfford && !iLead) ? "⚠️ Not enough budget" : iLead ? "You're the highest bidder!" : "Tap to raise the bid";
 }
 
 function placeBid() {
-  if (!dbRef || myTeamIdx === null) return;
-  var currentBid = G.currentBid || 0;
-  var newBid = parseFloat((currentBid + selectedInc).toFixed(2));
-  var myTeam = G.teams[myTeamIdx];
-  if (!myTeam || newBid > myTeam.budget - myTeam.spent) return;
-  dbRef.update({ currentBid: newBid, currentBidderIdx: myTeamIdx });
+  if (!dbRef || myTeamIdx===null) return;
+  var cb = G.currentBid || 0;
+  var nb = parseFloat((cb + selectedInc).toFixed(2));
+  var mt = G.teams[myTeamIdx];
+  if (!mt || nb > mt.budget - mt.spent) return;
+  dbRef.update({ currentBid: nb, currentBidderIdx: myTeamIdx });
 }
 
 function selectInc(val) {
   selectedInc = val;
-  document.querySelectorAll('.inc-btn').forEach(function(b){ b.classList.remove('selected'); });
-  event.target.classList.add('selected');
-  var currentBid = G.currentBid || 0;
-  document.getElementById('bidBtnAmount').textContent = (currentBid + val).toFixed(2);
+  document.querySelectorAll(".inc-btn").forEach(function(b){ b.classList.remove("selected"); });
+  event.target.classList.add("selected");
+  document.getElementById("bidBtnAmount").textContent = ((G.currentBid||0) + val).toFixed(2);
 }
 
 function updateBudgetDisplay() {
-  var t = G.teams[myTeamIdx];
-  if (!t) return;
-  document.getElementById('budgetLeft').textContent = (t.budget-t.spent).toFixed(2);
+  var t = G.teams[myTeamIdx]; if (!t) return;
+  document.getElementById("budgetLeft").textContent = (t.budget-t.spent).toFixed(2);
   renderSquadTab();
 }
 
 function updateWaitBudget() {
   var t = G.teams[myTeamIdx];
-  if (t) document.getElementById('waitBudget').textContent = '₹'+(t.budget-t.spent).toFixed(2)+'Cr';
+  if (t) document.getElementById("waitBudget").textContent = "₹"+(t.budget-t.spent).toFixed(2)+"Cr";
 }
 
 function renderSquadTab() {
-  var t = G.teams[myTeamIdx];
-  if (!t) return;
-  document.getElementById('budgetSummary').innerHTML =
-    '<div class="budget-row"><span>Total Budget</span><span class="val">₹'+t.budget+'Cr</span></div>'
-    +'<div class="budget-row"><span>Spent</span><span class="val" style="color:var(--red)">₹'+t.spent.toFixed(2)+'Cr</span></div>'
-    +'<div class="budget-row"><span>Remaining</span><span class="val" style="color:var(--green)">₹'+(t.budget-t.spent).toFixed(2)+'Cr</span></div>'
-    +'<div class="budget-row"><span>Players</span><span class="val">'+t.players.length+'</span></div>';
-  document.getElementById('squadList').innerHTML = t.players.length
-    ? t.players.map(function(p){
-        return '<div class="squad-item"><div><div class="squad-name">'+p.name+'</div><div class="squad-role">'+p.role+' · '+p.nationality+'</div></div><div class="squad-price">₹'+p.soldPrice.toFixed(2)+'Cr</div></div>';
-      }).join('')
-    : '<div class="empty-state"><div style="font-size:36px">🛒</div><p style="margin-top:8px">No players yet</p></div>';
+  var t = G.teams[myTeamIdx]; if (!t) return;
+  document.getElementById("budgetSummary").innerHTML =
+    "<div class='budget-row'><span>Total Budget</span><span class='val'>₹"+t.budget+"Cr</span></div>"
+    +"<div class='budget-row'><span>Spent</span><span class='val' style='color:var(--red)'>₹"+t.spent.toFixed(2)+"Cr</span></div>"
+    +"<div class='budget-row'><span>Remaining</span><span class='val' style='color:var(--green)'>₹"+(t.budget-t.spent).toFixed(2)+"Cr</span></div>"
+    +"<div class='budget-row'><span>Players</span><span class='val'>"+t.players.length+"</span></div>";
+  document.getElementById("squadList").innerHTML = t.players.length
+    ? t.players.map(function(p){ return "<div class='squad-item'><div><div class='squad-name'>"+p.name+"</div><div class='squad-role'>"+p.role+" · "+p.nationality+"</div></div><div class='squad-price'>₹"+p.soldPrice.toFixed(2)+"Cr</div></div>"; }).join("")
+    : "<div class='empty-state'><div style='font-size:36px'>🛒</div><p style='margin-top:8px'>No players yet</p></div>";
 }
 
 function switchBidTab(name) {
-  document.querySelectorAll('.tabs .tab').forEach(function(t){ t.classList.remove('active'); });
-  document.querySelectorAll('.tab-content').forEach(function(t){ t.classList.remove('active'); });
-  event.target.classList.add('active');
-  document.getElementById('btab-'+name).classList.add('active');
-  if(name==='squad') renderSquadTab();
+  document.querySelectorAll(".tabs .tab").forEach(function(t){ t.classList.remove("active"); });
+  document.querySelectorAll(".tab-content").forEach(function(t){ t.classList.remove("active"); });
+  event.target.classList.add("active");
+  document.getElementById("btab-"+name).classList.add("active");
+  if (name==="squad") renderSquadTab();
 }
 
 function showSoldFlash(sold) {
-  document.getElementById('sfPlayer').textContent = sold.player;
-  document.getElementById('sfTo').textContent = sold.team;
-  document.getElementById('sfPrice').textContent = parseFloat(sold.price).toFixed(2);
-  var fl = document.getElementById('soldFlash');
-  fl.classList.add('show');
-  setTimeout(function(){ fl.classList.remove('show'); }, 3000);
+  document.getElementById("sfPlayer").textContent = sold.player;
+  document.getElementById("sfTo").textContent = sold.team;
+  document.getElementById("sfPrice").textContent = parseFloat(sold.price).toFixed(2);
+  var fl = document.getElementById("soldFlash");
+  fl.classList.add("show");
+  setTimeout(function(){ fl.classList.remove("show"); }, 3000);
 }
 
 function showAuctionEnded() {
-  showScreen('waitingScreen');
-  document.querySelector('#waitingScreen h2').textContent = 'Auction Over!';
-  document.querySelector('#waitingScreen p').textContent = 'Thanks for playing 🏆';
+  showScreen("waitingScreen");
+  document.querySelector("#waitingScreen h2").textContent = "Auction Over! 🏆";
+  document.querySelector("#waitingScreen p").textContent = "Thanks for playing!";
 }
 
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
-  document.getElementById(id).classList.add('active');
+  document.querySelectorAll(".screen").forEach(function(s){ s.classList.remove("active"); });
+  document.getElementById(id).classList.add("active");
 }
 
-window.addEventListener('DOMContentLoaded', function() {
-  loadSavedConfig();
-  loadTeams();
-});
+window.addEventListener("DOMContentLoaded", function() { loadTeams(); });
+
 </script>
 </body>
 </html>
