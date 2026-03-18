@@ -245,7 +245,7 @@
   </div>
   <div class="body">
     <div class="card">
-      <div class="card-title">🎙 Host — Create a Room</div>
+      <div class="card-title">🎙 Host - Create a Room</div>
       <label>Your Name</label>
       <input type="text" id="hostName" placeholder="e.g. Rahul" maxlength="20"/>
       <div class="gap"></div>
@@ -274,7 +274,7 @@
     </div>
     <div class="divider"><span>OR</span></div>
     <div class="card">
-      <div class="card-title">🏏 Participant — Join a Room</div>
+      <div class="card-title">🏏 Participant - Join a Room</div>
       <label>Your Name</label>
       <input type="text" id="participantName" placeholder="e.g. Arjun" maxlength="20"/>
       <div class="gap"></div>
@@ -296,7 +296,7 @@
   <div class="body">
     <div class="rc-card">
       <div class="rc-lbl">Room Code</div>
-      <div class="rc-code" id="lobbyCode">—</div>
+      <div class="rc-code" id="lobbyCode">-</div>
       <div class="rc-sub">Everyone opens the same link and enters this code</div>
     </div>
     <div class="card">
@@ -337,7 +337,7 @@
       <h2 id="hostTitle">Ready</h2>
     </div>
     <span class="pbadge pb-gold" id="hostCount">0/225</span>
-    <span class="pbadge pb-code" id="hostCode">—</span>
+    <span class="pbadge pb-code" id="hostCode">-</span>
     <span class="pbadge pb-live" id="hostLive" style="display:none">● LIVE</span>
   </div>
   <div class="tabs">
@@ -373,7 +373,7 @@
       <div class="plyr-card">
         <div class="plyr-banner">
           <div class="plyr-avi" id="hAvi">👤</div>
-          <div><div class="plyr-name" id="hName">—</div><div class="pmeta"><span class="pill pill-role" id="hRole">—</span><span class="pill pill-nat" id="hNat">—</span></div></div>
+          <div><div class="plyr-name" id="hName">-</div><div class="pmeta"><span class="pill pill-role" id="hRole">-</span><span class="pill pill-nat" id="hNat">-</span></div></div>
         </div>
         <div class="price-row">
           <div class="price-box"><div class="price-lbl">Base</div><div class="price-val" id="hBase">₹0</div></div>
@@ -394,7 +394,7 @@
       </div>
       <div style="padding:4px 12px 6px;font-size:11px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase">Next bid</div>
       <div class="inc-row" id="hNextBidRow">
-        <div style="background:var(--surface2);border:1px solid var(--gold);border-radius:var(--rsm);padding:10px 14px;font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold);text-align:center;flex:1" id="hNextBidAmt">—</div>
+        <div style="background:var(--surface2);border:1px solid var(--gold);border-radius:var(--rsm);padding:10px 14px;font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold);text-align:center;flex:1" id="hNextBidAmt">-</div>
       </div>
       <div class="act-row">
         <button class="btn btn-green btn-sm" onclick="soldNow()" style="flex:2">🔨 SOLD!</button>
@@ -439,8 +439,8 @@
     <div class="wait-pulse">⏳</div>
     <h2 style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;color:var(--text2);margin-top:18px">Waiting for player...</h2>
     <p style="font-size:14px;color:var(--text3);margin-top:7px">The auctioneer will bring up the next player</p>
-    <div class="wait-team" id="waitTeamName">—</div>
-    <div class="wait-info"><div class="wl">Your Budget</div><div class="wv" id="waitBudget">—</div></div>
+    <div class="wait-team" id="waitTeamName">-</div>
+    <div class="wait-info"><div class="wl">Your Budget</div><div class="wv" id="waitBudget">-</div></div>
   </div>
 
   <!-- POOL -->
@@ -467,7 +467,7 @@
   <div class="conn-bar cb-live">✓ Live</div>
   <div class="bid-hdr">
     <div class="bid-hdr-team" id="pTeamName">Team</div>
-    <div class="bpill">₹<span id="pBudgetLeft">—</span>L</div>
+    <div class="bpill">₹<span id="pBudgetLeft">-</span>L</div>
   </div>
   <div class="tabs">
     <div class="tab on" onclick="pTab('live',this)">🔴 Live</div>
@@ -480,7 +480,7 @@
     <div class="live-card" id="liveCard">
       <div class="plyr-banner">
         <div class="plyr-avi" id="pAvi">👤</div>
-        <div><div class="plyr-name" id="pName">—</div><div class="pmeta"><span class="pill pill-role" id="pRole">—</span><span class="pill pill-nat" id="pNat">—</span></div></div>
+        <div><div class="plyr-name" id="pName">-</div><div class="pmeta"><span class="pill pill-role" id="pRole">-</span><span class="pill pill-nat" id="pNat">-</span></div></div>
       </div>
       <div class="price-row">
         <div class="price-box"><div class="price-lbl">Base</div><div class="price-val" id="pBase">₹0</div></div>
@@ -535,8 +535,8 @@
 <div class="overlay ov-sold" id="soldOverlay">
   <div class="hammer">🔨</div>
   <h2 style="color:var(--gold)">SOLD!</h2>
-  <div class="ov-player" id="ovPlayer">—</div>
-  <div class="ov-to">sold to <strong id="ovTeam" style="color:var(--gold)">—</strong></div>
+  <div class="ov-player" id="ovPlayer">-</div>
+  <div class="ov-to">sold to <strong id="ovTeam" style="color:var(--gold)">-</strong></div>
   <div class="ov-price" id="ovPrice">0</div>
   <div class="ov-unit">LAKHS</div>
   <button class="btn btn-gold" style="margin-top:20px;max-width:260px" onclick="hideSoldOverlay()">Next Player →</button>
@@ -546,7 +546,7 @@
 <div class="overlay ov-unsold" id="unsoldOverlay">
   <div style="font-size:60px">😔</div>
   <h2 style="color:var(--red)">UNSOLD</h2>
-  <div class="ov-player" id="ovUnsoldPlayer" style="margin-top:8px">—</div>
+  <div class="ov-player" id="ovUnsoldPlayer" style="margin-top:8px">-</div>
   <button class="btn btn-ghost" style="margin-top:20px;max-width:260px" onclick="hideUnsoldOverlay()">Continue →</button>
 </div>
 
@@ -554,8 +554,8 @@
 <div class="overlay ov-sold" id="soldFlash" style="pointer-events:none">
   <div class="hammer">🔨</div>
   <h2 style="color:var(--gold)">SOLD!</h2>
-  <div class="ov-player" id="fPlayer">—</div>
-  <div class="ov-to">to <strong id="fTeam" style="color:var(--gold)">—</strong></div>
+  <div class="ov-player" id="fPlayer">-</div>
+  <div class="ov-to">to <strong id="fTeam" style="color:var(--gold)">-</strong></div>
   <div class="ov-price" id="fPrice">0</div>
   <div class="ov-unit">LAKHS</div>
 </div>
@@ -573,7 +573,6 @@ firebase.initializeApp({
 });
 var db = firebase.database();
 
-// PLAYER DATA (base prices already in Lakhs = Cr * 100) ──
 var PLAYERS = [
   {id:1,name:"Akeal Hosein",role:"Bowler",nat:"WI",base:200},
   {id:2,name:"Aman Khan",role:"All-Rounder",nat:"Indian",base:40},
@@ -803,64 +802,71 @@ var PLAYERS = [
 ];
 
 var COLORS=['#1a74e4','#ff4c6a','#00c896','#f0b429','#9c6fff','#ff8c42','#00d4ff','#ff6bae','#b4f261','#ffd166','#e040fb','#00bcd4'];
-var EMOJI={Batter:'🏏',Bowler:'🎳','All-Rounder':'⚡','WK-Batter':'🧤'};
+var EMOJI={Batter:'[BAT]',Bowler:'[BOWL]','All-Rounder':'[AR]','WK-Batter':'[WK]'};
 
-// BID INCREMENT LOGIC ──
-// Under 100L: steps of 20L; 100-500L: steps of 25L; above 500L: steps of 50L
+// Bid increment: <100L: +20L, 100-500L: +25L, >500L: +50L
 function nextBid(current) {
   if (current < 100) return current + 20;
   if (current < 500) return current + 25;
   return current + 50;
 }
-function fmtL(val) { return '₹' + val + 'L'; }
+function fmtL(val) { return "Rs." + val + "L"; }
 
-// APP STATE ──
+// Get team from Firebase data (handles both array and object-with-string-keys)
+function getTeam(teamsData, idx) {
+  if (!teamsData) return null;
+  var n = parseInt(idx);
+  if (isNaN(n)) return null;
+  if (Array.isArray(teamsData)) return teamsData[n] || null;
+  return teamsData[n] || teamsData[String(n)] || null;
+}
+
 var role=null, roomCode=null, roomRef=null;
 var myTeamIdx=null, myName=null, myTeamName=null;
 var G={};
 var lastPlayerId=null, lastSoldKey=null;
-var hostCat='All', hPFilter='All', pPoolCat='All';
+var hostCat='All', hPFilter='All', pPoolCat='All', wPoolCat='All';
 var timerInterval=null, timerLeft=0;
 var toastTO;
-// snapshot of sold info for overlay (fixes the sold bug)
-var pendingSold=null;
 
 function showScreen(id){
-  var already = document.getElementById(id).classList.contains('active');
+  var already=document.getElementById(id).classList.contains('active');
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.getElementById(id).classList.add('active');
-  // initialise wait screen tabs on first show
   if(id==='waitScreen' && !already){
-    var panes=document.querySelectorAll('#waitScreen .tab-pane');
-    var tabs=document.querySelectorAll('#waitScreen .tab');
-    panes.forEach(function(p){p.classList.remove('on');});
-    tabs.forEach(function(t){t.classList.remove('on');});
+    document.querySelectorAll('#waitScreen .tab-pane').forEach(function(p){p.classList.remove('on');});
+    document.querySelectorAll('#waitScreen .tab').forEach(function(t){t.classList.remove('on');});
     var sp=document.getElementById('wpane-status');
-    if(sp){sp.classList.add('on');}
-    if(tabs[0]){tabs[0].classList.add('on');}
+    var tabs=document.querySelectorAll('#waitScreen .tab');
+    if(sp) sp.classList.add('on');
+    if(tabs[0]) tabs[0].classList.add('on');
   }
 }
+
 function toast(msg,dur){
   var t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
   clearTimeout(toastTO);
   toastTO=setTimeout(function(){t.classList.remove('show');},dur||2800);
 }
+
 function genCode(){
   var c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',s='';
   for(var i=0;i<5;i++) s+=c[Math.floor(Math.random()*c.length)];
   return s;
 }
+
 function toggleTimerExtra(){
   document.getElementById('timerExtra').classList.toggle('show',document.getElementById('enableTimer').checked);
 }
+
 function pickTimer(s,el){
   document.getElementById('customTimer').value=s;
   document.querySelectorAll('.tpbtn').forEach(function(b){b.classList.remove('on');});
   el.classList.add('on');
 }
 
-// CREATE ROOM ──
+// --- CREATE ROOM ---
 function createRoom(){
   var hName=document.getElementById('hostName').value.trim();
   var rName=document.getElementById('roomName').value.trim();
@@ -879,14 +885,12 @@ function createRoom(){
   roomRef=db.ref('rooms/'+code);
 
   roomRef.set({
-    roomName:rName, hostName:hName,
-    teamBudget:budget,
-    teams:[], // teams built dynamically as participants join
-    players:players,
+    roomName:rName, hostName:hName, teamBudget:budget,
+    teams:{}, players:players,
     currentPlayerId:null, currentBid:0, currentBidderIdx:"NONE",
     timerEnabled:timerOn, timerSeconds:timerSec,
     auctionStarted:false, auctionEnded:false,
-    participants:{}, lastSold:null,
+    participants:{}, lastSold:null, teamCount:0,
     createdAt:Date.now()
   }, function(err){
     if(err){toast('Firebase error: '+err.message);return;}
@@ -897,19 +901,19 @@ function createRoom(){
   });
 }
 
-// LOBBY ──
+// --- LOBBY ---
 function listenLobby(){
   roomRef.on('value',function(snap){
     var data=snap.val(); if(!data) return;
     G=data;
     var parts=data.participants?Object.values(data.participants):[];
     document.getElementById('pCount').textContent=parts.length;
-    if(parts.length===0){
+    if(!parts.length){
       document.getElementById('participantsList').innerHTML='<div style="color:var(--text3);font-size:13px;padding:4px 0">Waiting<span class="wdots"></span></div>';
     } else {
       document.getElementById('participantsList').innerHTML=parts.map(function(p){
-        var teamColor=COLORS[p.teamIdx]||'var(--text3)';
-        return '<div class="pitem"><div class="pdot" style="background:'+teamColor+'"></div>'
+        var col=COLORS[p.teamIdx%COLORS.length]||'var(--text3)';
+        return '<div class="pitem"><div class="pdot" style="background:'+col+'"></div>'
           +'<div class="pname">'+p.name+'</div>'
           +'<div class="pteam">'+p.teamName+'</div></div>';
       }).join('');
@@ -917,28 +921,23 @@ function listenLobby(){
   });
 }
 
-// JOIN ROOM ──
+// --- JOIN ROOM ---
 function joinRoom(){
   var pName=document.getElementById('participantName').value.trim();
   var code=document.getElementById('roomCode').value.trim().toUpperCase();
   if(!pName){toast('Enter your name!');return;}
   if(code.length!==5){toast('Enter the 5-character room code!');return;}
-
   var ref=db.ref('rooms/'+code);
   ref.once('value',function(snap){
     var data=snap.val();
-    if(!data){toast('❌ Room not found! Check the code.');return;}
+    if(!data){toast('Room not found! Check the code.');return;}
     if(data.auctionEnded){toast('This auction has already ended.');return;}
     if(data.auctionStarted){toast('Auction already in progress.');return;}
-
     roomCode=code; role='participant'; myName=pName;
     roomRef=ref; G=data;
-
     document.getElementById('tsRoomName').textContent=data.roomName;
     document.getElementById('tsRoomCode').textContent=code;
     showScreen('teamSelectScreen');
-
-    // listen for auction start
     roomRef.on('value',function(snap2){
       var d=snap2.val(); if(!d) return;
       G=d;
@@ -950,67 +949,53 @@ function joinRoom(){
   });
 }
 
-// JOIN TEAM ──
+// --- JOIN TEAM ---
 function joinTeam(){
   var tName=document.getElementById('myTeamName').value.trim();
   if(!tName){toast('Enter your team name!');return;}
-
-  // check current participants count
-  var parts=G.participants?Object.values(G.participants):[];
-  if(parts.length>=12){toast('Room is full (12 teams max)!');return;}
-
-  myTeamName = tName;
-
-  // Use a transaction on teamCount to safely assign a unique index
-  roomRef.child('teamCount').transaction(function(current){
-    return (current || 0) + 1;
-  }, function(err, committed, snap){
-    if(err || !committed){ toast('Join error, try again!'); return; }
-    var assignedIdx = snap.val() - 1; // 0-based
-    if(assignedIdx >= 12){ toast('Room is full (12 teams max)!'); return; }
-
-    myTeamIdx = assignedIdx;
-    var color = COLORS[assignedIdx % COLORS.length];
-    document.documentElement.style.setProperty('--team', color);
-
-    var pid = myName.replace(/\s+/g,'_') + '_' + Date.now();
-    var teamEntry = { name: tName, budget: G.teamBudget||10000, spent: 0, players: [], color: color };
-
-    var update = {};
-    update['participants/' + pid] = { name: myName, teamName: tName, teamIdx: assignedIdx, joinedAt: Date.now() };
-    update['teams/' + assignedIdx] = teamEntry;
-
-    roomRef.update(update, function(updateErr){
-      if(updateErr){ toast('Error: ' + updateErr.message); return; }
-      toast('Joined as ' + tName + ' 🎉');
-      document.getElementById('waitTeamName').textContent = tName;
-      document.getElementById('pTeamName').textContent = tName;
+  roomRef.child('teamCount').transaction(function(cur){ return (cur||0)+1; },
+    function(err,committed,snap){
+      if(err||!committed){toast('Join error, try again!');return;}
+      var idx=snap.val()-1;
+      if(idx>=12){toast('Room is full!');return;}
+      myTeamIdx=idx;
+      var color=COLORS[idx%COLORS.length];
+      document.documentElement.style.setProperty('--team',color);
+      var pid=myName.replace(/\s+/g,'_')+'_'+Date.now();
+      var update={};
+      update['participants/'+pid]={name:myName,teamName:tName,teamIdx:idx,joinedAt:Date.now()};
+      update['teams/'+idx]={name:tName,budget:G.teamBudget||10000,spent:0,players:[],color:color};
+      roomRef.update(update,function(e2){
+        if(e2){toast('Error: '+e2.message);return;}
+        myTeamName=tName;
+        toast('Joined as '+tName+'!');
+        document.getElementById('waitTeamName').textContent=tName;
+        document.getElementById('pTeamName').textContent=tName;
+      });
     });
-  });
 }
 
-// START AUCTION ──
+// --- START AUCTION ---
 function startAuction(){
   roomRef.update({auctionStarted:true},function(err){
     if(err){toast('Error: '+err.message);return;}
     showScreen('hostAuctionScreen');
     document.getElementById('hostCode').textContent=roomCode;
     document.getElementById('hostConnBar').className='conn-bar cb-live';
-    document.getElementById('hostConnBar').textContent='✓ Live · Room: '+roomCode;
+    document.getElementById('hostConnBar').textContent='Live - Room: '+roomCode;
     renderSortedList();
     listenAuction();
   });
 }
 
-// HOST AUCTION LISTENER ──
+// --- HOST AUCTION LISTENER ---
 function listenAuction(){
   document.getElementById('hostCode').textContent=roomCode;
   roomRef.on('value',function(snap){
     var data=snap.val(); if(!data) return;
     G=data;
     document.getElementById('hostConnBar').className='conn-bar cb-live';
-    document.getElementById('hostConnBar').textContent='✓ Live · Room: '+roomCode;
-    // update active bid view if visible
+    document.getElementById('hostConnBar').textContent='Live - Room: '+roomCode;
     if(data.currentPlayerId && document.getElementById('activeBidDiv').style.display!=='none'){
       renderActiveBid(data);
     }
@@ -1021,11 +1006,11 @@ function listenAuction(){
   });
 }
 
-function pushRoom(patch,cb){
-  if(roomRef) roomRef.update(patch,cb||function(){});
+function pushRoom(patch){
+  if(roomRef) roomRef.update(patch);
 }
 
-// CATEGORY ──
+// --- CATEGORY ---
 function setHostCat(cat,el){
   hostCat=cat;
   document.querySelectorAll('.cat-btn').forEach(function(b){b.classList.remove('on');});
@@ -1035,17 +1020,18 @@ function setHostCat(cat,el){
 
 function getFilteredPending(){
   return (G.players||[]).filter(function(p){
-    return p.status==='pending' && (hostCat==='All' || p.role===hostCat);
+    return p.status==='pending' && (hostCat==='All'||p.role===hostCat);
   }).sort(function(a,b){return a.name.localeCompare(b.name);});
 }
 
 function renderSortedList(){
   var list=getFilteredPending();
   var el=document.getElementById('sortedList');
+  if(!el) return;
   if(!list.length){el.innerHTML='<div class="empty">No pending players in this category</div>';return;}
   el.innerHTML=list.map(function(p){
     return '<div class="sr-item" onclick="bringPlayer('+p.id+')">'
-      +'<div><div class="sr-name">'+p.name+'</div><div class="sr-sub">'+p.role+' · '+p.nat+'</div></div>'
+      +'<div><div class="sr-name">'+p.name+'</div><div class="sr-sub">'+p.role+' - '+p.nat+'</div></div>'
       +'<div class="sr-price">'+fmtL(p.base)+'</div></div>';
   }).join('');
 }
@@ -1055,29 +1041,28 @@ function searchPlayers(){
   var res=document.getElementById('searchResults');
   if(!q){res.innerHTML='';return;}
   var matches=(G.players||[]).filter(function(p){
-    return p.status==='pending' && p.name.toLowerCase().indexOf(q)>=0 &&
-      (hostCat==='All'||p.role===hostCat);
+    return p.status==='pending'&&p.name.toLowerCase().indexOf(q)>=0&&(hostCat==='All'||p.role===hostCat);
   }).slice(0,8);
   res.innerHTML=matches.map(function(p){
     return '<div class="sr-item" onclick="bringPlayer('+p.id+')">'
-      +'<div><div class="sr-name">'+p.name+'</div><div class="sr-sub">'+p.role+' · '+p.nat+'</div></div>'
+      +'<div><div class="sr-name">'+p.name+'</div><div class="sr-sub">'+p.role+' - '+p.nat+'</div></div>'
       +'<div class="sr-price">'+fmtL(p.base)+'</div></div>';
   }).join('')||'<div style="color:var(--text3);font-size:13px;padding:8px">No players found</div>';
 }
 
 function nextRandom(){
   var list=getFilteredPending();
-  if(!list.length){toast('No pending players in this category!');return;}
+  if(!list.length){toast('No pending players!');return;}
   bringPlayer(list[Math.floor(Math.random()*list.length)].id);
 }
 
+// --- BRING PLAYER ---
 function bringPlayer(id){
   var p=(G.players||[]).find(function(x){return x.id===id;});
   if(!p||p.status!=='pending') return;
   document.getElementById('playerSearch').value='';
   document.getElementById('searchResults').innerHTML='';
   stopTimer();
-  // Store "NONE" as bidder — avoids Firebase dropping falsy values like 0 or -1
   pushRoom({currentPlayerId:id, currentBid:0, currentBidderIdx:"NONE"});
   G.currentPlayerId=id; G.currentBid=0; G.currentBidderIdx="NONE";
   document.getElementById('noBidDiv').style.display='none';
@@ -1091,21 +1076,20 @@ function bringPlayer(id){
 function renderActiveBid(data){
   var p=(data.players||[]).find(function(x){return x.id===data.currentPlayerId;});
   if(!p) return;
-  document.getElementById('hAvi').textContent=EMOJI[p.role]||'👤';
+  document.getElementById('hAvi').textContent=EMOJI[p.role]||'?';
   document.getElementById('hName').textContent=p.name;
   document.getElementById('hRole').textContent=p.role;
   document.getElementById('hNat').textContent=p.nat;
   document.getElementById('hBase').textContent=fmtL(p.base);
   var cb=data.currentBid||0;
-  document.getElementById('hCurrent').textContent = (cb===0) ? '— No bid yet' : fmtL(cb);
-  var nb = (cb===0) ? p.base : nextBid(cb);
+  document.getElementById('hCurrent').textContent=(cb===0)?'No bid yet':fmtL(cb);
+  var nb=(cb===0)?p.base:nextBid(cb);
   document.getElementById('hNextBidAmt').textContent=fmtL(nb);
   updateHostCount();
   var bi=data.currentBidderIdx;
-  var teams=data.teams||{};
-  var hasLeader = bi && bi!=="NONE";
+  var hasLeader=(bi && bi!=="NONE");
   if(hasLeader){
-    var t=getTeam(teams, bi);
+    var t=getTeam(data.teams,parseInt(bi));
     if(t){
       document.getElementById('hBidFeed').innerHTML='<div class="bfeed-item" style="border-left-color:'+t.color+'">'
         +'<div class="bfeed-team" style="color:'+t.color+'">'+t.name+'</div>'
@@ -1118,7 +1102,7 @@ function renderActiveBid(data){
   }
 }
 
-// SOLD ──
+// --- SOLD ---
 function soldNow(){
   if(!roomRef) return;
   roomRef.once('value',function(snap){
@@ -1129,32 +1113,29 @@ function soldNow(){
     if(!pid){toast('No player selected!');return;}
     if(!bi||bi==="NONE"||cb===0){toast('No bid placed yet!');return;}
     stopTimer();
+    var biIdx=parseInt(bi);
     var players=data.players||[];
     var teams=data.teams||{};
     var pidx=-1;
     for(var i=0;i<players.length;i++){if(players[i].id===pid){pidx=i;break;}}
     if(pidx<0){toast('Player not found!');return;}
-    var team=getTeam(teams,bi);
+    var team=getTeam(teams,biIdx);
     if(!team){toast('Team not found!');return;}
-    // find team index for spent tracking
-    var teamIdx=parseInt(bi);
     players[pidx].status='sold';
-    players[pidx].soldTo=teamIdx;
+    players[pidx].soldTo=biIdx;
     players[pidx].soldPrice=cb;
-    teams[teamIdx]=(teams[teamIdx]||teams[String(teamIdx)]);
-    teams[teamIdx].spent=(teams[teamIdx].spent||0)+cb;
-    if(!teams[teamIdx].players) teams[teamIdx].players=[];
-    teams[teamIdx].players.push(Object.assign({},players[pidx]));
+    var teamKey=String(biIdx);
+    if(!teams[teamKey]) teams[teamKey]=teams[biIdx];
+    teams[teamKey].spent=(teams[teamKey].spent||0)+cb;
+    if(!teams[teamKey].players) teams[teamKey].players=[];
+    teams[teamKey].players.push(Object.assign({},players[pidx]));
     document.getElementById('ovPlayer').textContent=players[pidx].name;
     document.getElementById('ovTeam').textContent=team.name;
     document.getElementById('ovTeam').style.color=team.color;
     document.getElementById('ovPrice').textContent=cb;
     document.getElementById('soldOverlay').classList.add('show');
-    pushRoom({
-      players:players, teams:teams,
-      currentPlayerId:null, currentBid:0, currentBidderIdx:"NONE",
-      lastSold:{player:players[pidx].name, team:team.name, price:cb}
-    });
+    pushRoom({players:players,teams:teams,currentPlayerId:null,currentBid:0,currentBidderIdx:"NONE",
+      lastSold:{player:players[pidx].name,team:team.name,price:cb}});
   });
 }
 
@@ -1181,7 +1162,7 @@ function markUnsold(){
     players[pidx].status='unsold';
     document.getElementById('ovUnsoldPlayer').textContent=players[pidx].name;
     document.getElementById('unsoldOverlay').classList.add('show');
-    pushRoom({players:players, currentPlayerId:null, currentBid:0, currentBidderIdx:"NONE"});
+    pushRoom({players:players,currentPlayerId:null,currentBid:0,currentBidderIdx:"NONE"});
   });
 }
 
@@ -1196,7 +1177,7 @@ function hideUnsoldOverlay(){
 
 function skipPlayer(){
   stopTimer();
-  pushRoom({currentPlayerId:null, currentBid:0, currentBidderIdx:"NONE"});
+  pushRoom({currentPlayerId:null,currentBid:0,currentBidderIdx:"NONE"});
   document.getElementById('noBidDiv').style.display='block';
   document.getElementById('activeBidDiv').style.display='none';
   document.getElementById('hostLive').style.display='none';
@@ -1204,57 +1185,207 @@ function skipPlayer(){
   updateHostCount();
 }
 
-function getTeam(teamsData, idx) {
-  if(!teamsData) return null;
-  var n=parseInt(idx);
-  if(isNaN(n)) return null;
-  if(Array.isArray(teamsData)) return teamsData[n]||null;
-  return teamsData[n]||teamsData[String(n)]||null;
+// --- TIMER ---
+function startTimer(sec){
+  timerLeft=sec;
+  document.getElementById('hTimerWrap').style.display='block';
+  updateTimerUI();
+  timerInterval=setInterval(function(){
+    timerLeft--;
+    updateTimerUI();
+    if(timerLeft<=0){
+      stopTimer();
+      var bi=G.currentBidderIdx;
+      if(bi && bi!=="NONE") soldNow(); else markUnsold();
+    }
+  },1000);
+}
+function stopTimer(){clearInterval(timerInterval);timerInterval=null;}
+function updateTimerUI(){
+  var el=document.getElementById('hTimerNum'),bar=document.getElementById('hTimerBar');
+  var sec=G.timerSeconds||45;
+  el.textContent=timerLeft;
+  bar.style.width=(timerLeft/sec*100)+'%';
+  el.classList.toggle('urgent',timerLeft<=10);
+  bar.classList.toggle('urgent',timerLeft<=10);
+}
+
+// --- HOST RENDER ---
+function updateHostCount(){
+  var done=(G.players||[]).filter(function(p){return p.status!=='pending';}).length;
+  document.getElementById('hostCount').textContent=done+'/'+(G.players||[]).length;
+}
+
+function renderHostTeams(){
+  var c=document.getElementById('hTeamsList');
+  var teams=G.teams||{};
+  var keys=Object.keys(teams);
+  if(!keys.length){c.innerHTML='<div class="empty">No teams yet</div>';return;}
+  c.innerHTML=keys.sort().map(function(k){
+    var t=teams[k];
+    return '<div class="tc"><div class="tc-hdr" onclick="toggleTC(this.dataset.k)" data-k="'+k+'">'
+      +'<div class="tc-dot" style="background:'+t.color+'"></div>'
+      +'<div class="tc-name">'+t.name+'</div>'
+      +'<div><div class="tc-budget">'+fmtL(t.budget-t.spent)+'</div>'
+      +'<div style="font-size:10px;color:var(--text3)">'+(t.players?t.players.length:0)+' players</div></div>'
+      +'</div><div class="tc-body" id="tc'+k+'">'
+      +'<div class="tc-stats">'
+      +'<div class="ts"><div class="v">'+fmtL(t.budget)+'</div><div class="l">Budget</div></div>'
+      +'<div class="ts"><div class="v">'+fmtL(t.spent)+'</div><div class="l">Spent</div></div>'
+      +'<div class="ts"><div class="v">'+fmtL(t.budget-t.spent)+'</div><div class="l">Left</div></div>'
+      +'<div class="ts"><div class="v">'+(t.players?t.players.length:0)+'</div><div class="l">Players</div></div>'
+      +'</div>'
+      +(t.players&&t.players.length?t.players.map(function(p){
+        return '<div class="acq-row"><div><div class="acq-name">'+p.name+'</div><div class="acq-role">'+p.role+'</div></div>'
+          +'<div class="acq-price">'+fmtL(p.soldPrice)+'</div></div>';
+      }).join(''):'<div class="empty">No players yet</div>')
+      +'</div></div>';
+  }).join('');
+}
+function toggleTC(k){var b=document.getElementById('tc'+k);if(b)b.classList.toggle('open');}
+
+function hFilterP(f,el){
+  hPFilter=f;
+  document.querySelectorAll('#hpane-players .fc').forEach(function(c){c.classList.remove('on');});
+  el.classList.add('on');
+  renderHostPlayers();
+}
+
+function renderHostPlayers(){
+  var list=(G.players||[]).filter(function(p){
+    if(hPFilter==='All') return true;
+    if(hPFilter==='Pending') return p.status==='pending';
+    if(hPFilter==='Sold') return p.status==='sold';
+    if(hPFilter==='Unsold') return p.status==='unsold';
+    return p.role===hPFilter;
+  }).sort(function(a,b){return a.name.localeCompare(b.name);});
+  var c=document.getElementById('hPlayersList');
+  if(!list.length){c.innerHTML='<div class="empty">No players</div>';return;}
+  var teams=G.teams||{};
+  c.innerHTML=list.map(function(p){
+    var isCur=p.id===G.currentPlayerId;
+    var soldTeam='';
+    if(p.soldTo!=null){var st=getTeam(teams,p.soldTo);soldTeam=st?st.name:'';}
+    var status=p.status==='sold'?'<span class="s-s pl-st">Sold: '+soldTeam+'</span>'
+      :p.status==='unsold'?'<span class="s-u pl-st">Unsold</span>'
+      :isCur?'<span class="s-l pl-st">Live</span>'
+      :'<span class="s-p pl-st">Pending</span>';
+    var pr=p.status==='sold'?fmtL(p.soldPrice):fmtL(p.base);
+    return '<div class="pl-item '+(p.status==='sold'?'faded':'')+' '+(isCur?'hl':'')+'">'
+      +'<div class="pl-info"><div class="pl-name">'+p.name+'</div>'
+      +'<div class="pl-sub">'+p.role+' - '+p.nat+'</div>'+status+'</div>'
+      +'<div class="pl-price">'+pr+'</div></div>';
+  }).join('');
+}
+
+function hTab(name,el){
+  document.querySelectorAll('#hostAuctionScreen .tab').forEach(function(t){t.classList.remove('on');});
+  document.querySelectorAll('#hostAuctionScreen .tab-pane').forEach(function(t){t.classList.remove('on');});
+  el.classList.add('on');
+  document.getElementById('hpane-'+name).classList.add('on');
+  if(name==='teams') renderHostTeams();
+  if(name==='players') renderHostPlayers();
+}
+
+// --- PARTICIPANT ---
+function listenParticipant(){
+  roomRef.on('value',function(snap){
+    var data=snap.val(); if(!data) return;
+    G=data;
+    if(myTeamIdx!==null && data.teams){
+      var t=getTeam(data.teams,myTeamIdx);
+      if(t) document.documentElement.style.setProperty('--team',t.color);
+    }
+    if(data.lastSold){
+      var key=data.lastSold.player+'|'+data.lastSold.price;
+      if(key!==lastSoldKey){lastSoldKey=key;showSoldFlash(data.lastSold);}
+    }
+    if(data.auctionEnded){showParticipantEnd();return;}
+    updateWaitBudget();
+    if(document.getElementById('wpane-pool')&&document.getElementById('wpane-pool').classList.contains('on')) renderWPool();
+    if(document.getElementById('wpane-squad')&&document.getElementById('wpane-squad').classList.contains('on')) renderWSquad();
+    if(!data.currentPlayerId){
+      if(document.getElementById('pBidScreen').classList.contains('active')){
+        showScreen('waitScreen');
+        renderWPool();
+        renderWSquad();
+      }
+      return;
+    }
+    if(data.currentPlayerId!==lastPlayerId){
+      lastPlayerId=data.currentPlayerId;
+      showScreen('pBidScreen');
+      renderParticipantBid(data);
+    } else {
+      updatePBidInfo(data);
+    }
+    updatePBudget();
+  });
+}
+
+function updateWaitBudget(){
+  if(myTeamIdx===null||!G.teams) return;
+  var t=getTeam(G.teams,myTeamIdx); if(!t) return;
+  document.getElementById('waitBudget').textContent=fmtL(t.budget-t.spent);
+  document.getElementById('waitTeamName').textContent=t.name;
+}
+
+function renderParticipantBid(data){
+  var p=(data.players||[]).find(function(x){return x.id===data.currentPlayerId;});
+  if(!p) return;
+  document.getElementById('pAvi').textContent=EMOJI[p.role]||'?';
+  document.getElementById('pName').textContent=p.name;
+  document.getElementById('pRole').textContent=p.role;
+  document.getElementById('pNat').textContent=p.nat;
+  document.getElementById('pBase').textContent=fmtL(p.base);
+  var t=myTeamIdx!==null?getTeam(data.teams,myTeamIdx):null;
+  document.getElementById('pTeamName').textContent=t?t.name:'';
+  document.getElementById('pTimerWrap').style.display=data.timerEnabled?'block':'none';
+  updatePBidInfo(data);
 }
 
 function updatePBidInfo(data){
   var cb=data.currentBid||0;
-  var bi=data.currentBidderIdx; // now a string team index e.g. "0","1" or "NONE"
+  var bi=data.currentBidderIdx;
+  var hasLeader=(bi && bi!=="NONE");
+  var leaderIdx=hasLeader?parseInt(bi):-1;
   var myIdx=parseInt(myTeamIdx);
-  var hasLeader = bi && bi!=="NONE";
-  var leaderIdx = hasLeader ? parseInt(bi) : -1;
-  var iLead = hasLeader && leaderIdx===myIdx;
+  var iLead=(hasLeader && leaderIdx===myIdx);
 
-  document.getElementById('pCurrent').textContent = (cb===0) ? '—' : fmtL(cb);
-
+  document.getElementById('pCurrent').textContent=(cb===0)?'No bids yet':fmtL(cb);
   var p2=(data.players||G.players||[]).find(function(x){return x.id===data.currentPlayerId;});
-  var nb=(cb===0 && p2) ? p2.base : nextBid(cb);
+  var nb=(cb===0&&p2)?p2.base:nextBid(cb);
   document.getElementById('pBidAmt').textContent=nb;
 
-  var mt=getTeam(data.teams||G.teams, myIdx);
-  var remaining=mt ? (mt.budget-mt.spent) : 0;
-  var canAfford=mt && remaining>=nb;
+  var mt=getTeam(data.teams||G.teams,myIdx);
+  var remaining=mt?(mt.budget-mt.spent):0;
+  var canAfford=!!(mt && remaining>=nb);
 
-  console.log('[BID] myIdx='+myIdx+' bi='+bi+' leaderIdx='+leaderIdx+' iLead='+iLead+' cb='+cb+' nb='+nb+' remaining='+remaining+' canAfford='+canAfford);
+  console.log('BID myIdx='+myIdx+' bi='+bi+' leaderIdx='+leaderIdx+' iLead='+iLead+' canAfford='+canAfford+' nb='+nb+' remaining='+remaining);
 
-  document.getElementById('bigBidBtn').disabled = iLead || !canAfford;
+  document.getElementById('bigBidBtn').disabled=(iLead||!canAfford);
 
   var lb=document.getElementById('pLeader');
   var lc=document.getElementById('liveCard');
   if(!hasLeader){
-    lb.textContent='No bids yet — be first!';
+    lb.textContent='No bids yet - be first!';
     lb.className='p-leader';
     lc.classList.remove('leading');
   } else if(iLead){
-    lb.innerHTML="<strong>You're leading! 🎉</strong>";
+    lb.innerHTML='<strong>You are leading!</strong>';
     lb.className='p-leader me';
     lc.classList.add('leading');
   } else {
-    var lt=getTeam(data.teams||G.teams, leaderIdx);
+    var lt=getTeam(data.teams||G.teams,leaderIdx);
     lb.innerHTML='Leading: <strong>'+(lt?lt.name:'Team '+leaderIdx)+'</strong>';
     lb.className='p-leader';
     lc.classList.remove('leading');
   }
   document.getElementById('pBidHint').textContent=
-    !canAfford ? '⚠️ Not enough budget' :
-    iLead ? "You're the highest bidder!" : 'Tap to raise the bid';
+    !canAfford?'Not enough budget':
+    iLead?'You are the highest bidder!':'Tap to raise the bid';
 
-  if(data.timerEnabled && data.timerSeconds){
+  if(data.timerEnabled&&data.timerSeconds){
     var tl=data.timerLeft||0,ts=data.timerSeconds;
     var tn=document.getElementById('pTimerNum'),tb=document.getElementById('pTimerBar');
     tn.textContent=tl; tb.style.width=(tl/ts*100)+'%';
@@ -1262,6 +1393,7 @@ function updatePBidInfo(data){
   }
 }
 
+// --- PLACE BID ---
 function placeBid(){
   if(!roomRef||myTeamIdx===null) return;
   var myIdx2=parseInt(myTeamIdx);
@@ -1269,48 +1401,38 @@ function placeBid(){
     var data=snap.val(); if(!data) return;
     if(!data.currentPlayerId){toast('No active player!');return;}
     var bi=data.currentBidderIdx;
-    var hasLeader=bi && bi!=="NONE";
-    if(hasLeader && parseInt(bi)===myIdx2){toast("You're already the highest bidder!");return;}
+    var hasLeader=(bi && bi!=="NONE");
+    if(hasLeader && parseInt(bi)===myIdx2){toast('You are already the highest bidder!');return;}
     var cb=data.currentBid||0;
     var p0=(data.players||[]).find(function(x){return x.id===data.currentPlayerId;});
-    if(!p0){toast('No active player!');return;}
-    var nb=(cb===0) ? p0.base : nextBid(cb);
+    if(!p0){toast('Player not found!');return;}
+    var nb=(cb===0)?p0.base:nextBid(cb);
     var mt=getTeam(data.teams,myIdx2);
-    if(!mt){toast('Team not found — did you join correctly?');return;}
+    if(!mt){toast('Team not found!');return;}
     if(nb>mt.budget-mt.spent){toast('Not enough budget!');return;}
-    console.log('[PLACE BID] myIdx='+myIdx2+' nb='+nb+' writing bidderIdx="'+String(myIdx2)+'"');
-    // Store as string to guarantee Firebase keeps it (won't drop "0")
+    console.log('PLACING BID: team='+myIdx2+' bidderIdx="'+String(myIdx2)+'" amount='+nb);
     roomRef.update({currentBid:nb, currentBidderIdx:String(myIdx2)});
   });
 }
 
-
-  // Firebase stores arrays as objects with string keys — handle both
-  if (!teamsData) return null;
-  var n = parseInt(idx);
-  if (Array.isArray(teamsData)) return teamsData[n] || null;
-  return teamsData[n] || teamsData[String(n)] || null;
-}
-
-
 function updatePBudget(){
   if(myTeamIdx===null||!G.teams) return;
-  var t=G.teams[myTeamIdx]; if(!t) return;
+  var t=getTeam(G.teams,myTeamIdx); if(!t) return;
   document.getElementById('pBudgetLeft').textContent=(t.budget-t.spent);
   renderSquad();
 }
 
 function renderSquad(){
   if(myTeamIdx===null||!G.teams) return;
-  var t=G.teams[myTeamIdx]; if(!t) return;
+  var t=getTeam(G.teams,myTeamIdx); if(!t) return;
   document.getElementById('pSquadBudget').innerHTML=
     '<div class="brow"><span>Budget</span><span class="bv">'+fmtL(t.budget)+'</span></div>'
     +'<div class="brow"><span>Spent</span><span class="bv" style="color:var(--red)">'+fmtL(t.spent)+'</span></div>'
     +'<div class="brow"><span>Remaining</span><span class="bv" style="color:var(--green)">'+fmtL(t.budget-t.spent)+'</span></div>'
-    +'<div class="brow"><span>Players</span><span class="bv">'+t.players.length+'</span></div>';
-  document.getElementById('pSquadList').innerHTML=t.players.length
+    +'<div class="brow"><span>Players</span><span class="bv">'+(t.players?t.players.length:0)+'</span></div>';
+  document.getElementById('pSquadList').innerHTML=(t.players&&t.players.length)
     ?t.players.map(function(p){
-      return '<div class="sq-item"><div><div class="sq-name">'+p.name+'</div><div class="sq-role">'+p.role+' · '+p.nat+'</div></div>'
+      return '<div class="sq-item"><div><div class="sq-name">'+p.name+'</div><div class="sq-role">'+p.role+' - '+p.nat+'</div></div>'
         +'<div class="sq-price">'+fmtL(p.soldPrice)+'</div></div>';
     }).join('')
     :'<div class="empty">No players yet</div>';
@@ -1328,13 +1450,12 @@ function renderPPool(){
     return p.status==='pending'&&(pPoolCat==='All'||p.role===pPoolCat);
   }).sort(function(a,b){return a.name.localeCompare(b.name);});
   var c=document.getElementById('pPoolList');
-  if(!list.length){c.innerHTML='<div class="empty">No pending players</div>';return;}
-  c.innerHTML=list.map(function(p){
-    return '<div class="pl-item"><div style="font-size:19px">'+(EMOJI[p.role]||'👤')+'</div>'
-      +'<div class="pl-info"><div class="pl-name">'+p.name+'</div>'
-      +'<div class="pl-sub">'+p.role+' · '+p.nat+'</div></div>'
+  if(!c) return;
+  c.innerHTML=list.length?list.map(function(p){
+    return '<div class="pl-item"><div class="pl-info"><div class="pl-name">'+p.name+'</div>'
+      +'<div class="pl-sub">'+p.role+' - '+p.nat+'</div></div>'
       +'<div class="pl-price">'+fmtL(p.base)+'</div></div>';
-  }).join('');
+  }).join(''):'<div class="empty">No pending players</div>';
 }
 
 function pTab(name,el){
@@ -1346,40 +1467,7 @@ function pTab(name,el){
   if(name==='pool') renderPPool();
 }
 
-function showSoldFlash(sold){
-  document.getElementById('fPlayer').textContent=sold.player;
-  document.getElementById('fTeam').textContent=sold.team;
-  document.getElementById('fPrice').textContent=sold.price;
-  var fl=document.getElementById('soldFlash');
-  fl.classList.add('show');
-  setTimeout(function(){fl.classList.remove('show');},3000);
-}
-
-// END SCREENS ──
-function showEndScreen(){
-  var sold=(G.players||[]).filter(function(p){return p.status==='sold';}).length;
-  var unsold=(G.players||[]).filter(function(p){return p.status==='unsold';}).length;
-  document.getElementById('endSummary').textContent=sold+' sold · '+unsold+' unsold';
-  renderFinalList();
-  showScreen('endScreen');
-}
-function showParticipantEnd(){renderFinalList();showScreen('endScreen');}
-function renderFinalList(){
-  document.getElementById('finalList').innerHTML=(G.teams||[]).map(function(t){
-    return '<div class="ft"><div class="ft-hdr">'
-      +'<div class="ft-name" style="border-left:3px solid '+t.color+';padding-left:9px">'+t.name+'</div>'
-      +'<div class="ft-spent">'+fmtL(t.spent)+'</div></div>'
-      +(t.players&&t.players.length?t.players.map(function(p){
-        return '<div class="fp"><span>'+p.name+' <span style="color:var(--text3);font-size:11px">('+p.role+')</span></span>'
-          +'<span class="fp-price">'+fmtL(p.soldPrice)+'</span></div>';
-      }).join(''):'<div style="color:var(--text3);font-size:13px">No players</div>')
-      +'</div>';
-  }).join('');
-}
-
-// WAIT SCREEN TABS ──
-var wPoolCat='All';
-
+// --- WAIT SCREEN TABS ---
 function wTab(name,el){
   document.querySelectorAll('#waitScreen .tab').forEach(function(t){t.classList.remove('on');});
   document.querySelectorAll('#waitScreen .tab-pane').forEach(function(t){t.classList.remove('on');});
@@ -1402,19 +1490,17 @@ function renderWPool(){
   }).sort(function(a,b){return a.name.localeCompare(b.name);});
   var c=document.getElementById('wPoolList');
   if(!c) return;
-  if(!list.length){c.innerHTML='<div class="empty">No pending players</div>';return;}
-  c.innerHTML=list.map(function(p){
-    return '<div class="pl-item"><div style="font-size:19px">'+(EMOJI[p.role]||'👤')+'</div>'
-      +'<div class="pl-info"><div class="pl-name">'+p.name+'</div>'
-      +'<div class="pl-sub">'+p.role+' · '+p.nat+'</div>'
+  c.innerHTML=list.length?list.map(function(p){
+    return '<div class="pl-item"><div class="pl-info"><div class="pl-name">'+p.name+'</div>'
+      +'<div class="pl-sub">'+p.role+' - '+p.nat+'</div>'
       +'<span class="s-p pl-st">Base: '+fmtL(p.base)+'</span></div>'
       +'<div class="pl-price">'+fmtL(p.base)+'</div></div>';
-  }).join('');
+  }).join(''):'<div class="empty">No pending players</div>';
 }
 
 function renderWSquad(){
   if(myTeamIdx===null||!G.teams) return;
-  var t=G.teams[myTeamIdx]; if(!t) return;
+  var t=getTeam(G.teams,myTeamIdx); if(!t) return;
   var bs=document.getElementById('wSquadBudget');
   var sl=document.getElementById('wSquadList');
   if(!bs||!sl) return;
@@ -1422,13 +1508,47 @@ function renderWSquad(){
     '<div class="brow"><span>Budget</span><span class="bv">'+fmtL(t.budget)+'</span></div>'
     +'<div class="brow"><span>Spent</span><span class="bv" style="color:var(--red)">'+fmtL(t.spent)+'</span></div>'
     +'<div class="brow"><span>Remaining</span><span class="bv" style="color:var(--green)">'+fmtL(t.budget-t.spent)+'</span></div>'
-    +'<div class="brow"><span>Players</span><span class="bv">'+t.players.length+'</span></div>';
-  sl.innerHTML=t.players.length
+    +'<div class="brow"><span>Players</span><span class="bv">'+(t.players?t.players.length:0)+'</span></div>';
+  sl.innerHTML=(t.players&&t.players.length)
     ?t.players.map(function(p){
-      return '<div class="sq-item"><div><div class="sq-name">'+p.name+'</div><div class="sq-role">'+p.role+' · '+p.nat+'</div></div>'
+      return '<div class="sq-item"><div><div class="sq-name">'+p.name+'</div><div class="sq-role">'+p.role+'</div></div>'
         +'<div class="sq-price">'+fmtL(p.soldPrice)+'</div></div>';
     }).join('')
     :'<div class="empty">No players yet</div>';
+}
+
+// --- SOLD FLASH ---
+function showSoldFlash(sold){
+  document.getElementById('fPlayer').textContent=sold.player;
+  document.getElementById('fTeam').textContent=sold.team;
+  document.getElementById('fPrice').textContent=sold.price;
+  var fl=document.getElementById('soldFlash');
+  fl.classList.add('show');
+  setTimeout(function(){fl.classList.remove('show');},3000);
+}
+
+// --- END ---
+function showEndScreen(){
+  var sold=(G.players||[]).filter(function(p){return p.status==='sold';}).length;
+  var unsold=(G.players||[]).filter(function(p){return p.status==='unsold';}).length;
+  document.getElementById('endSummary').textContent=sold+' sold - '+unsold+' unsold';
+  renderFinalList();
+  showScreen('endScreen');
+}
+function showParticipantEnd(){renderFinalList();showScreen('endScreen');}
+function renderFinalList(){
+  var teams=G.teams||{};
+  document.getElementById('finalList').innerHTML=Object.keys(teams).sort().map(function(k){
+    var t=teams[k];
+    return '<div class="ft"><div class="ft-hdr">'
+      +'<div class="ft-name" style="border-left:3px solid '+t.color+';padding-left:9px">'+t.name+'</div>'
+      +'<div class="ft-spent">'+fmtL(t.spent)+'</div></div>'
+      +(t.players&&t.players.length?t.players.map(function(p){
+        return '<div class="fp"><span>'+p.name+' ('+p.role+')</span>'
+          +'<span class="fp-price">'+fmtL(p.soldPrice)+'</span></div>';
+      }).join(''):'<div style="color:var(--text3);font-size:13px">No players</div>')
+      +'</div>';
+  }).join('');
 }
 
 window.addEventListener('DOMContentLoaded',function(){});
