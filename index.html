@@ -1079,8 +1079,8 @@ function bringPlayer(id){
   stopTimer();
   // First bid is at base price
   // currentBid starts at 0 — no bid placed yet. First bid will be at base price.
-  pushRoom({currentPlayerId:id,currentBid:0,currentBidderIdx:-1});
-  G.currentPlayerId=id; G.currentBid=0; G.currentBidderIdx=-1;
+  pushRoom({currentPlayerId:id,currentBid:0,currentBidderIdx:0});
+  G.currentPlayerId=id; G.currentBid=0; G.currentBidderIdx=0;
   document.getElementById('noBidDiv').style.display='none';
   document.getElementById('activeBidDiv').style.display='block';
   document.getElementById('hostLive').style.display='inline-block';
@@ -1104,7 +1104,7 @@ function renderActiveBid(data){
   var nb = cb===0 ? p.base : nextBid(cb);
   document.getElementById('hNextBidAmt').textContent=fmtL(nb);
   updateHostCount();
-  var bi=(data.currentBidderIdx!==undefined&&data.currentBidderIdx!==null)?parseInt(data.currentBidderIdx):-1;
+  var bi=(data.currentBidderIdx!==undefined&&data.currentBidderIdx!==null&&data.currentBidderIdx>0)?parseInt(data.currentBidderIdx)-1:-1;
   var teams=data.teams||[];
   if(bi>=0 && teams[bi]){
     var t=teams[bi];
@@ -1124,11 +1124,12 @@ function soldNow(){
   if(!roomRef) return;
   roomRef.once('value',function(snap){
     var data=snap.val(); if(!data) return;
-    var bi=data.currentBidderIdx;
+    var rawBi2=data.currentBidderIdx;
+    var bi=(rawBi2!==undefined&&rawBi2!==null&&rawBi2>0)?parseInt(rawBi2)-1:-1;
     var pid=data.currentPlayerId;
     var cb=data.currentBid;
     if(!pid){toast('No player selected!');return;}
-    if(bi===undefined||bi===null||bi<0){toast('No bid placed yet!');return;}
+    if(bi<0){toast('No bid placed yet!');return;}
     stopTimer();
 
     var players=data.players||[];
@@ -1154,7 +1155,7 @@ function soldNow(){
 
     pushRoom({
       players:players, teams:teams,
-      currentPlayerId:null, currentBid:0, currentBidderIdx:-1,
+      currentPlayerId:null, currentBid:0, currentBidderIdx:0,
       lastSold:{player:players[pidx].name,team:team.name,price:cb}
     });
     G.currentPlayerId=null; G.currentBidderIdx=-1;
@@ -1183,7 +1184,7 @@ function markUnsold(){
     players[pidx].status='unsold';
     document.getElementById('ovUnsoldPlayer').textContent=players[pidx].name;
     document.getElementById('unsoldOverlay').classList.add('show');
-    pushRoom({players:players,currentPlayerId:null,currentBid:0,currentBidderIdx:-1});
+    pushRoom({players:players,currentPlayerId:null,currentBid:0,currentBidderIdx:0});
     G.currentPlayerId=null; G.currentBidderIdx=-1;
   });
 }
@@ -1199,7 +1200,7 @@ function hideUnsoldOverlay(){
 
 function skipPlayer(){
   stopTimer();
-  pushRoom({currentPlayerId:null,currentBid:0,currentBidderIdx:-1});
+  pushRoom({currentPlayerId:null,currentBid:0,currentBidderIdx:0});
   G.currentPlayerId=null; G.currentBidderIdx=-1;
   document.getElementById('noBidDiv').style.display='block';
   document.getElementById('activeBidDiv').style.display='none';
@@ -1387,7 +1388,8 @@ function getTeam(teamsData, idx) {
 function updatePBidInfo(data){
   var cb = data.currentBid || 0;
   var rawBi = data.currentBidderIdx;
-  var bi = (rawBi !== undefined && rawBi !== null && rawBi !== -1) ? parseInt(rawBi) : -1;
+  // stored as idx+1 to avoid Firebase dropping 0; convert back
+  var bi = (rawBi !== undefined && rawBi !== null && rawBi > 0) ? parseInt(rawBi) - 1 : -1;
   var myIdx = parseInt(myTeamIdx);
 
   // Current bid display
@@ -1404,7 +1406,7 @@ function updatePBidInfo(data){
   var canAfford = mt && remaining >= nb;
   var iLead = (bi >= 0 && bi === myIdx);
 
-  console.log('[BID] myIdx='+myIdx+' bi='+bi+' cb='+cb+' nb='+nb+' remaining='+remaining+' canAfford='+canAfford+' iLead='+iLead);
+  console.log('[BID] myIdx='+myIdx+' rawBi='+rawBi+' bi='+bi+' cb='+cb+' nb='+nb+' remaining='+remaining+' canAfford='+canAfford+' iLead='+iLead);
 
   // Enable button for anyone who CAN afford and is NOT currently leading
   document.getElementById('bigBidBtn').disabled = iLead || !canAfford;
@@ -1449,7 +1451,7 @@ function placeBid(){
   roomRef.once('value', function(snap){
     var data = snap.val(); if(!data) return;
     var cb = data.currentBid || 0;
-    var curBi = (data.currentBidderIdx !== undefined && data.currentBidderIdx !== null) ? parseInt(data.currentBidderIdx) : -1;
+    var curBi = (data.currentBidderIdx !== undefined && data.currentBidderIdx !== null && data.currentBidderIdx > 0) ? parseInt(data.currentBidderIdx) - 1 : -1;
     if(curBi === myIdx2){ toast("You're already the highest bidder!"); return; }
     var p0 = (data.players || []).find(function(x){ return x.id === data.currentPlayerId; });
     if(!p0){ toast('No active player!'); return; }
@@ -1458,7 +1460,7 @@ function placeBid(){
     if(!mt){ toast('Team not found!'); return; }
     if(nb > mt.budget - mt.spent){ toast('Not enough budget!'); return; }
     console.log('[PLACE BID] team='+myIdx2+' nb='+nb);
-    roomRef.update({ currentBid: nb, currentBidderIdx: myIdx2 });
+    roomRef.update({ currentBid: nb, currentBidderIdx: myIdx2 + 1 }); // +1 so team 0 is stored as 1 (Firebase drops 0)
   });
 }
 
