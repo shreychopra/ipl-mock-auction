@@ -217,29 +217,6 @@
   <div class="setup-body">
 
     <!-- Firebase Config -->
-    <div class="card" style="border-color:rgba(240,180,41,.3)">
-      <div class="section-title">🔥 Firebase Setup</div>
-      <p style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.6">
-        Paste your Firebase config values below. Get them from<br>
-        <strong style="color:var(--gold)">Firebase Console → Project Settings → Your Apps → Web App → SDK config</strong>
-      </p>
-      <label>API Key</label>
-      <input type="text" id="fb_apiKey" placeholder="AIzaSy..." />
-      <div style="height:10px"></div>
-      <label>Database URL</label>
-      <input type="text" id="fb_databaseURL" placeholder="https://your-project-default-rtdb.firebaseio.com" />
-      <div style="height:10px"></div>
-      <label>Project ID</label>
-      <input type="text" id="fb_projectId" placeholder="your-project-id" />
-      <div style="height:10px"></div>
-      <label>App ID</label>
-      <input type="text" id="fb_appId" placeholder="1:123456:web:abc..." />
-      <p style="font-size:11px;color:var(--text3);margin-top:10px">
-        ℹ️ These are saved in your browser so you only enter them once.
-      </p>
-      <button class="btn btn-secondary btn-sm" style="margin-top:12px;width:auto" onclick="saveFirebaseConfig()">💾 Save Config</button>
-    </div>
-
     <!-- Teams -->
     <div class="card">
       <div class="section-title">Teams</div>
@@ -443,13 +420,23 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- Firebase compat SDKs (global, no module needed) -->
+<!-- Firebase compat SDKs (global, no modules) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
 <script>
+
+// ── HARDCODED FIREBASE CONFIG ──
+var FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAcfJjyEmSUVkk-oXipxVkmsHzq1vwOcwc",
+  authDomain: "ipl-auction-64c8e.firebaseapp.com",
+  databaseURL: "https://ipl-auction-64c8e-default-rtdb.firebaseio.com",
+  projectId: "ipl-auction-64c8e",
+  storageBucket: "ipl-auction-64c8e.appspot.com",
+  appId: "1:152098475113:web:1ca6675ccf43e8d568a6f8"
+};
+
 // ── PLAYER DATA ──
-const IPL_PLAYERS = [
+var IPL_PLAYERS = [
   { id: 1, name: "Akeal Hosein", role: "Bowler", nationality: "WI", basePrice: 2.0 },
   { id: 2, name: "Aman Khan", role: "All-Rounder", nationality: "Indian", basePrice: 0.4 },
   { id: 3, name: "Anshul Kamboj", role: "All-Rounder", nationality: "Indian", basePrice: 0.2 },
@@ -674,63 +661,21 @@ const IPL_PLAYERS = [
   { id: 222, name: "Praful Hinge", role: "Bowler", nationality: "Indian", basePrice: 0.3 },
   { id: 223, name: "Sakib Hussain", role: "Bowler", nationality: "Indian", basePrice: 0.3 },
   { id: 224, name: "Krains Fuletra", role: "Bowler", nationality: "Indian", basePrice: 0.3 },
-  { id: 225, name: "Shivang Kumar", role: "All-Rounder", nationality: "Indian", basePrice: 0.3 },
+  { id: 225, name: "Shivang Kumar", role: "All-Rounder", nationality: "Indian", basePrice: 0.3 }
 ];
 
-const TEAM_COLORS = ['#1a74e4','#ff4c6a','#00c896','#f0b429','#9c6fff','#ff8c42','#00d4ff','#ff6bae','#b4f261','#ffd166'];
-const ROLE_EMOJI = {'Batter':'🏏','Bowler':'🎳','All-Rounder':'⚡','WK-Batter':'🧤'};
+var TEAM_COLORS = ['#1a74e4','#ff4c6a','#00c896','#f0b429','#9c6fff','#ff8c42','#00d4ff','#ff6bae','#b4f261','#ffd166'];
+var ROLE_EMOJI = {'Batter':'🏏','Bowler':'🎳','All-Rounder':'⚡','WK-Batter':'🧤'};
 
-let db, dbRef;
-let S = {
-  teams:[], players:[], currentPlayerId:null,
-  currentBid:0, currentBidderIdx:-1,
-  timerEnabled:false, timerSeconds:45,
-  selectedIncrement:0.5, filter:'All',
-  timerInterval:null, timerLeft:0
-};
+var db, dbRef;
+var S = { teams:[], players:[], currentPlayerId:null, currentBid:0, currentBidderIdx:-1, timerEnabled:false, timerSeconds:45, selectedIncrement:0.5, timerInterval:null, timerLeft:0 };
+var activeFilter = 'All';
+var toastTO;
 
-// ── Firebase config helpers ──
-function saveFirebaseConfig() {
-  var cfg = {
-    apiKey: document.getElementById('fb_apiKey').value.trim(),
-    databaseURL: document.getElementById('fb_databaseURL').value.trim(),
-    projectId: document.getElementById('fb_projectId').value.trim(),
-    appId: document.getElementById('fb_appId').value.trim(),
-  };
-  if (!cfg.apiKey || !cfg.databaseURL || !cfg.projectId) {
-    alert('Please fill in API Key, Database URL and Project ID.');
-    return;
-  }
-  localStorage.setItem('ipl_fb_config', JSON.stringify(cfg));
-  showToast('✅ Config saved! Now tap Launch Auction.');
-}
-
-function loadSavedConfig() {
-  var s = JSON.parse(localStorage.getItem('ipl_fb_config') || '{}');
-  if (s.apiKey) document.getElementById('fb_apiKey').value = s.apiKey;
-  if (s.databaseURL) document.getElementById('fb_databaseURL').value = s.databaseURL;
-  if (s.projectId) document.getElementById('fb_projectId').value = s.projectId;
-  if (s.appId) document.getElementById('fb_appId').value = s.appId;
-}
-
-function initFirebase() {
-  var saved = JSON.parse(localStorage.getItem('ipl_fb_config') || '{}');
-  if (!saved.apiKey || !saved.databaseURL) return false;
-  try {
-    var cfg = {
-      apiKey: saved.apiKey,
-      authDomain: saved.projectId + '.firebaseapp.com',
-      databaseURL: saved.databaseURL,
-      projectId: saved.projectId,
-      storageBucket: saved.projectId + '.appspot.com',
-      appId: saved.appId || 'app'
-    };
-    if (!firebase.apps.length) firebase.initializeApp(cfg);
-    db = firebase.database();
-    dbRef = db.ref('auction');
-    return true;
-  } catch(e) { console.error('Firebase init error:', e); alert('Firebase error: ' + e.message); return false; }
-}
+// ── Init Firebase immediately ──
+firebase.initializeApp(FIREBASE_CONFIG);
+db = firebase.database();
+dbRef = db.ref('auction');
 
 // ── Setup UI ──
 function updateTeamInputs() {
@@ -754,7 +699,6 @@ function selectTimer(s) {
 
 // ── Launch Auction ──
 function startAuction() {
-  if (!initFirebase()) { showToast('⚠️ Save Firebase config first!'); return; }
   var n = Math.min(10, Math.max(2, parseInt(document.getElementById('numTeams').value)||4));
   var budget = parseFloat(document.getElementById('teamBudget').value)||100;
   S.timerEnabled = document.getElementById('enableTimer').checked;
@@ -768,17 +712,15 @@ function startAuction() {
   }
   var players = IPL_PLAYERS.map(function(p){ return Object.assign({}, p, {status:'pending', soldTo:null, soldPrice:0}); });
 
-  var initialState = {
+  setConnBar('connecting');
+  dbRef.set({
     teams: teams, players: players,
     currentPlayerId: null, currentBid: 0, currentBidderIdx: -1,
     timerEnabled: S.timerEnabled, timerSeconds: S.timerSeconds,
     selectedIncrement: S.selectedIncrement,
     auctionActive: true, auctionEnded: false
-  };
-
-  setConnBar('connecting');
-  dbRef.set(initialState, function(err) {
-    if (err) { alert('Firebase write failed: ' + err.message); return; }
+  }, function(err) {
+    if (err) { alert('Firebase error: ' + err.message); return; }
     S.teams = teams; S.players = players;
     showScreen('auctionScreen');
     listenToState();
@@ -799,24 +741,27 @@ function listenToState() {
     S.currentPlayerId = data.currentPlayerId || null;
     S.currentBid = data.currentBid || 0;
     S.currentBidderIdx = (data.currentBidderIdx !== undefined) ? data.currentBidderIdx : -1;
-    renderAll();
-  }, function(err) { setConnBar('error'); console.error(err); });
+    // sync any incoming bids from teams
+    if (S.currentPlayerId && document.getElementById('activeBidState').style.display !== 'none') {
+      renderCurrentPlayer();
+    }
+    renderTeamsTab();
+    renderPlayersTab();
+    updatePlayerCount();
+  }, function(err) { setConnBar('error'); });
 }
 
 function pushState(patch) {
-  if (!dbRef) return;
-  dbRef.update(patch, function(err){ if(err) console.error('Firebase write error', err); });
+  dbRef.update(patch);
 }
 
 function setConnBar(state) {
   var bar = document.getElementById('connBar');
   bar.className = 'conn-bar ' + state;
-  bar.textContent = state === 'connecting' ? '⟳ Connecting to Firebase...'
-    : state === 'connected' ? '✓ Connected — Live'
-    : '✗ Firebase error — check config';
+  bar.textContent = state === 'connecting' ? '⟳ Connecting...' : state === 'connected' ? '✓ Connected — Live' : '✗ Firebase error';
 }
 
-// ── Auction logic ──
+// ── Player search & select ──
 function nextRandomPlayer() {
   var pending = S.players.filter(function(p){ return p.status==='pending'; });
   if (!pending.length) { endAuction(); return; }
@@ -833,9 +778,8 @@ function searchPlayers() {
     return '<div class="search-result-item" onclick="loadPlayer('+p.id+')">'
       +'<div><div class="search-result-name">'+p.name+'</div>'
       +'<div class="search-result-sub">'+p.role+' · '+p.nationality+' · Base ₹'+p.basePrice+'Cr</div></div>'
-      +'<div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold)">₹'+p.basePrice+'Cr</div>'
-      +'</div>';
-  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:8px">No pending players found</div>';
+      +'<div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:var(--gold)">₹'+p.basePrice+'Cr</div></div>';
+  }).join('') || '<div style="color:var(--text3);font-size:13px;padding:8px">No players found</div>';
 }
 
 function loadPlayer(id) {
@@ -846,15 +790,11 @@ function loadPlayer(id) {
   stopTimer();
   pushState({ currentPlayerId: id, currentBid: p.basePrice, currentBidderIdx: -1 });
   S.currentPlayerId = id; S.currentBid = p.basePrice; S.currentBidderIdx = -1;
-  showActiveBidState();
-  if (S.timerEnabled) startTimer();
-}
-
-function showActiveBidState() {
   document.getElementById('noBidState').style.display='none';
   document.getElementById('activeBidState').style.display='block';
   document.getElementById('liveBadge').style.display='inline-block';
   renderCurrentPlayer();
+  if (S.timerEnabled) startTimer();
 }
 
 function renderCurrentPlayer() {
@@ -868,23 +808,15 @@ function renderCurrentPlayer() {
   document.getElementById('currentBid').textContent = '₹'+S.currentBid.toFixed(2)+'Cr';
   document.getElementById('auctionTitle').textContent = p.name;
   updatePlayerCount();
-  renderBidFeed();
-}
-
-function renderBidFeed() {
-  var feed = document.getElementById('bidFeed');
-  if (S.currentBidderIdx < 0) {
-    feed.innerHTML='<div style="color:var(--text3);font-size:13px;padding:8px 0">Waiting for bids...</div>';
-    document.getElementById('currentBidder').innerHTML='No bids yet — <em>be the first!</em>';
-    return;
+  // show leading bidder
+  if (S.currentBidderIdx >= 0 && S.teams[S.currentBidderIdx]) {
+    var t = S.teams[S.currentBidderIdx];
+    document.getElementById('bidFeed').innerHTML = '<div class="bid-feed-item" style="border-left-color:'+t.color+'"><div class="bid-feed-team" style="color:'+t.color+'">'+t.name+'</div><div class="bid-feed-amount">₹'+S.currentBid.toFixed(2)+'Cr</div></div>';
+    document.getElementById('currentBidder').innerHTML = 'Leading: <strong style="color:'+t.color+'">'+t.name+'</strong>';
+  } else {
+    document.getElementById('bidFeed').innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px 0">Waiting for bids...</div>';
+    document.getElementById('currentBidder').innerHTML = 'No bids yet';
   }
-  var team = S.teams[S.currentBidderIdx];
-  if (!team) return;
-  feed.innerHTML = '<div class="bid-feed-item" style="border-left-color:'+team.color+'">'
-    +'<div class="bid-feed-team" style="color:'+team.color+'">'+team.name+'</div>'
-    +'<div class="bid-feed-amount">₹'+S.currentBid.toFixed(2)+'Cr</div>'
-    +'</div>';
-  document.getElementById('currentBidder').innerHTML = 'Leading: <strong style="color:'+team.color+'">'+team.name+'</strong>';
 }
 
 function selectIncrement(val) {
@@ -895,7 +827,7 @@ function selectIncrement(val) {
 }
 
 function soldNow() {
-  if (!S.currentPlayerId) return;
+  if (!S.currentPlayerId) { showToast('No player selected!'); return; }
   if (S.currentBidderIdx < 0) { showToast('No bid placed yet!'); return; }
   stopTimer();
   var pidx = S.players.findIndex(function(x){ return x.id===S.currentPlayerId; });
@@ -904,16 +836,13 @@ function soldNow() {
   S.players[pidx].soldPrice=S.currentBid;
   S.teams[S.currentBidderIdx].spent += S.currentBid;
   S.teams[S.currentBidderIdx].players.push(Object.assign({}, S.players[pidx]));
-
   var team = S.teams[S.currentBidderIdx];
-  document.getElementById('soldPlayerName').textContent=S.players[pidx].name;
-  document.getElementById('soldToTeam').textContent=team.name;
-  document.getElementById('soldToTeam').style.color=team.color;
-  document.getElementById('soldPrice').textContent=S.currentBid.toFixed(2);
+  document.getElementById('soldPlayerName').textContent = S.players[pidx].name;
+  document.getElementById('soldToTeam').textContent = team.name;
+  document.getElementById('soldToTeam').style.color = team.color;
+  document.getElementById('soldPrice').textContent = S.currentBid.toFixed(2);
   document.getElementById('soldOverlay').classList.add('show');
-
-  pushState({ players: S.players, teams: S.teams, currentPlayerId: null, currentBid:0, currentBidderIdx:-1,
-    lastSold: { player: S.players[pidx].name, team: team.name, price: S.currentBid } });
+  pushState({ players: S.players, teams: S.teams, currentPlayerId: null, currentBid:0, currentBidderIdx:-1, lastSold: { player: S.players[pidx].name, team: team.name, price: S.currentBid } });
   S.currentPlayerId=null; S.currentBidderIdx=-1;
 }
 
@@ -932,7 +861,7 @@ function markUnsold() {
   stopTimer();
   var pidx = S.players.findIndex(function(x){ return x.id===S.currentPlayerId; });
   S.players[pidx].status='unsold';
-  document.getElementById('unsoldPlayerName').textContent=S.players[pidx].name;
+  document.getElementById('unsoldPlayerName').textContent = S.players[pidx].name;
   document.getElementById('unsoldOverlay').classList.add('show');
   pushState({ players: S.players, currentPlayerId:null, currentBid:0, currentBidderIdx:-1 });
   S.currentPlayerId=null; S.currentBidderIdx=-1;
@@ -943,7 +872,6 @@ function hideUnsoldOverlay() {
   document.getElementById('noBidState').style.display='block';
   document.getElementById('activeBidState').style.display='none';
   document.getElementById('liveBadge').style.display='none';
-  document.getElementById('playerSearch').value='';
   updatePlayerCount();
 }
 
@@ -973,54 +901,42 @@ function updateTimerUI() {
   var el=document.getElementById('timerCount'), fill=document.getElementById('timerFill');
   el.textContent=S.timerLeft;
   fill.style.width=(S.timerLeft/S.timerSeconds*100)+'%';
-  var u=S.timerLeft<=10;
-  el.classList.toggle('urgent',u); fill.classList.toggle('urgent',u);
+  el.classList.toggle('urgent',S.timerLeft<=10);
+  fill.classList.toggle('urgent',S.timerLeft<=10);
 }
 
-// ── Render ──
-function renderAll() {
-  if (S.currentPlayerId && document.getElementById('activeBidState').style.display!=='none') {
-    renderCurrentPlayer();
-  }
-  renderTeamsTab();
-  renderPlayersTab();
-  updatePlayerCount();
-}
-
+// ── Render helpers ──
 function updatePlayerCount() {
   var done = S.players.filter(function(p){ return p.status!=='pending'; }).length;
-  document.getElementById('playerCountBadge').textContent=done+'/'+S.players.length;
+  document.getElementById('playerCountBadge').textContent = done+'/'+S.players.length;
 }
 
 function renderTeamsTab() {
-  var c=document.getElementById('teamsListContainer');
-  c.innerHTML=S.teams.map(function(t,i){
+  var c = document.getElementById('teamsListContainer');
+  c.innerHTML = S.teams.map(function(t,i){
     return '<div class="team-card">'
       +'<div class="team-card-header" onclick="toggleTeamCard('+i+')">'
       +'<div class="team-color-dot" style="background:'+t.color+'"></div>'
       +'<div class="team-card-name">'+t.name+'</div>'
       +'<div><div class="team-card-budget">₹'+(t.budget-t.spent).toFixed(2)+'Cr</div>'
-      +'<div style="font-size:10px;color:var(--text3);text-align:right">'+t.players.length+' players</div></div>'
-      +'</div>'
+      +'<div style="font-size:10px;color:var(--text3);text-align:right">'+t.players.length+' players</div></div></div>'
       +'<div class="team-card-body" id="team-body-'+i+'">'
       +'<div class="team-stats">'
-      +'<div class="team-stat"><div class="val">₹'+t.budget+'Cr</div><div class="lbl">Budget</div></div>'
-      +'<div class="team-stat"><div class="val">₹'+t.spent.toFixed(2)+'Cr</div><div class="lbl">Spent</div></div>'
-      +'<div class="team-stat"><div class="val">₹'+(t.budget-t.spent).toFixed(2)+'Cr</div><div class="lbl">Left</div></div>'
-      +'<div class="team-stat"><div class="val">'+t.players.length+'</div><div class="lbl">Players</div></div>'
-      +'</div>'
+      +'<div class="team-stat"><div class="val">₹'+t.budget+'</div><div class="lbl">Budget</div></div>'
+      +'<div class="team-stat"><div class="val">₹'+t.spent.toFixed(1)+'</div><div class="lbl">Spent</div></div>'
+      +'<div class="team-stat"><div class="val">₹'+(t.budget-t.spent).toFixed(1)+'</div><div class="lbl">Left</div></div>'
+      +'<div class="team-stat"><div class="val">'+t.players.length+'</div><div class="lbl">Players</div></div></div>'
       +(t.players.length ? t.players.map(function(p){
-        return '<div class="player-acq-row"><div><div class="player-acq-name">'+p.name+'</div><div class="player-acq-role">'+p.role+'</div></div><div class="player-acq-price">₹'+p.soldPrice.toFixed(2)+'Cr</div></div>';
-      }).join('') : '<div class="empty-state"><div class="emoji">🛒</div><p>No players yet</p></div>')
+          return '<div class="player-acq-row"><div><div class="player-acq-name">'+p.name+'</div><div class="player-acq-role">'+p.role+'</div></div><div class="player-acq-price">₹'+p.soldPrice.toFixed(2)+'Cr</div></div>';
+        }).join('') : '<div class="empty-state"><div class="emoji">🛒</div><p>No players yet</p></div>')
       +'</div></div>';
   }).join('');
 }
 
 function toggleTeamCard(i) { var b=document.getElementById('team-body-'+i); if(b) b.classList.toggle('open'); }
 
-var activeFilter='All';
 function filterPlayers(f) {
-  activeFilter=f;
+  activeFilter = f;
   document.querySelectorAll('.filter-chip').forEach(function(c){ c.classList.remove('active'); });
   event.target.classList.add('active');
   renderPlayersTab();
@@ -1033,19 +949,18 @@ function renderPlayersTab() {
     if(activeFilter==='Pending') return p.status==='pending';
     if(activeFilter==='Sold') return p.status==='sold';
     if(activeFilter==='Unsold') return p.status==='unsold';
-    if(roles.indexOf(activeFilter)>=0) return p.role===activeFilter;
-    return true;
+    return p.role===activeFilter;
   });
-  var c=document.getElementById('playersListContainer');
-  if(!filtered.length){c.innerHTML='<div class="empty-state"><div class="emoji">🔍</div><p>No players</p></div>';return;}
-  c.innerHTML=filtered.map(function(p){
-    var isCur=p.id===S.currentPlayerId;
-    var soldTeam=p.soldTo!=null && S.teams[p.soldTo] ? S.teams[p.soldTo].name : '';
-    var status=p.status==='sold'?'<span class="status-sold">✓ '+soldTeam+'</span>'
-      :p.status==='unsold'?'<span class="status-unsold">✗ Unsold</span>'
-      :isCur?'<span class="status-live">● Live</span>'
-      :'<span class="status-pending">Pending</span>';
-    var price=p.status==='sold'?'₹'+p.soldPrice.toFixed(2)+'Cr':'₹'+p.basePrice+'Cr';
+  var c = document.getElementById('playersListContainer');
+  if (!filtered.length) { c.innerHTML='<div class="empty-state"><div class="emoji">🔍</div><p>No players</p></div>'; return; }
+  c.innerHTML = filtered.map(function(p){
+    var isCur = p.id===S.currentPlayerId;
+    var soldTeam = (p.soldTo!=null && S.teams[p.soldTo]) ? S.teams[p.soldTo].name : '';
+    var status = p.status==='sold' ? '<span class="status-sold">✓ '+soldTeam+'</span>'
+      : p.status==='unsold' ? '<span class="status-unsold">✗ Unsold</span>'
+      : isCur ? '<span class="status-live">● Live</span>'
+      : '<span class="status-pending">Pending</span>';
+    var price = p.status==='sold' ? '₹'+p.soldPrice.toFixed(2)+'Cr' : '₹'+p.basePrice+'Cr';
     return '<div class="player-list-item '+(p.status==='sold'?'sold-item':'')+' '+(isCur?'current-item':'')+'">'
       +'<div style="font-size:22px">'+(ROLE_EMOJI[p.role]||'👤')+'</div>'
       +'<div class="player-list-info"><div class="player-list-name">'+p.name+'</div>'
@@ -1066,18 +981,16 @@ function switchTab(name) {
 
 function endAuction() {
   pushState({ auctionEnded: true });
-  var sold=S.players.filter(function(p){ return p.status==='sold'; }).length;
-  var unsold=S.players.filter(function(p){ return p.status==='unsold'; }).length;
-  document.getElementById('endSummary').textContent=sold+' sold · '+unsold+' unsold';
-  document.getElementById('finalTeamsContainer').innerHTML=S.teams.map(function(t){
-    return '<div class="final-team-card">'
-      +'<div class="final-team-header">'
+  var sold = S.players.filter(function(p){ return p.status==='sold'; }).length;
+  var unsold = S.players.filter(function(p){ return p.status==='unsold'; }).length;
+  document.getElementById('endSummary').textContent = sold+' sold · '+unsold+' unsold';
+  document.getElementById('finalTeamsContainer').innerHTML = S.teams.map(function(t){
+    return '<div class="final-team-card"><div class="final-team-header">'
       +'<div class="final-team-name" style="border-left:3px solid '+t.color+';padding-left:10px">'+t.name+'</div>'
-      +'<div class="final-team-spent">₹'+t.spent.toFixed(2)+'Cr</div>'
-      +'</div>'
+      +'<div class="final-team-spent">₹'+t.spent.toFixed(2)+'Cr</div></div>'
       +(t.players.length ? t.players.map(function(p){
-        return '<div class="final-player"><span>'+p.name+' <span style="color:var(--text3);font-size:11px">('+p.role+')</span></span><span class="final-player-price">₹'+p.soldPrice.toFixed(2)+'Cr</span></div>';
-      }).join('') : '<div style="color:var(--text3);font-size:13px">No players</div>')
+          return '<div class="final-player"><span>'+p.name+' <span style="color:var(--text3);font-size:11px">('+p.role+')</span></span><span class="final-player-price">₹'+p.soldPrice.toFixed(2)+'Cr</span></div>';
+        }).join('') : '<div style="color:var(--text3);font-size:13px">No players</div>')
       +'</div>';
   }).join('');
   showScreen('endScreen');
@@ -1090,18 +1003,16 @@ function showScreen(id) {
   document.getElementById(id).classList.add('active');
 }
 
-var toastTO;
 function showToast(msg) {
-  var t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  clearTimeout(toastTO); toastTO=setTimeout(function(){ t.classList.remove('show'); }, 2800);
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTO); toastTO = setTimeout(function(){ t.classList.remove('show'); }, 2800);
 }
 
-// ── Init ──
 window.addEventListener('DOMContentLoaded', function() {
-  loadSavedConfig();
   updateTeamInputs();
 });
+
 </script>
 </body>
 </html>
