@@ -115,15 +115,15 @@
     .tpbtn.on,.tpbtn:active{background:var(--gold);color:#0a0800;border-color:var(--gold)}
 
     /* ── ROOM CODE ── */
-    .rc-card{background:linear-gradient(145deg,#0e1e4a,#091530);
+    .rc-card{background:linear-gradient(145deg,#152454,#0d1a3a);
       border:1px solid var(--border2);border-radius:var(--radius);
       padding:28px 18px;text-align:center;margin-bottom:14px;position:relative;overflow:hidden}
     .rc-card::before{content:'';position:absolute;top:-40px;left:50%;transform:translateX(-50%);
       width:200px;height:200px;background:radial-gradient(circle,rgba(245,184,0,.08),transparent 70%)}
     .rc-lbl{font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;
       color:var(--text3);margin-bottom:10px}
-    .rc-code{font-family:var(--font-num);font-size:64px;letter-spacing:12px;color:var(--gold);
-      line-height:1;filter:drop-shadow(0 0 20px rgba(245,184,0,.5));position:relative}
+    .rc-code{font-family:var(--font-num);font-size:64px;letter-spacing:12px;color:#fff;
+      line-height:1;filter:drop-shadow(0 0 24px rgba(245,184,0,.7));position:relative;font-weight:400}
     .rc-sub{font-size:12px;color:var(--text3);margin-top:10px}
 
     /* ── PARTICIPANTS LIST ── */
@@ -209,7 +209,7 @@
     @keyframes pulse{from{opacity:1}to{opacity:.3}}
     .ttrack{height:4px;background:var(--surface3);border-radius:99px;overflow:hidden}
     .tbar{height:100%;background:linear-gradient(90deg,var(--green),var(--gold));
-      border-radius:99px;transition:width 1s linear}
+      border-radius:99px;transition:width 1.05s linear}
     .tbar.urgent{background:var(--red)}
 
     /* bid feed */
@@ -495,8 +495,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>IPL 2026 Mock Auction</title>
-  <script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-app-compat.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-database-compat.min.js"></script>
+
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
   <style>
     :root{
@@ -606,15 +605,15 @@
     .tpbtn.on,.tpbtn:active{background:var(--gold);color:#0a0800;border-color:var(--gold)}
 
     /* ── ROOM CODE ── */
-    .rc-card{background:linear-gradient(145deg,#0e1e4a,#091530);
+    .rc-card{background:linear-gradient(145deg,#152454,#0d1a3a);
       border:1px solid var(--border2);border-radius:var(--radius);
       padding:28px 18px;text-align:center;margin-bottom:14px;position:relative;overflow:hidden}
     .rc-card::before{content:'';position:absolute;top:-40px;left:50%;transform:translateX(-50%);
       width:200px;height:200px;background:radial-gradient(circle,rgba(245,184,0,.08),transparent 70%)}
     .rc-lbl{font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;
       color:var(--text3);margin-bottom:10px}
-    .rc-code{font-family:var(--font-num);font-size:64px;letter-spacing:12px;color:var(--gold);
-      line-height:1;filter:drop-shadow(0 0 20px rgba(245,184,0,.5));position:relative}
+    .rc-code{font-family:var(--font-num);font-size:64px;letter-spacing:12px;color:#fff;
+      line-height:1;filter:drop-shadow(0 0 24px rgba(245,184,0,.7));position:relative;font-weight:400}
     .rc-sub{font-size:12px;color:var(--text3);margin-top:10px}
 
     /* ── PARTICIPANTS LIST ── */
@@ -700,7 +699,7 @@
     @keyframes pulse{from{opacity:1}to{opacity:.3}}
     .ttrack{height:4px;background:var(--surface3);border-radius:99px;overflow:hidden}
     .tbar{height:100%;background:linear-gradient(90deg,var(--green),var(--gold));
-      border-radius:99px;transition:width 1s linear}
+      border-radius:99px;transition:width 1.05s linear}
     .tbar.urgent{background:var(--red)}
 
     /* bid feed */
@@ -1002,9 +1001,7 @@
     </div>
     
 
-</div>
-
-<!-- ════ LOBBY ════ -->
+<<!-- ════ LOBBY ════ -->
 <div id="lobbyScreen" class="screen">
   <div class="page-hero">
     <span class="icon">🏆</span>
@@ -2104,6 +2101,8 @@ function updateTimerUI(){
   bar.style.width=(timerLeft/sec*100)+'%';
   el.classList.toggle('urgent',timerLeft<=10);
   bar.classList.toggle('urgent',timerLeft<=10);
+  // Push timer to Firebase so participants can see it
+  if(roomRef) roomRef.update({timerLeft:timerLeft});
 }
 
 // --- HOST RENDER ---
@@ -2285,10 +2284,17 @@ function updatePBidInfo(data){
     iLead?'You are the highest bidder!':'Tap to raise the bid';
 
   if(data.timerEnabled&&data.timerSeconds){
-    var tl=data.timerLeft||0,ts=data.timerSeconds;
-    var tn=document.getElementById('pTimerNum'),tb=document.getElementById('pTimerBar');
-    tn.textContent=tl; tb.style.width=(tl/ts*100)+'%';
-    tn.classList.toggle('urgent',tl<=10); tb.classList.toggle('urgent',tl<=10);
+    var tl=(data.timerLeft!==undefined)?data.timerLeft:0;
+    var ts=data.timerSeconds;
+    var tw=document.getElementById('pTimerWrap');
+    var tn=document.getElementById('pTimerNum');
+    var tb=document.getElementById('pTimerBar');
+    if(tw) tw.style.display='block';
+    if(tn){ tn.textContent=tl; tn.classList.toggle('urgent',tl<=10); }
+    if(tb){ tb.style.width=(ts>0?(tl/ts*100):0)+'%'; tb.classList.toggle('urgent',tl<=10); }
+  } else {
+    var tw2=document.getElementById('pTimerWrap');
+    if(tw2) tw2.style.display='none';
   }
 }
 
