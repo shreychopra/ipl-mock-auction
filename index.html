@@ -1634,10 +1634,11 @@ function closeConfirm() {
   confirmCallback = null;
 }
 function confirmOk() {
+  var action = confirmCallback; // capture before closeConfirm clears it
   closeConfirm();
-  if (confirmCallback === 'end') doEndAuction();
-  else if (confirmCallback === 'exitHost') doExitHost();
-  else if (confirmCallback === 'exitPart') doExitParticipant();
+  if (action === 'end') doEndAuction();
+  else if (action === 'exitHost') doExitHost();
+  else if (action === 'exitPart') doExitParticipant();
 }
 
 // ══ PAUSE / RESUME ══
@@ -1669,13 +1670,26 @@ function doEndAuction() {
 function doExitHost() {
   stopTimer();
   if (roomRef) roomRef.off();
+  // Pre-fill landing page so host can easily rejoin
+  var savedCode = roomCode;
+  var savedName = myName;
   roomRef = null; roomCode = null; G = {};
   showScreen('landingScreen');
+  if (savedName) document.getElementById('hostName').value = savedName;
+  // Show a toast with the room code for easy reference
+  if (savedCode) toast('Room code: ' + savedCode + ' (rejoin anytime)', 5000);
 }
 function doExitParticipant() {
   if (roomRef) roomRef.off();
+  // Save details before clearing so we can pre-fill landing page
+  var savedCode = roomCode;
+  var savedName = myName;
   roomRef = null; roomCode = null; myTeamIdx = null; myTeamName = null; G = {};
   showScreen('landingScreen');
+  // Pre-fill the join fields so they can instantly rejoin
+  if (savedName) document.getElementById('participantName').value = savedName;
+  if (savedCode) document.getElementById('roomCode').value = savedCode;
+  if (savedCode) toast('Tap Find Room to rejoin - code: ' + savedCode, 5000);
 }
 
 // ══ EXPORT CSV ══
@@ -1734,6 +1748,13 @@ function tryRestoreSession() {
   ref.once('value', function(snap) {
     var data = snap.val();
     if (!data || data.auctionEnded) { clearSession(); return; }
+    if (!data.auctionStarted && session.role === 'participant') {
+      // Auction hasn't started yet - just pre-fill the join form
+      document.getElementById('participantName').value = session.myName || '';
+      document.getElementById('roomCode').value = session.roomCode || '';
+      clearSession();
+      return;
+    }
     roomCode = session.roomCode;
     role = session.role;
     myName = session.myName;
