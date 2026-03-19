@@ -286,6 +286,16 @@
     </div>
     <div class="divider"><span>OR</span></div>
     <div class="card">
+      <div class="card-title">🎙 Host - Rejoin Existing Room</div>
+      <label>Your Name</label>
+      <input type="text" id="hostRejoinName" placeholder="e.g. Rahul" maxlength="20"/>
+      <div class="gap"></div>
+      <label>Room Code</label>
+      <input type="text" id="hostRejoinCode" class="upper" placeholder="XXXXX" maxlength="5" oninput="this.value=this.value.toUpperCase()"/>
+      <div style="margin-top:16px"><button class="btn btn-red" onclick="rejoinAsHost()" style="background:linear-gradient(135deg,#ff4c6a,#c0003a);color:#fff">🎙 Rejoin as Host</button></div>
+    </div>
+    <div class="divider"><span>OR</span></div>
+    <div class="card">
       <div class="card-title">🏏 Participant - Join a Room</div>
       <label>Your Name</label>
       <input type="text" id="participantName" placeholder="e.g. Arjun" maxlength="20"/>
@@ -964,6 +974,43 @@ function listenLobby(){
           +'<div class="pteam">'+p.teamName+'</div></div>';
       }).join('');
     }
+  });
+}
+
+// --- REJOIN AS HOST ---
+function rejoinAsHost() {
+  var hName = document.getElementById('hostRejoinName').value.trim();
+  var code = document.getElementById('hostRejoinCode').value.trim().toUpperCase();
+  if (!hName) { toast('Enter your name!'); return; }
+  if (code.length !== 5) { toast('Enter the 5-character room code!'); return; }
+  var ref = db.ref('rooms/' + code);
+  ref.once('value', function(snap) {
+    var data = snap.val();
+    if (!data) { toast('Room not found! Check the code.'); return; }
+    if (data.auctionEnded) { toast('This auction has already ended.'); return; }
+    // Verify the name matches the original host
+    if (data.hostName && data.hostName.toLowerCase() !== hName.toLowerCase()) {
+      toast('Name does not match the original host.'); return;
+    }
+    roomCode = code; role = 'host'; myName = hName;
+    roomRef = ref; G = data;
+    document.getElementById('hostCode').textContent = roomCode;
+    document.getElementById('hostConnBar').className = 'conn-bar cb-live';
+    document.getElementById('hostConnBar').textContent = 'Live - Room: ' + roomCode;
+    if (data.auctionStarted) {
+      showScreen('hostAuctionScreen');
+      renderSortedList();
+      listenAuction();
+      toast('Rejoined as host!');
+    } else {
+      // Auction not started yet — go back to lobby
+      document.getElementById('lobbyCode').textContent = roomCode;
+      document.getElementById('lobbyRoomName').textContent = data.roomName || roomCode;
+      showScreen('lobbyScreen');
+      listenLobby();
+      toast('Back in the lobby!');
+    }
+    saveSession();
   });
 }
 
@@ -1676,8 +1723,10 @@ function doExitHost() {
   roomRef = null; roomCode = null; G = {};
   showScreen('landingScreen');
   if (savedName) document.getElementById('hostName').value = savedName;
-  // Show a toast with the room code for easy reference
-  if (savedCode) toast('Room code: ' + savedCode + ' (rejoin anytime)', 5000);
+  // Pre-fill the rejoin fields
+  if (savedName) document.getElementById('hostRejoinName').value = savedName;
+  if (savedCode) document.getElementById('hostRejoinCode').value = savedCode;
+  if (savedCode) toast('Use "Rejoin as Host" with code: ' + savedCode, 5000);
 }
 function doExitParticipant() {
   if (roomRef) roomRef.off();
@@ -1748,6 +1797,14 @@ function tryRestoreSession() {
   ref.once('value', function(snap) {
     var data = snap.val();
     if (!data || data.auctionEnded) { clearSession(); return; }
+    // Pre-fill rejoin fields from saved session
+    if (session.role === 'host') {
+      if (session.myName) document.getElementById('hostRejoinName').value = session.myName;
+      if (session.roomCode) document.getElementById('hostRejoinCode').value = session.roomCode;
+    } else {
+      if (session.myName) document.getElementById('participantName').value = session.myName;
+      if (session.roomCode) document.getElementById('roomCode').value = session.roomCode;
+    }
     if (!data.auctionStarted && session.role === 'participant') {
       // Auction hasn't started yet - just pre-fill the join form
       document.getElementById('participantName').value = session.myName || '';
