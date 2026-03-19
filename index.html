@@ -883,6 +883,10 @@ var PLAYERS = [
   {id:250,name:"Zeeshan Ansari",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/942371/942371.1.png&w=120&h=120&fit=cover&mask=circle"}
 ];
 
+var PHOTO_MAP = {};
+(function(){ PLAYERS.forEach(function(p){ if(p.photo) PHOTO_MAP[p.id]=p.photo; }); })();
+function getPhoto(p){ return (p && (p.photo || PHOTO_MAP[p.id])) || ''; }
+
 var COLORS=['#1a74e4','#ff4c6a','#00c896','#f0b429','#9c6fff','#ff8c42','#00d4ff','#ff6bae','#b4f261','#ffd166','#e040fb','#00bcd4'];
 var EMOJI={Batter:'BAT',Bowler:'BOWL','All-Rounder':'AR',WK:'WK'};
 
@@ -1195,7 +1199,7 @@ function renderSortedList(){
     return '<div class="sr-item" onclick="bringPlayer('+p.id+')">'
       +'<div style="display:flex;align-items:center;gap:9px">'
       +'<div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--surface3);flex-shrink:0;border:1px solid var(--border)">'
-      +(p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover" onerror="this.src=\'\'">'
+      +(getPhoto(p)?'<img src="'+getPhoto(p)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.src=\'\'">'
               :'<div style="text-align:center;line-height:36px;font-size:14px">'+(EMOJI[p.role]||'?')+'</div>')
       +'</div>'
       +'<div><div class="sr-name">'+p.name+'</div><div class="sr-sub">'+p.role+' - '+p.nat+'</div></div>'
@@ -1215,7 +1219,7 @@ function searchPlayers(){
     return '<div class="sr-item" onclick="bringPlayer('+p.id+')">'
       +'<div style="display:flex;align-items:center;gap:9px">'
       +'<div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--surface3);flex-shrink:0;border:1px solid var(--border)">'
-      +(p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover" onerror="this.src=\'\'">'
+      +(getPhoto(p)?'<img src="'+getPhoto(p)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.src=\'\'">'
               :'<div style="text-align:center;line-height:36px;font-size:14px">'+(EMOJI[p.role]||'?')+'</div>')
       +'</div>'
       +'<div><div class="sr-name">'+p.name+'</div><div class="sr-sub">'+p.role+' - '+p.nat+'</div></div>'
@@ -1264,7 +1268,7 @@ function renderActiveBid(data){
   var p=(data.players||[]).find(function(x){return x.id===data.currentPlayerId;});
   if(!p) return;
   var hAviEl=document.getElementById('hAvi');
-  setAvi(hAviEl, p.photo, p.role);
+  setAvi(hAviEl, getPhoto(p), p.role);
   document.getElementById('hName').textContent=p.name;
   document.getElementById('hRole').textContent=p.role;
   document.getElementById('hNat').textContent=p.nat;
@@ -1524,7 +1528,7 @@ function renderParticipantBid(data){
   var p=(data.players||[]).find(function(x){return x.id===data.currentPlayerId;});
   if(!p) return;
   var pAviEl=document.getElementById('pAvi');
-  setAvi(pAviEl, p.photo, p.role);
+  setAvi(pAviEl, getPhoto(p), p.role);
   document.getElementById('pName').textContent=p.name;
   document.getElementById('pRole').textContent=p.role;
   document.getElementById('pNat').textContent=p.nat;
@@ -1646,7 +1650,7 @@ function renderPPool(){
   c.innerHTML=list.length?list.map(function(p){
     return '<div class="pl-item">'
       +'<div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--surface3);flex-shrink:0;border:1px solid var(--border)">'
-      +(p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover">':'<div style="text-align:center;line-height:36px;font-size:14px">'+(EMOJI[p.role]||'?')+'</div>')
+      +(getPhoto(p)?'<img src="'+getPhoto(p)+'" style="width:100%;height:100%;object-fit:cover">':'<div style="text-align:center;line-height:36px;font-size:14px">'+(EMOJI[p.role]||'?')+'</div>')
       +'</div>'
       +'<div class="pl-info"><div class="pl-name">'+p.name+'</div>'
       +'<div class="pl-sub">'+p.role+' - '+p.nat+'</div></div>'
@@ -1689,7 +1693,7 @@ function renderWPool(){
   c.innerHTML=list.length?list.map(function(p){
     return '<div class="pl-item">'
       +'<div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--surface3);flex-shrink:0;border:1px solid var(--border)">'
-      +(p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover">':'<div style="text-align:center;line-height:36px;font-size:14px">'+(EMOJI[p.role]||'?')+'</div>')
+      +(getPhoto(p)?'<img src="'+getPhoto(p)+'" style="width:100%;height:100%;object-fit:cover">':'<div style="text-align:center;line-height:36px;font-size:14px">'+(EMOJI[p.role]||'?')+'</div>')
       +'</div>'
       +'<div class="pl-info"><div class="pl-name">'+p.name+'</div>'
       +'<div class="pl-sub">'+p.role+' - '+p.nat+'</div>'
