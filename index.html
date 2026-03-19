@@ -90,7 +90,9 @@
     /* player card */
     .plyr-card{margin:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
     .plyr-banner{background:linear-gradient(135deg,#1a2340,#121828);padding:16px;display:flex;align-items:center;gap:12px}
-    .plyr-avi{width:56px;height:56px;border-radius:50%;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;border:2px solid var(--border)}
+    .plyr-avi{width:60px;height:60px;border-radius:50%;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;border:2px solid var(--border);overflow:hidden;position:relative}
+    .plyr-avi img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+    .plyr-avi .avi-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:22px}
     .plyr-name{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700}
     .pmeta{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
     .pill{font-size:11px;font-weight:600;padding:3px 8px;border-radius:99px}
@@ -383,7 +385,7 @@
         <button class="cat-btn" onclick="setHostCat('Batter',this)">🏏 Batters</button>
         <button class="cat-btn" onclick="setHostCat('Bowler',this)">🎳 Bowlers</button>
         <button class="cat-btn" onclick="setHostCat('All-Rounder',this)">⚡ All-Rounders</button>
-        <button class="cat-btn" onclick="setHostCat('WK-Batter',this)">🧤 WK</button>
+        <button class="cat-btn" onclick="setHostCat('WK',this)">🧤 WK</button>
       </div>
       <div class="next-wrap">
         <div class="next-title">Search player</div>
@@ -447,7 +449,7 @@
       <div class="fc" onclick="hFilterP('Batter',this)">Batters</div>
       <div class="fc" onclick="hFilterP('Bowler',this)">Bowlers</div>
       <div class="fc" onclick="hFilterP('All-Rounder',this)">AR</div>
-      <div class="fc" onclick="hFilterP('WK-Batter',this)">WK</div>
+      <div class="fc" onclick="hFilterP('WK',this)">WK</div>
     </div>
     <div class="pl-list" id="hPlayersList"></div>
   </div>
@@ -481,7 +483,7 @@
       <div class="fc" onclick="wPoolFilter('Batter',this)">Batters</div>
       <div class="fc" onclick="wPoolFilter('Bowler',this)">Bowlers</div>
       <div class="fc" onclick="wPoolFilter('All-Rounder',this)">AR</div>
-      <div class="fc" onclick="wPoolFilter('WK-Batter',this)">WK</div>
+      <div class="fc" onclick="wPoolFilter('WK',this)">WK</div>
     </div>
     <div class="pl-list" id="wPoolList"><div class="empty">Loading pool...</div></div>
   </div>
@@ -551,7 +553,7 @@
       <div class="fc" onclick="pPoolFilter('Batter',this)">Batters</div>
       <div class="fc" onclick="pPoolFilter('Bowler',this)">Bowlers</div>
       <div class="fc" onclick="pPoolFilter('All-Rounder',this)">AR</div>
-      <div class="fc" onclick="pPoolFilter('WK-Batter',this)">WK</div>
+      <div class="fc" onclick="pPoolFilter('WK',this)">WK</div>
     </div>
     <div class="pl-list" id="pPoolList"></div>
   </div>
@@ -629,235 +631,260 @@ window.addEventListener('load', function(){
 });
 
 var PLAYERS = [
-  {id:1,name:"Akeal Hosein",role:"Bowler",nat:"WI",base:200},
-  {id:2,name:"Aman Khan",role:"All-Rounder",nat:"Indian",base:40},
-  {id:3,name:"Anshul Kamboj",role:"All-Rounder",nat:"Indian",base:20},
-  {id:4,name:"Ayush Mhatre",role:"Batter",nat:"Indian",base:20},
-  {id:5,name:"Dewald Brevis",role:"Batter",nat:"SA",base:20},
-  {id:6,name:"Gurjapneet Singh",role:"Bowler",nat:"Indian",base:20},
-  {id:7,name:"Jamie Overton",role:"Bowler",nat:"ENG",base:20},
-  {id:8,name:"Kartik Sharma",role:"WK-Batter",nat:"Indian",base:1420},
-  {id:9,name:"Khaleel Ahmed",role:"Bowler",nat:"Indian",base:20},
-  {id:10,name:"Matt Henry",role:"Bowler",nat:"NZ",base:200},
-  {id:11,name:"Matthew Short",role:"All-Rounder",nat:"AUS",base:150},
-  {id:12,name:"MS Dhoni",role:"WK-Batter",nat:"Indian",base:20},
-  {id:13,name:"Mukesh Choudhary",role:"Bowler",nat:"Indian",base:20},
-  {id:14,name:"Nathan Ellis",role:"Bowler",nat:"AUS",base:20},
-  {id:15,name:"Noor Ahmad",role:"Bowler",nat:"AFG",base:20},
-  {id:16,name:"Prashant Veer",role:"All-Rounder",nat:"Indian",base:1420},
-  {id:17,name:"Rahul Chahar",role:"Bowler",nat:"Indian",base:100},
-  {id:18,name:"Ramakrishna Ghosh",role:"All-Rounder",nat:"Indian",base:20},
-  {id:19,name:"Ruturaj Gaikwad",role:"Batter",nat:"Indian",base:20},
-  {id:20,name:"Sanju Samson",role:"WK-Batter",nat:"Indian",base:20},
-  {id:21,name:"Sarfaraz Khan",role:"Batter",nat:"Indian",base:75},
-  {id:22,name:"Shivam Dube",role:"All-Rounder",nat:"Indian",base:20},
-  {id:23,name:"Shreyas Gopal",role:"Bowler",nat:"Indian",base:20},
-  {id:24,name:"Urvil Patel",role:"WK-Batter",nat:"Indian",base:20},
-  {id:25,name:"Zak Foulkes",role:"All-Rounder",nat:"NZ",base:75},
-  {id:26,name:"Anuj Rawat",role:"WK-Batter",nat:"Indian",base:20},
-  {id:27,name:"Arshad Khan",role:"Bowler",nat:"Indian",base:20},
-  {id:28,name:"Ashok Sharma",role:"Bowler",nat:"Indian",base:90},
-  {id:29,name:"Glenn Phillips",role:"All-Rounder",nat:"NZ",base:20},
-  {id:30,name:"Gurnoor Singh Brar",role:"Bowler",nat:"Indian",base:20},
-  {id:31,name:"Ishant Sharma",role:"Bowler",nat:"Indian",base:20},
-  {id:32,name:"Jason Holder",role:"All-Rounder",nat:"WI",base:700},
-  {id:33,name:"Jayant Yadav",role:"Bowler",nat:"Indian",base:20},
-  {id:34,name:"Jos Buttler",role:"WK-Batter",nat:"ENG",base:20},
-  {id:35,name:"Kagiso Rabada",role:"Bowler",nat:"SA",base:20},
-  {id:36,name:"Kumar Kushagra",role:"WK-Batter",nat:"Indian",base:20},
-  {id:37,name:"Luke Wood",role:"Bowler",nat:"ENG",base:75},
-  {id:38,name:"Manav Suthar",role:"Bowler",nat:"Indian",base:20},
-  {id:39,name:"Mohammed Siraj",role:"Bowler",nat:"Indian",base:20},
-  {id:40,name:"Nishant Sindhu",role:"All-Rounder",nat:"Indian",base:20},
-  {id:41,name:"Prasidh Krishna",role:"Bowler",nat:"Indian",base:20},
-  {id:42,name:"Prithviraj Yarra",role:"Bowler",nat:"Indian",base:30},
-  {id:43,name:"Rahul Tewatia",role:"All-Rounder",nat:"Indian",base:20},
-  {id:44,name:"Rashid Khan",role:"Bowler",nat:"AFG",base:20},
-  {id:45,name:"Sai Kishore",role:"Bowler",nat:"Indian",base:20},
-  {id:46,name:"Sai Sudharsan",role:"Batter",nat:"Indian",base:20},
-  {id:47,name:"Shahrukh Khan",role:"Batter",nat:"Indian",base:20},
-  {id:48,name:"Shubman Gill",role:"Batter",nat:"Indian",base:20},
-  {id:49,name:"Tom Banton",role:"Batter",nat:"ENG",base:200},
-  {id:50,name:"Washington Sundar",role:"All-Rounder",nat:"Indian",base:20},
-  {id:51,name:"Ajinkya Rahane",role:"Batter",nat:"Indian",base:20},
-  {id:52,name:"Akash Deep",role:"Bowler",nat:"Indian",base:100},
-  {id:53,name:"Angkrish Raghuvanshi",role:"Batter",nat:"Indian",base:20},
-  {id:54,name:"Anukul Roy",role:"All-Rounder",nat:"Indian",base:20},
-  {id:55,name:"Blessing Muzarabani",role:"Bowler",nat:"ZIM",base:20},
-  {id:56,name:"Cameron Green",role:"All-Rounder",nat:"AUS",base:2520},
-  {id:57,name:"Daksh Kamra",role:"All-Rounder",nat:"Indian",base:30},
-  {id:58,name:"Finn Allen",role:"WK-Batter",nat:"NZ",base:200},
-  {id:59,name:"Harshit Rana",role:"Bowler",nat:"Indian",base:20},
-  {id:60,name:"Kartik Tyagi",role:"Bowler",nat:"Indian",base:30},
-  {id:61,name:"Manish Pandey",role:"Batter",nat:"Indian",base:20},
-  {id:62,name:"Matheesha Pathirana",role:"Bowler",nat:"SL",base:1800},
-  {id:63,name:"Prashant Solanki",role:"Bowler",nat:"Indian",base:30},
-  {id:64,name:"Rachin Ravindra",role:"All-Rounder",nat:"NZ",base:200},
-  {id:65,name:"Rahul Tripathi",role:"Batter",nat:"Indian",base:75},
-  {id:66,name:"Ramandeep Singh",role:"Batter",nat:"Indian",base:20},
-  {id:67,name:"Rinku Singh",role:"Batter",nat:"Indian",base:20},
-  {id:68,name:"Rovman Powell",role:"All-Rounder",nat:"WI",base:20},
-  {id:69,name:"Sarthak Ranjan",role:"All-Rounder",nat:"Indian",base:30},
-  {id:70,name:"Sunil Narine",role:"All-Rounder",nat:"WI",base:20},
-  {id:71,name:"Tejasvi Singh",role:"WK-Batter",nat:"Indian",base:300},
-  {id:72,name:"Tim Seifert",role:"WK-Batter",nat:"NZ",base:150},
-  {id:73,name:"Umran Malik",role:"Bowler",nat:"Indian",base:20},
-  {id:74,name:"Vaibhav Arora",role:"Bowler",nat:"Indian",base:20},
-  {id:75,name:"Varun Chakaravarthy",role:"Bowler",nat:"Indian",base:20},
-  {id:76,name:"Abdul Samad",role:"Batter",nat:"Indian",base:20},
-  {id:77,name:"Aiden Markram",role:"Batter",nat:"SA",base:20},
-  {id:78,name:"Akash Singh",role:"Bowler",nat:"Indian",base:20},
-  {id:79,name:"Akshat Raghuwanshi",role:"Batter",nat:"Indian",base:220},
-  {id:80,name:"Anrich Nortje",role:"Bowler",nat:"SA",base:200},
-  {id:81,name:"Arjun Tendulkar",role:"Bowler",nat:"Indian",base:20},
-  {id:82,name:"Arshin Kulkarni",role:"All-Rounder",nat:"Indian",base:20},
-  {id:83,name:"Avesh Khan",role:"Bowler",nat:"Indian",base:20},
-  {id:84,name:"Ayush Badoni",role:"All-Rounder",nat:"Indian",base:20},
-  {id:85,name:"Digvesh Rathi",role:"Bowler",nat:"Indian",base:20},
-  {id:86,name:"Himmat Singh",role:"Batter",nat:"Indian",base:20},
-  {id:87,name:"Josh Inglis",role:"Batter",nat:"AUS",base:860},
-  {id:88,name:"M. Siddharth",role:"Bowler",nat:"Indian",base:20},
-  {id:89,name:"Matthew Breetzke",role:"Batter",nat:"SA",base:20},
-  {id:90,name:"Mayank Yadav",role:"Bowler",nat:"Indian",base:20},
-  {id:91,name:"Mitchell Marsh",role:"Batter",nat:"AUS",base:20},
-  {id:92,name:"Mohammed Shami",role:"Bowler",nat:"Indian",base:20},
-  {id:93,name:"Mohsin Khan",role:"Bowler",nat:"Indian",base:20},
-  {id:94,name:"Mukul Choudhary",role:"WK-Batter",nat:"Indian",base:260},
-  {id:95,name:"Naman Tiwari",role:"All-Rounder",nat:"Indian",base:100},
-  {id:96,name:"Nicholas Pooran",role:"WK-Batter",nat:"WI",base:20},
-  {id:97,name:"Prince Yadav",role:"Bowler",nat:"Indian",base:20},
-  {id:98,name:"Rishabh Pant",role:"WK-Batter",nat:"Indian",base:20},
-  {id:99,name:"Shahbaz Ahamad",role:"All-Rounder",nat:"Indian",base:20},
-  {id:100,name:"Wanindu Hasaranga",role:"All-Rounder",nat:"SL",base:200},
-  {id:101,name:"Allah Ghazanfar",role:"Bowler",nat:"AFG",base:20},
-  {id:102,name:"Ashwani Kumar",role:"Bowler",nat:"Indian",base:20},
-  {id:103,name:"Atharva Ankolekar",role:"All-Rounder",nat:"Indian",base:30},
-  {id:104,name:"Corbin Bosch",role:"All-Rounder",nat:"SA",base:20},
-  {id:105,name:"Danish Malewar",role:"Batter",nat:"Indian",base:30},
-  {id:106,name:"Deepak Chahar",role:"Bowler",nat:"Indian",base:20},
-  {id:107,name:"Hardik Pandya",role:"All-Rounder",nat:"Indian",base:20},
-  {id:108,name:"Jasprit Bumrah",role:"Bowler",nat:"Indian",base:20},
-  {id:109,name:"Mayank Markande",role:"Bowler",nat:"Indian",base:20},
-  {id:110,name:"Mayank Rawat",role:"All-Rounder",nat:"Indian",base:30},
-  {id:111,name:"Mitchell Santner",role:"All-Rounder",nat:"NZ",base:20},
-  {id:112,name:"Mohammad Izhar",role:"Bowler",nat:"Indian",base:30},
-  {id:113,name:"Naman Dhir",role:"All-Rounder",nat:"Indian",base:20},
-  {id:114,name:"Quinton De Kock",role:"WK-Batter",nat:"SA",base:100},
-  {id:115,name:"Raghu Sharma",role:"Bowler",nat:"Indian",base:20},
-  {id:116,name:"Raj Bawa",role:"All-Rounder",nat:"Indian",base:20},
-  {id:117,name:"Robin Minz",role:"WK-Batter",nat:"Indian",base:20},
-  {id:118,name:"Rohit Sharma",role:"Batter",nat:"Indian",base:20},
-  {id:119,name:"Ryan Rickelton",role:"WK-Batter",nat:"SA",base:20},
-  {id:120,name:"Shardul Thakur",role:"All-Rounder",nat:"Indian",base:20},
-  {id:121,name:"Sherfane Rutherford",role:"Batter",nat:"WI",base:20},
-  {id:122,name:"Surya Kumar Yadav",role:"Batter",nat:"Indian",base:20},
-  {id:123,name:"Tilak Varma",role:"Batter",nat:"Indian",base:20},
-  {id:124,name:"Trent Boult",role:"Bowler",nat:"NZ",base:20},
-  {id:125,name:"Will Jacks",role:"All-Rounder",nat:"ENG",base:20},
-  {id:126,name:"Arshdeep Singh",role:"Bowler",nat:"Indian",base:20},
-  {id:127,name:"Azmatullah Omarzai",role:"All-Rounder",nat:"AFG",base:20},
-  {id:128,name:"Ben Dwarshuis",role:"All-Rounder",nat:"AUS",base:440},
-  {id:129,name:"Cooper Connolly",role:"All-Rounder",nat:"AUS",base:300},
-  {id:130,name:"Harnoor Pannu",role:"Batter",nat:"Indian",base:20},
-  {id:131,name:"Harpreet Brar",role:"All-Rounder",nat:"Indian",base:20},
-  {id:132,name:"Lockie Ferguson",role:"Bowler",nat:"NZ",base:20},
-  {id:133,name:"Marco Jansen",role:"All-Rounder",nat:"SA",base:20},
-  {id:134,name:"Marcus Stoinis",role:"All-Rounder",nat:"AUS",base:20},
-  {id:135,name:"Mitch Owen",role:"All-Rounder",nat:"AUS",base:20},
-  {id:136,name:"Musheer Khan",role:"All-Rounder",nat:"Indian",base:20},
-  {id:137,name:"Nehal Wadhera",role:"Batter",nat:"Indian",base:20},
-  {id:138,name:"Prabhsimran Singh",role:"WK-Batter",nat:"Indian",base:20},
-  {id:139,name:"Pravin Dubey",role:"Bowler",nat:"Indian",base:30},
-  {id:140,name:"Priyansh Arya",role:"All-Rounder",nat:"Indian",base:20},
-  {id:141,name:"Pyla Avinash",role:"Batter",nat:"Indian",base:20},
-  {id:142,name:"Shashank Singh",role:"Batter",nat:"Indian",base:20},
-  {id:143,name:"Shreyas Iyer",role:"Batter",nat:"Indian",base:20},
-  {id:144,name:"Suryansh Shedge",role:"All-Rounder",nat:"Indian",base:20},
-  {id:145,name:"Vishal Nishad",role:"Bowler",nat:"Indian",base:30},
-  {id:146,name:"Vishnu Vinod",role:"WK-Batter",nat:"Indian",base:20},
-  {id:147,name:"Vyshak Vijaykumar",role:"Bowler",nat:"Indian",base:20},
-  {id:148,name:"Xavier Bartlett",role:"Bowler",nat:"AUS",base:20},
-  {id:149,name:"Yash Thakur",role:"Bowler",nat:"Indian",base:20},
-  {id:150,name:"Yuzvendra Chahal",role:"Bowler",nat:"Indian",base:20},
-  {id:151,name:"Adam Milne",role:"Bowler",nat:"NZ",base:240},
-  {id:152,name:"Aman Rao",role:"Batter",nat:"Indian",base:30},
-  {id:153,name:"Brijesh Sharma",role:"Bowler",nat:"Indian",base:30},
-  {id:154,name:"Dhruv Jurel",role:"WK-Batter",nat:"Indian",base:20},
-  {id:155,name:"Donovan Ferreira",role:"WK-Batter",nat:"SA",base:20},
-  {id:156,name:"Jofra Archer",role:"Bowler",nat:"ENG",base:20},
-  {id:157,name:"Kuldeep Sen",role:"Bowler",nat:"Indian",base:75},
-  {id:158,name:"Kwena Maphaka",role:"Bowler",nat:"SA",base:20},
-  {id:159,name:"Lhuan-dre Pretorius",role:"Batter",nat:"SA",base:20},
-  {id:160,name:"Nandre Burger",role:"Bowler",nat:"SA",base:20},
-  {id:161,name:"Ravi Bishnoi",role:"Bowler",nat:"Indian",base:720},
-  {id:162,name:"Ravi Singh",role:"WK-Batter",nat:"Indian",base:95},
-  {id:163,name:"Ravindra Jadeja",role:"All-Rounder",nat:"Indian",base:20},
-  {id:164,name:"Riyan Parag",role:"Batter",nat:"Indian",base:20},
-  {id:165,name:"Sam Curran",role:"All-Rounder",nat:"ENG",base:20},
-  {id:166,name:"Sandeep Sharma",role:"Bowler",nat:"Indian",base:20},
-  {id:167,name:"Shimron Hetmyer",role:"Batter",nat:"WI",base:20},
-  {id:168,name:"Shubham Dubey",role:"Batter",nat:"Indian",base:20},
-  {id:169,name:"Sushant Mishra",role:"Bowler",nat:"Indian",base:90},
-  {id:170,name:"Tushar Deshpande",role:"Bowler",nat:"Indian",base:20},
-  {id:171,name:"Vaibhav Suryavanshi",role:"Batter",nat:"Indian",base:20},
-  {id:172,name:"Vignesh Puthur",role:"Bowler",nat:"Indian",base:30},
-  {id:173,name:"Yash Raj Punja",role:"Bowler",nat:"Indian",base:30},
-  {id:174,name:"Yashasvi Jaiswal",role:"Batter",nat:"Indian",base:20},
-  {id:175,name:"Yudhvir Singh Charak",role:"All-Rounder",nat:"Indian",base:20},
-  {id:176,name:"Abhinandan Singh",role:"Bowler",nat:"Indian",base:20},
-  {id:177,name:"Bhuvneshwar Kumar",role:"Bowler",nat:"Indian",base:20},
-  {id:178,name:"Devdutt Padikkal",role:"Batter",nat:"Indian",base:20},
-  {id:179,name:"Jacob Bethell",role:"All-Rounder",nat:"ENG",base:20},
-  {id:180,name:"Jacob Duffy",role:"Bowler",nat:"NZ",base:200},
-  {id:181,name:"Jitesh Sharma",role:"WK-Batter",nat:"Indian",base:20},
-  {id:182,name:"Jordan Cox",role:"Batter",nat:"ENG",base:75},
-  {id:183,name:"Josh Hazlewood",role:"Bowler",nat:"AUS",base:20},
-  {id:184,name:"Kanishk Chouhan",role:"All-Rounder",nat:"Indian",base:30},
-  {id:185,name:"Krunal Pandya",role:"All-Rounder",nat:"Indian",base:20},
-  {id:186,name:"Mangesh Yadav",role:"All-Rounder",nat:"Indian",base:520},
-  {id:187,name:"Nuwan Thushara",role:"Bowler",nat:"SL",base:20},
-  {id:188,name:"Phil Salt",role:"WK-Batter",nat:"ENG",base:20},
-  {id:189,name:"Rajat Patidar",role:"Batter",nat:"Indian",base:20},
-  {id:190,name:"Rasikh Salam",role:"Bowler",nat:"Indian",base:20},
-  {id:191,name:"Romario Shepherd",role:"All-Rounder",nat:"WI",base:20},
-  {id:192,name:"Satvik Deswal",role:"All-Rounder",nat:"Indian",base:30},
-  {id:193,name:"Suyash Sharma",role:"Bowler",nat:"Indian",base:20},
-  {id:194,name:"Swapnil Singh",role:"All-Rounder",nat:"Indian",base:20},
-  {id:195,name:"Tim David",role:"All-Rounder",nat:"SGP",base:20},
-  {id:196,name:"Venkatesh Iyer",role:"All-Rounder",nat:"Indian",base:700},
-  {id:197,name:"Vicky Ostwal",role:"All-Rounder",nat:"Indian",base:30},
-  {id:198,name:"Vihaan Malhotra",role:"All-Rounder",nat:"Indian",base:30},
-  {id:199,name:"Virat Kohli",role:"Batter",nat:"Indian",base:20},
-  {id:200,name:"Yash Dayal",role:"Bowler",nat:"Indian",base:20},
-  {id:201,name:"Abhishek Sharma",role:"All-Rounder",nat:"Indian",base:20},
-  {id:202,name:"Amit Kumar",role:"Bowler",nat:"Indian",base:30},
-  {id:203,name:"Aniket Verma",role:"Batter",nat:"Indian",base:20},
-  {id:204,name:"Brydon Carse",role:"All-Rounder",nat:"ENG",base:20},
-  {id:205,name:"Eshan Malinga",role:"Bowler",nat:"SL",base:20},
-  {id:206,name:"Harsh Dubey",role:"All-Rounder",nat:"Indian",base:20},
-  {id:207,name:"Harshal Patel",role:"All-Rounder",nat:"Indian",base:20},
-  {id:208,name:"Heinrich Klaasen",role:"WK-Batter",nat:"SA",base:20},
-  {id:209,name:"Ishan Kishan",role:"WK-Batter",nat:"Indian",base:20},
-  {id:210,name:"Jack Edwards",role:"All-Rounder",nat:"AUS",base:300},
-  {id:211,name:"Jaydev Unadkat",role:"Bowler",nat:"Indian",base:20},
-  {id:212,name:"Kamindu Mendis",role:"All-Rounder",nat:"SL",base:20},
-  {id:213,name:"Liam Livingstone",role:"All-Rounder",nat:"ENG",base:1300},
-  {id:214,name:"Nitish Kumar Reddy",role:"All-Rounder",nat:"Indian",base:20},
-  {id:215,name:"Pat Cummins",role:"Bowler",nat:"AUS",base:20},
-  {id:216,name:"R Smaran",role:"Batter",nat:"Indian",base:20},
-  {id:217,name:"Salil Arora",role:"WK-Batter",nat:"Indian",base:150},
-  {id:218,name:"Shivam Mavi",role:"Bowler",nat:"Indian",base:75},
-  {id:219,name:"Travis Head",role:"Batter",nat:"AUS",base:20},
-  {id:220,name:"Zeeshan Ansari",role:"Bowler",nat:"Indian",base:20},
-  {id:221,name:"Onkar Tarmale",role:"Bowler",nat:"Indian",base:30},
-  {id:222,name:"Praful Hinge",role:"Bowler",nat:"Indian",base:30},
-  {id:223,name:"Sakib Hussain",role:"Bowler",nat:"Indian",base:30},
-  {id:224,name:"Krains Fuletra",role:"Bowler",nat:"Indian",base:30},
-  {id:225,name:"Shivang Kumar",role:"All-Rounder",nat:"Indian",base:30}
+  {id:1,name:"Ruturaj Gaikwad",role:"Batter",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1060380/322236.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:2,name:"Dewald Brevis",role:"Batter",nat:"South Africa",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1070665/335134.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:3,name:"MS Dhoni",role:"WK",nat:"India",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/28081/319946.3.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:4,name:"Kartik Sharma",role:"WK",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1459392/1459392.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:5,name:"Sarfaraz Khan",role:"Batter",nat:"India",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/642525/642525.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:6,name:"Ayush Mhatre",role:"Batter",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1452455/1452455.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:7,name:"Urvil Patel",role:"WK",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1131570/1131570.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:8,name:"Sanju Samson",role:"WK",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/425943/322701.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:9,name:"Aman Khan",role:"All-Rounder",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1254269/1254269.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:10,name:"Shivam Dube",role:"All-Rounder",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/714451/383773.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:11,name:"Zak Foulkes",role:"All-Rounder",nat:"New Zealand",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1202098/1202098.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:12,name:"Ramakrishna Ghosh",role:"All-Rounder",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1339053/1339053.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:13,name:"Anshul Kamboj",role:"All-Rounder",nat:"India",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1175428/381389.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:14,name:"Jamie Overton",role:"All-Rounder",nat:"England",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/510530/324243.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:15,name:"Matthew Short",role:"All-Rounder",nat:"Australia",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/605575/384252.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:16,name:"Prashant Veer",role:"All-Rounder",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1403197/1403197.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:17,name:"Khaleel Ahmed",role:"Bowler",nat:"India",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/942645/322268.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:18,name:"Rahul Chahar",role:"Bowler",nat:"India",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1064812/331166.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:19,name:"Nathan Ellis",role:"Bowler",nat:"Australia",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/826915/329711.2.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:20,name:"Shreyas Gopal",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/344580/322275.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:21,name:"Gurjapneet Singh",role:"Bowler",nat:"India",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1269869/1269869.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:22,name:"Matt Henry",role:"Bowler",nat:"New Zealand",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/506612/506612.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:23,name:"Akeal Hosein",role:"Bowler",nat:"West Indies",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/530812/321939.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:24,name:"Mukesh Choudhary",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1125688/1125688.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:25,name:"Noor Ahmad",role:"Bowler",nat:"Afghanistan",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1182529/1182529.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:26,name:"Abishek Porel",role:"WK",nat:"India",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1277545/1277545.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:27,name:"Ben Duckett",role:"Batter",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/521637/383154.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:28,name:"David Miller",role:"Batter",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/321777/316655.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:29,name:"Karun Nair",role:"Batter",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/398439/398439.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:30,name:"Pathum Nissanka",role:"Batter",nat:"India",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1028655/323070.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:31,name:"Sahil Parakh",role:"Batter",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1451028/1451028.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:32,name:"KL Rahul",role:"WK",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/422108/319942.3.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:33,name:"Nitish Rana",role:"Batter",nat:"India",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/604527/323054.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:34,name:"Prithvi Shaw",role:"Batter",nat:"India",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1070168/322622.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:35,name:"Tristan Stubbs",role:"Batter",nat:"South Africa",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/595978/348577.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:36,name:"Axar Patel",role:"All-Rounder",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/554691/331164.2.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:37,name:"Ajay Mandal",role:"All-Rounder",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1059570/1059570.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:38,name:"Sameer Rizvi",role:"All-Rounder",nat:"India",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1175489/1175489.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:39,name:"Ashutosh Sharma",role:"All-Rounder",nat:"India",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1131978/380694.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:40,name:"Madhav Tiwari",role:"All-Rounder",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1460385/1460385.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:41,name:"Auqib Nabi",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1159732/1159732.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:42,name:"Dushmantha Chameera",role:"Bowler",nat:"India",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/552152/319862.2.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:43,name:"Kyle Jamieson",role:"Bowler",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/625960/321236.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:44,name:"Kuldeep Yadav",role:"Bowler",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/559235/319943.2.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:45,name:"Mukesh Kumar",role:"Bowler",nat:"India",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/926851/373907.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:46,name:"T Natarajan",role:"Bowler",nat:"India",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/802575/322699.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:47,name:"Lungi Ngidi",role:"Bowler",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/542023/322069.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:48,name:"Vipraj Nigam",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1449074/1449074.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:49,name:"Mitchell Starc",role:"Bowler",nat:"Australia",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/311592/311592.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:50,name:"Tripurana Vijay",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1292527/1292527.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:51,name:"Shubman Gill",role:"Batter",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1070173/1070173.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:52,name:"Anuj Rawat",role:"WK",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1123073/359757.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:53,name:"Tom Banton",role:"WK",nat:"England",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/877051/323099.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:54,name:"Jos Buttler",role:"WK",nat:"England",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/308967/308967.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:55,name:"Kumar Kushagra",role:"WK",nat:"India",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1207295/1207295.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:56,name:"Sai Sudharsan",role:"Batter",nat:"India",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1151288/1151288.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:57,name:"M Shahrukh Khan",role:"Batter",nat:"India",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/719719/359756.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:58,name:"Jason Holder",role:"All-Rounder",nat:"West Indies",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/391485/316673.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:59,name:"Glenn Phillips",role:"All-Rounder",nat:"New Zealand",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/823509/823509.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:60,name:"Rashid Khan",role:"All-Rounder",nat:"Afghanistan",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/793463/383228.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:61,name:"Nishant Sindhu",role:"All-Rounder",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1292506/345097.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:62,name:"Manav Suthar",role:"All-Rounder",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1175426/1175426.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:63,name:"Rahul Tewatia",role:"All-Rounder",nat:"India",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/423838/322269.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:64,name:"Washington Sundar",role:"All-Rounder",nat:"India",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/719715/322619.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:65,name:"Arshad Khan",role:"Bowler",nat:"India",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1244751/1244751.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:66,name:"Ashok Sharma",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1299879/341036.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:67,name:"Gurnoor Brar",role:"Bowler",nat:"India",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1287033/359764.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:68,name:"Mohammed Siraj",role:"Bowler",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/940973/322611.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:69,name:"Prasidh Krishna",role:"Bowler",nat:"India",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/917159/917159.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:70,name:"Prithvi Raj",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1121579/1121579.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:71,name:"Kagiso Rabada",role:"Bowler",nat:"South Africa",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/550215/320376.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:72,name:"Sai Kishore",role:"Bowler",nat:"India",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1048739/1048739.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:73,name:"Ishant Sharma",role:"Bowler",nat:"India",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/236779/316602.3.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:74,name:"Luke Wood",role:"Bowler",nat:"England",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/573170/324367.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:75,name:"Jayant Yadav",role:"Bowler",nat:"India",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/447587/322553.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:76,name:"Ajinkya Rahane",role:"Batter",nat:"India",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/277916/316620.3.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:77,name:"Finn Allen",role:"Batter",nat:"New Zealand",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/959759/959759.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:78,name:"Tejasvi Dahiya",role:"WK",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1460372/1460372.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:79,name:"Manish Pandey",role:"Batter",nat:"India",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/290630/323052.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:80,name:"Rovman Powell",role:"Batter",nat:"West Indies",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/820351/322172.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:81,name:"Angkrish Raghuvanshi",role:"Batter",nat:"India",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1292495/345093.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:82,name:"Ramandeep Singh",role:"Batter",nat:"India",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1079470/1079470.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:83,name:"Sarthak Ranjan",role:"Batter",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/956405/956405.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:84,name:"Tim Seifert",role:"WK",nat:"India",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/625964/321313.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:85,name:"Rinku Singh",role:"Batter",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/723105/341043.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:86,name:"Rahul Tripathi",role:"Batter",nat:"India",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/446763/446763.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:87,name:"Daksh Kamra",role:"All-Rounder",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1515048/1515048.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:88,name:"Cameron Green",role:"All-Rounder",nat:"Australia",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1076713/321569.2.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:89,name:"Sunil Narine",role:"All-Rounder",nat:"West Indies",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/230558/320119.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:90,name:"Rachin Ravindra",role:"All-Rounder",nat:"New Zealand",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/959767/959767.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:91,name:"Anukul Roy",role:"All-Rounder",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1079839/341041.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:92,name:"Akash Deep",role:"Bowler",nat:"India",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1176959/1176959.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:93,name:"Vaibhav Arora",role:"Bowler",nat:"India",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1209292/1209292.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:94,name:"Harshit Rana",role:"Bowler",nat:"India",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1312645/358042.3.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:95,name:"Kartik Tyagi",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1122918/339150.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:96,name:"Blessing Muzarabani",role:"Bowler",nat:"Zimbabwe",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/827051/321471.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:97,name:"Matheesha Pathirana",role:"Bowler",nat:"Sri Lanka",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1194795/355402.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:98,name:"Prashant Solanki",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1252337/1252337.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:99,name:"Umran Malik",role:"Bowler",nat:"India",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1246528/343263.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:100,name:"Varun Chakravarthy",role:"Bowler",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1108375/331167.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:101,name:"Rishabh Pant",role:"WK",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/931581/323036.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:102,name:"Abdul Samad",role:"Batter",nat:"India",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1175485/339145.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:103,name:"Akshat Raghuwanshi",role:"Batter",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1300795/1300795.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:104,name:"Ayush Badoni",role:"Batter",nat:"India",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1151270/1151270.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:105,name:"Matthew Breetzke",role:"Batter",nat:"South Africa",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/595267/595267.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:106,name:"Mukul Choudhary",role:"Batter",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1354217/1354217.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:107,name:"Himmat Singh",role:"Batter",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/805235/805235.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:108,name:"Josh Inglis",role:"WK",nat:"Australia",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/662235/324232.2.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:109,name:"Aiden Markram",role:"Batter",nat:"South Africa",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/600498/322067.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:110,name:"Nicholas Pooran",role:"WK",nat:"West Indies",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/604302/320109.2.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:111,name:"Wanindu Hasaranga",role:"All-Rounder",nat:"Sri Lanka",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/784379/322946.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:112,name:"Arshin Kulkarni",role:"All-Rounder",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1403153/1403153.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:113,name:"Mitchell Marsh",role:"All-Rounder",nat:"Australia",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/272450/385798.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:114,name:"Shahbaz Ahmed",role:"All-Rounder",nat:"India",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1159711/340313.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:115,name:"Akash Singh",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1175458/1175458.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:116,name:"Avesh Khan",role:"Bowler",nat:"India",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/694211/322244.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:117,name:"Mohammed Shami",role:"Bowler",nat:"India",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/481896/481896.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:118,name:"Mohsin Khan",role:"Bowler",nat:"India",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1132005/1132005.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:119,name:"Anrich Nortje",role:"Bowler",nat:"South Africa",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/481979/322080.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:120,name:"Prince Yadav",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1350768/1350768.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:121,name:"Digvesh Rathi",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1460529/1460529.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:122,name:"Manimaran Siddharth",role:"Bowler",nat:"India",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1151286/1151286.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:123,name:"Arjun Tendulkar",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1148776/359770.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:124,name:"Naman Tiwari",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1408677/1408677.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:125,name:"Mayank Yadav",role:"Bowler",nat:"India",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1292563/373904.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:126,name:"Quinton de Kock",role:"WK",nat:"South Africa",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/379143/316668.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:127,name:"Danish Malewar",role:"Batter",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1421992/1421992.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:128,name:"Robin Minz",role:"WK",nat:"India",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1350762/1350762.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:129,name:"Ryan Rickelton",role:"WK",nat:"South Africa",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/605661/366321.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:130,name:"Sherfane Rutherford",role:"Batter",nat:"West Indies",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/914541/322173.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:131,name:"Rohit Sharma",role:"Batter",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/34102/385819.2.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:132,name:"Suryakumar Yadav",role:"Batter",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/446507/331163.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:133,name:"Hardik Pandya",role:"All-Rounder",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/625371/625371.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:134,name:"Atharva Ankolekar",role:"All-Rounder",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1175467/1175467.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:135,name:"Raj Bawa",role:"All-Rounder",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1292502/339156.2.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:136,name:"Corbin Bosch",role:"All-Rounder",nat:"South Africa",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/594322/594322.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:137,name:"Will Jacks",role:"All-Rounder",nat:"England",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/897549/897549.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:138,name:"Mayank Rawat",role:"All-Rounder",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1079847/1079847.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:139,name:"Naman Dhir",role:"All-Rounder",nat:"India",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1287032/381384.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:140,name:"Mitchell Santner",role:"All-Rounder",nat:"New Zealand",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/502714/502714.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:141,name:"Shardul Thakur",role:"All-Rounder",nat:"India",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/475281/322696.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:142,name:"Tilak Varma",role:"All-Rounder",nat:"India",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1170265/381391.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:143,name:"Ashwani Kumar",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1209126/1209126.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:144,name:"Trent Boult",role:"Bowler",nat:"New Zealand",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/277912/277912.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:145,name:"Jasprit Bumrah",role:"Bowler",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/625383/319940.2.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:146,name:"Deepak Chahar",role:"Bowler",nat:"India",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/447261/322704.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:147,name:"AM Ghazanfar",role:"Bowler",nat:"India",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1326798/1326798.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:148,name:"Mayank Markande",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1081442/355403.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:149,name:"Mohd Izhar",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1512648/1512648.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:150,name:"Raghu Sharma",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1122621/1122621.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:151,name:"Shreyas Iyer",role:"Batter",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/642519/323035.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:152,name:"Priyansh Arya",role:"Batter",nat:"India",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1175456/1175456.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:153,name:"Pyla Avinash",role:"Batter",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1324449/1324449.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:154,name:"Harnoor Singh",role:"Batter",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1292496/1292496.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:155,name:"Prabhsimran Singh",role:"WK",nat:"India",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1161024/358040.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:156,name:"Vishnu Vinod",role:"WK",nat:"India",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/732293/359774.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:157,name:"Nehal Wadhera",role:"Batter",nat:"India",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1151273/381388.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:158,name:"Azmatullah Omarzai",role:"All-Rounder",nat:"Afghanistan",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/819429/383229.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:159,name:"Cooper Connolly",role:"All-Rounder",nat:"Australia",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1210488/347820.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:160,name:"Marco Jansen",role:"All-Rounder",nat:"South Africa",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/696401/337189.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:161,name:"Musheer Khan",role:"All-Rounder",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1316430/1316430.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:162,name:"Mitchell Owen",role:"All-Rounder",nat:"India",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1213979/1213979.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:163,name:"Shashank Singh",role:"All-Rounder",nat:"India",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/377534/380696.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:164,name:"Marcus Stoinis",role:"All-Rounder",nat:"India",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/325012/321596.2.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:165,name:"Suryansh Shedge",role:"All-Rounder",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1339698/1339698.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:166,name:"Arshdeep Singh",role:"Bowler",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1125976/1125976.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:167,name:"Xavier Bartlett",role:"Bowler",nat:"Australia",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1050545/1050545.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:168,name:"Yuzvendra Chahal",role:"Bowler",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/430246/319955.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:169,name:"Praveen Dubey",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/777515/777515.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:170,name:"Ben Dwarshuis",role:"Bowler",nat:"Australia",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/679567/679567.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:171,name:"Lockie Ferguson",role:"Bowler",nat:"New Zealand",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/493773/493773.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:172,name:"Harpreet Brar",role:"Bowler",nat:"India",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1168641/381368.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:173,name:"Vishal Nishad",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1449053/1449053.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:174,name:"Vijaykumar Vyshak",role:"Bowler",nat:"India",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/777815/777815.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:175,name:"Yash Thakur",role:"Bowler",nat:"India",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1070196/1070196.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:176,name:"Rajat Patidar",role:"Batter",nat:"India",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/823703/823703.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:177,name:"Jordan Cox",role:"WK",nat:"England",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1112537/325912.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:178,name:"Tim David",role:"Batter",nat:"Singapore",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/892749/340305.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:179,name:"Virat Kohli",role:"Batter",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/253802/316605.3.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:180,name:"Devdutt Padikkal",role:"Batter",nat:"India",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1119026/322229.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:181,name:"Phil Salt",role:"WK",nat:"England",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/669365/383141.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:182,name:"Jitesh Sharma",role:"WK",nat:"India",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/721867/380690.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:183,name:"Jacob Bethell",role:"All-Rounder",nat:"England",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1194959/1194959.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:184,name:"Kanishk Chouhan",role:"All-Rounder",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1490396/1490396.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:185,name:"Venkatesh Iyer",role:"All-Rounder",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/851403/337187.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:186,name:"Vihaan Malhotra",role:"All-Rounder",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1354132/1354132.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:187,name:"Mangesh Yadav",role:"All-Rounder",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1515303/1515303.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:188,name:"Krunal Pandya",role:"All-Rounder",nat:"India",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/471342/322614.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:189,name:"Romario Shepherd",role:"All-Rounder",nat:"West Indies",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/677077/677077.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:190,name:"Abhinandan Singh",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1449085/1449085.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:191,name:"Satvik Deswal",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1515302/1515302.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:192,name:"Jacob Duffy",role:"Bowler",nat:"New Zealand",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/547766/547766.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:193,name:"Josh Hazlewood",role:"Bowler",nat:"Australia",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/288284/288284.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:194,name:"Bhuvneshwar Kumar",role:"Bowler",nat:"India",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/326016/326016.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:195,name:"Vicky Ostwal",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1292520/1292520.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:196,name:"Rasikh Salam",role:"Bowler",nat:"India",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1161489/341040.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:197,name:"Suyash Sharma",role:"Bowler",nat:"India",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1350792/358041.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:198,name:"Swapnil Singh",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/232292/384254.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:199,name:"Nuwan Thushara",role:"Bowler",nat:"Sri Lanka",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/955235/955235.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:200,name:"Yash Dayal",role:"Bowler",nat:"India",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1159720/1159720.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:201,name:"Aman Rao",role:"Batter",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1403261/1403261.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:202,name:"Shubham Dubey",role:"Batter",nat:"India",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1252585/1252585.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:203,name:"Shimron Hetmyer",role:"Batter",nat:"West Indies",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/670025/320116.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:204,name:"Yashasvi Jaiswal",role:"Batter",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1151278/340309.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:205,name:"Dhruv Jurel",role:"WK",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1175488/340310.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:206,name:"Riyan Parag",role:"Batter",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1079434/370935.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:207,name:"Lhuan-dre Pretorius",role:"WK",nat:"South Africa",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1385640/1385640.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:208,name:"Ravi Singh",role:"Batter",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1461577/411284.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:209,name:"Vaibhav Sooryavanshi",role:"Batter",nat:"India",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1408688/1408688.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:210,name:"Sam Curran",role:"All-Rounder",nat:"England",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/662973/383153.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:211,name:"Donovan Ferreira",role:"All-Rounder",nat:"South Africa",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/698315/698315.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:212,name:"Ravindra Jadeja",role:"All-Rounder",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/234675/316600.2.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:213,name:"Jofra Archer",role:"Bowler",nat:"England",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/669855/669855.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:214,name:"Brijesh Sharma",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1515046/1515046.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:215,name:"Nandre Burger",role:"Bowler",nat:"South Africa",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/971349/971349.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:216,name:"Tushar Deshpande",role:"Bowler",nat:"India",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/822553/822553.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:217,name:"Kwena Maphaka",role:"Bowler",nat:"South Africa",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1294342/1294342.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:218,name:"Adam Milne",role:"Bowler",nat:"New Zealand",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/450860/316689.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:219,name:"Sushant Mishra",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1175457/1175457.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:220,name:"Vignesh Puthur",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1460388/1460388.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:221,name:"Ravi Bishnoi",role:"Bowler",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1175441/337188.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:222,name:"Sandeep Sharma",role:"Bowler",nat:"India",base:100,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/438362/323055.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:223,name:"Kuldeep Sen",role:"Bowler",nat:"India",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1163695/1163695.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:224,name:"Yash Raj Punja",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1515186/1515186.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:225,name:"Yudhvir Singh",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1206052/1206052.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:226,name:"Ishan Kishan",role:"WK",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/720471/331165.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:227,name:"Salil Arora",role:"WK",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1199281/1199281.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:228,name:"Travis Head",role:"Batter",nat:"Australia",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/530011/321584.2.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:229,name:"Heinrich Klaasen",role:"WK",nat:"South Africa",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/436757/322073.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:230,name:"Ravichandran Smaran",role:"Batter",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1327722/1327722.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:231,name:"Aniket Verma",role:"Batter",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1409976/1409976.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:232,name:"Abhishek Sharma",role:"All-Rounder",nat:"India",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1070183/358037.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:233,name:"Brydon Carse",role:"All-Rounder",nat:"England",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/596417/325908.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:234,name:"Harsh Dubey",role:"All-Rounder",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1216159/1216159.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:235,name:"Jack Edwards",role:"All-Rounder",nat:"Australia",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1088610/1088610.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:236,name:"Krains Fuletra",role:"All-Rounder",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1467631/1467631.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:237,name:"Liam Livingstone",role:"All-Rounder",nat:"England",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/403902/403902.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:238,name:"Kamindu Mendis",role:"All-Rounder",nat:"Sri Lanka",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/784373/329938.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:239,name:"Nitish Kumar Reddy",role:"All-Rounder",nat:"India",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1175496/1175496.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:240,name:"Harshal Patel",role:"All-Rounder",nat:"India",base:150,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/390481/381372.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:241,name:"Shivam Mavi",role:"All-Rounder",nat:"India",base:75,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1079848/341042.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:242,name:"Shivang Kumar",role:"All-Rounder",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1512089/1512089.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:243,name:"Amit Kumar",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1512257/1512257.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:244,name:"Pat Cummins",role:"Bowler",nat:"Australia",base:200,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/489889/489889.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:245,name:"Praful Hinge",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1216167/1216167.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:246,name:"Eshan Malinga",role:"Bowler",nat:"Sri Lanka",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1306214/1306214.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:247,name:"Sakib Hussain",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1340422/387604.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:248,name:"Onkar Tarmale",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/1515304/1515304.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:249,name:"Jaydev Unadkat",role:"Bowler",nat:"India",base:50,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/390484/390484.1.png&w=120&h=120&fit=cover&mask=circle"},
+  {id:250,name:"Zeeshan Ansari",role:"Bowler",nat:"India",base:30,photo:"https://images.weserv.nl/?url=p.imgci.com/db/PICTURES/CMS/942371/942371.1.png&w=120&h=120&fit=cover&mask=circle"}
 ];
 
 var COLORS=['#1a74e4','#ff4c6a','#00c896','#f0b429','#9c6fff','#ff8c42','#00d4ff','#ff6bae','#b4f261','#ffd166','#e040fb','#00bcd4'];
-var EMOJI={Batter:'[BAT]',Bowler:'[BOWL]','All-Rounder':'[AR]','WK-Batter':'[WK]'};
+var EMOJI={Batter:'BAT',Bowler:'BOWL','All-Rounder':'AR',WK:'WK'};
 
 // Bid increment: <100L: +20L, 100-500L: +25L, >500L: +50L
 function nextBid(current) {
@@ -1166,7 +1193,13 @@ function renderSortedList(){
   if(!list.length){el.innerHTML='<div class="empty">No pending players in this category</div>';return;}
   el.innerHTML=list.map(function(p){
     return '<div class="sr-item" onclick="bringPlayer('+p.id+')">'
+      +'<div style="display:flex;align-items:center;gap:9px">'
+      +'<div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--surface3);flex-shrink:0;border:1px solid var(--border)">'
+      +(p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover" onerror="this.src=\'\'">'
+              :'<div style="text-align:center;line-height:36px;font-size:14px">'+(EMOJI[p.role]||'?')+'</div>')
+      +'</div>'
       +'<div><div class="sr-name">'+p.name+'</div><div class="sr-sub">'+p.role+' - '+p.nat+'</div></div>'
+      +'</div>'
       +'<div class="sr-price">'+fmtL(p.base)+'</div></div>';
   }).join('');
 }
@@ -1180,7 +1213,13 @@ function searchPlayers(){
   }).slice(0,8);
   res.innerHTML=matches.map(function(p){
     return '<div class="sr-item" onclick="bringPlayer('+p.id+')">'
+      +'<div style="display:flex;align-items:center;gap:9px">'
+      +'<div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--surface3);flex-shrink:0;border:1px solid var(--border)">'
+      +(p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover" onerror="this.src=\'\'">'
+              :'<div style="text-align:center;line-height:36px;font-size:14px">'+(EMOJI[p.role]||'?')+'</div>')
+      +'</div>'
       +'<div><div class="sr-name">'+p.name+'</div><div class="sr-sub">'+p.role+' - '+p.nat+'</div></div>'
+      +'</div>'
       +'<div class="sr-price">'+fmtL(p.base)+'</div></div>';
   }).join('')||'<div style="color:var(--text3);font-size:13px;padding:8px">No players found</div>';
 }
@@ -1208,10 +1247,24 @@ function bringPlayer(id){
   if(G.timerEnabled) startTimer(G.timerSeconds);
 }
 
+
+function setAvi(el, photo, role) {
+  if(photo) {
+    var img = document.createElement('img');
+    img.src = photo;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%';
+    img.onerror = function(){ this.src=''; el.innerHTML='<span style="font-size:22px">'+(EMOJI[role]||'?')+'</span>'; };
+    el.innerHTML = '';
+    el.appendChild(img);
+  } else {
+    el.innerHTML = '<span style="font-size:22px">'+(EMOJI[role]||'?')+'</span>';
+  }
+}
 function renderActiveBid(data){
   var p=(data.players||[]).find(function(x){return x.id===data.currentPlayerId;});
   if(!p) return;
-  document.getElementById('hAvi').textContent=EMOJI[p.role]||'?';
+  var hAviEl=document.getElementById('hAvi');
+  setAvi(hAviEl, p.photo, p.role);
   document.getElementById('hName').textContent=p.name;
   document.getElementById('hRole').textContent=p.role;
   document.getElementById('hNat').textContent=p.nat;
@@ -1470,7 +1523,8 @@ function updateWaitBudget(){
 function renderParticipantBid(data){
   var p=(data.players||[]).find(function(x){return x.id===data.currentPlayerId;});
   if(!p) return;
-  document.getElementById('pAvi').textContent=EMOJI[p.role]||'?';
+  var pAviEl=document.getElementById('pAvi');
+  setAvi(pAviEl, p.photo, p.role);
   document.getElementById('pName').textContent=p.name;
   document.getElementById('pRole').textContent=p.role;
   document.getElementById('pNat').textContent=p.nat;
@@ -1590,7 +1644,11 @@ function renderPPool(){
   var c=document.getElementById('pPoolList');
   if(!c) return;
   c.innerHTML=list.length?list.map(function(p){
-    return '<div class="pl-item"><div class="pl-info"><div class="pl-name">'+p.name+'</div>'
+    return '<div class="pl-item">'
+      +'<div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--surface3);flex-shrink:0;border:1px solid var(--border)">'
+      +(p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover">':'<div style="text-align:center;line-height:36px;font-size:14px">'+(EMOJI[p.role]||'?')+'</div>')
+      +'</div>'
+      +'<div class="pl-info"><div class="pl-name">'+p.name+'</div>'
       +'<div class="pl-sub">'+p.role+' - '+p.nat+'</div></div>'
       +'<div class="pl-price">'+fmtL(p.base)+'</div></div>';
   }).join(''):'<div class="empty">No pending players</div>';
@@ -1629,7 +1687,11 @@ function renderWPool(){
   var c=document.getElementById('wPoolList');
   if(!c) return;
   c.innerHTML=list.length?list.map(function(p){
-    return '<div class="pl-item"><div class="pl-info"><div class="pl-name">'+p.name+'</div>'
+    return '<div class="pl-item">'
+      +'<div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--surface3);flex-shrink:0;border:1px solid var(--border)">'
+      +(p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover">':'<div style="text-align:center;line-height:36px;font-size:14px">'+(EMOJI[p.role]||'?')+'</div>')
+      +'</div>'
+      +'<div class="pl-info"><div class="pl-name">'+p.name+'</div>'
       +'<div class="pl-sub">'+p.role+' - '+p.nat+'</div>'
       +'<span class="s-p pl-st">Base: '+fmtL(p.base)+'</span></div>'
       +'<div class="pl-price">'+fmtL(p.base)+'</div></div>';
