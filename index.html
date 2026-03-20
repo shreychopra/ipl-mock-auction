@@ -764,7 +764,7 @@
   <div id="exportBtnWrap" style="display:none;margin-top:16px">
     <button class="btn btn-gold" style="max-width:300px" onclick="exportCSV()">Export CSV</button>
   </div>
-  <a href="./fantasy.html" style="display:block;max-width:300px;margin-top:12px;text-decoration:none">
+  <a id="fantasyLink" href="./fantasy.html" style="display:block;max-width:300px;margin-top:12px;text-decoration:none">
     <button class="btn btn-blue" style="width:100%">Fantasy League Tracker</button>
   </a>
   <button class="btn btn-ghost" style="margin-top:8px;max-width:300px" onclick="showScreen('landingScreen')">New Auction</button>
@@ -1951,6 +1951,8 @@ function showSoldFlash(sold){
 
 // --- END ---
 function showEndScreen(){
+  var fl=document.getElementById('fantasyLink');
+  if(fl && roomCode) fl.href='./fantasy.html?code='+roomCode;
   var sold=(G.players||[]).filter(function(p){return p.status==='sold';}).length;
   var unsold=(G.players||[]).filter(function(p){return p.status==='unsold';}).length;
   document.getElementById('endSummary').textContent=sold+' sold - '+unsold+' unsold';
