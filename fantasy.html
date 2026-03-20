@@ -326,7 +326,7 @@ firebase.initializeApp({
 var db = firebase.database();
 
 // ── STATE ──
-var G = {teams:{}, roomCode:'', myTeamName:'', matchData:{}, matchLabels:{}, captains:{}, currentMatch:1};
+var G = {teams:{}, roomCode:'', myTeamName:'', matchData:{}, matchLabels:{}, captains:{}, auctionEndedAt:0, currentMatch:1};
 var fantasyRef = null;
 var currentSquadTeam = 0;
 var syncedIds = {};
@@ -877,8 +877,7 @@ function renderSquadView(){
       row.appendChild(avi); row.appendChild(info); row.appendChild(ptsDiv);
       row.addEventListener('click',function(){openPlayerModal(parseInt(row.dataset.ti),parseInt(row.dataset.pi));});
       // Show C/VC badges if set
-      var mk='match'+G.currentMatch;
-      var myCaps=G.captains&&G.captains[mk]&&G.captains[mk][currentSquadTeam]?G.captains[mk][currentSquadTeam]:{};
+      var myCaps=G.captains&&G.captains[currentSquadTeam]?G.captains[currentSquadTeam]:{};
       if(parseInt(myCaps.c)===idx){
         var cb=document.createElement('span');
         cb.style.cssText='background:var(--gold);color:#0a0800;font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;margin-left:5px;font-family:var(--fd)';
@@ -937,19 +936,14 @@ function openPlayerModal(ti,pi){
   } else {
     body+='<div class="empty" style="padding:20px">No match data yet</div>';
   }
-  // Add C/VC selector to modal
-  var mk2='match'+G.currentMatch;
-  var myCaps2=(G.captains&&G.captains[mk2]&&G.captains[mk2][ti])?G.captains[mk2][ti]:{};
+  // Show C/VC status in modal (read-only - set during auction)
+  var myCaps2=G.captains&&G.captains[ti]?G.captains[ti]:{};
   var isCurrC=parseInt(myCaps2.c)===pi;
   var isCurrVC=parseInt(myCaps2.vc)===pi;
-  body+='<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">'
-    +'<div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;text-transform:uppercase;font-family:var(--fd);margin-bottom:8px">Set for M'+G.currentMatch+'</div>'
-    +'<div style="display:flex;gap:8px">'
-    +'<button onclick="setCaptain('+ti+','+pi+',\"c\")" style="flex:1;padding:8px;border-radius:var(--rsm);font-family:var(--fd);font-size:13px;font-weight:700;cursor:pointer;border:none;'
-    +(isCurrC?'background:var(--gold);color:#0a0800':'background:var(--surface2);color:var(--text2);border:1px solid var(--border)')+'">Captain (2×)</button>'
-    +'<button onclick="setCaptain('+ti+','+pi+',\"vc\")" style="flex:1;padding:8px;border-radius:var(--rsm);font-family:var(--fd);font-size:13px;font-weight:700;cursor:pointer;border:none;'
-    +(isCurrVC?'background:var(--surface3);color:var(--gold);border:1px solid var(--gold)':'background:var(--surface2);color:var(--text2);border:1px solid var(--border)')+'">Vice Captain (1.5×)</button>'
-    +'</div></div>';
+  if(isCurrC||isCurrVC){
+    body+='<div style="margin-top:12px;padding:8px 12px;background:var(--golddim);border-radius:var(--rsm);border:1px solid rgba(245,184,0,.3);font-size:12px;font-family:var(--fd);font-weight:700;letter-spacing:1px;color:var(--gold)">'
+      +(isCurrC?'★ CAPTAIN (2×)':'◆ VICE-CAPTAIN (1.5×)')+'</div>';
+  }
   document.getElementById('modalBody').innerHTML=body;
   document.getElementById('playerModal').classList.add('show');
 }
@@ -1144,21 +1138,15 @@ function processMatch(matchId,desc,mNum,done){
   });
 }
 function saveResults(results,mNum,matchId,desc){
-  // Apply captain/VC multipliers
-  var mk='match'+mNum;
-  var caps=G.captains&&G.captains[mk]?G.captains[mk]:{};
+  // Apply captain/VC multipliers (fixed for whole tournament, stored in rooms/{code}/captains/{teamIdx})
   Object.keys(results).forEach(function(ti){
-    var cap=caps[ti];
-    if(!cap) return;
+    var cap=G.captains&&G.captains[ti]?G.captains[ti]:{};
+    if(!cap.c&&!cap.vc) return;
     Object.keys(results[ti]).forEach(function(pi){
       var isCap=cap.c!==undefined&&parseInt(cap.c)===parseInt(pi);
       var isVC=cap.vc!==undefined&&parseInt(cap.vc)===parseInt(pi);
-      if(isCap||isVC){
-        // Re-multiply only if not already applied
-        // Store raw pts first, apply multiplier on top
-        // Since we can't re-derive raw pts, apply ratio adjustment
-        results[ti][pi]=Math.round(results[ti][pi]*(isCap?2:1.5));
-      }
+      if(isCap) results[ti][pi]=Math.round(results[ti][pi]*2);
+      else if(isVC) results[ti][pi]=Math.round(results[ti][pi]*1.5);
     });
   });
   var upd={};
@@ -1221,6 +1209,18 @@ function confirmItem(matchId,i,accept){
     }
   }
 }
+function isMatchEligible(schedMatch){
+  // A match is eligible only if auction ended BEFORE the match started
+  // (strictly before start time - if ended at or after start, skip that match)
+  if(!G.auctionEndedAt) return true; // no timestamp = old room, include all
+  var timeParts=schedMatch.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  var hours=parseInt(timeParts[1])+(timeParts[3].toUpperCase()==='PM'&&timeParts[1]!=='12'?12:0);
+  var mins=parseInt(timeParts[2]);
+  var matchStartUTC=new Date(schedMatch.date+'T00:00:00Z').getTime()
+    +(hours*60+mins-330)*60000;
+  return G.auctionEndedAt < matchStartUTC;
+}
+
 function runSync(manual){
   if(manual) logSync('Manual sync started','info');
   document.getElementById('syncStatus').textContent='Syncing...';
@@ -1308,6 +1308,12 @@ function loadRoomAsAdmin(code){
     fantasyRef.once('value',function(snap2){
       var fd=snap2.val()||{};
       G.matchData=fd.matches||{}; G.matchLabels=fd.matchLabels||{}; G.currentMatch=fd.currentMatch||1;
+      // Load captains and auctionEndedAt
+      db.ref('rooms/'+code).once('value',function(rs){
+        var rd=rs.val()||{};
+        G.captains=rd.captains||{};
+        G.auctionEndedAt=rd.auctionEndedAt||0;
+      });
       document.getElementById('adminPanel').style.display='none';
       document.getElementById('navSub').textContent='Room: '+code+' (Admin)';
       updateNav(); buildSquadTabs(); renderLeaderboard(); renderSquadPane(); renderHistory();
@@ -1316,8 +1322,14 @@ function loadRoomAsAdmin(code){
     });
     fantasyRef.on('value',function(snap3){
       var fd=snap3.val()||{};
-      G.matchData=fd.matches||{}; G.matchLabels=fd.matchLabels||{}; G.captains=fd.captains||{}; G.currentMatch=fd.currentMatch||1;
+      G.matchData=fd.matches||{}; G.matchLabels=fd.matchLabels||{}; G.currentMatch=fd.currentMatch||1;
       renderLeaderboard(); renderHistory(); updateNav();
+    });
+    // Load captains and auctionEndedAt from auction room data
+    db.ref('rooms/'+code).once('value',function(rsnap2){
+      var rd=rsnap2.val()||{};
+      G.captains=rd.captains||{};
+      G.auctionEndedAt=rd.auctionEndedAt||0;
     });
   });
 }
