@@ -1121,19 +1121,28 @@ function processMatch(matchId,desc,mNum,done,retryCount){
       logSync('Failed after 3 attempts: '+desc+' — '+err,'err');
       done();return;
     }
-    // Check scorecard has meaningful data (guard against rain delays/abandoned matches)
-    var innings=data.scoreCard||data.inningsScoreList||[];
-    if(!innings.length){
-      logSync('No scorecard data yet for '+desc+' — may be rain delay. Will retry next sync.','warn');
+    // Check match state from matchHeader (most reliable signal)
+    var matchState=(data.matchHeader&&data.matchHeader.state)||'';
+    var matchStatus=(data.matchHeader&&data.matchHeader.status)||'';
+    matchState=matchState.toLowerCase();
+    if(matchState==='abandon'){
+      // Abandoned - no points, mark as synced so we don't retry forever
+      logSync(desc+' was abandoned (no result). Skipping with 0 points.','warn');
+      var upd={};
+      upd['syncedIds/'+matchId]=true;
+      if(fantasyRef) fantasyRef.update(upd);
+      syncedIds[matchId]=true;
       done();return;
     }
-    // Need at least 2 innings with bowling data (both teams must have bowled)
-    // This handles chase wins (fewer batters) correctly
-    var innWithBowling=innings.filter(function(inn){
-      return (inn.bowlCard||inn.bowlers||[]).length>0;
-    }).length;
-    if(innWithBowling<2){
-      logSync('Incomplete match data for '+desc+' ('+innWithBowling+'/2 innings bowled). Will retry.','warn');
+    if(matchState!=='complete'){
+      // Not finished yet (in progress, innings break, preview, etc)
+      logSync(desc+' not complete yet (state: '+matchState+'). Will retry next sync.','warn');
+      done();return;
+    }
+    // Match is confirmed complete - proceed with full scorecard parse
+    var innings=data.scoreCard||data.inningsScoreList||[];
+    if(!innings.length){
+      logSync('No innings data for completed match '+desc+' — unexpected. Retrying.','warn');
       done();return;
     }
     var stats=parseCard(data);
