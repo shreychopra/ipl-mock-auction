@@ -166,6 +166,11 @@
   <div class="hero">
     <h1>Fantasy League</h1>
     <p>IPL 2026 · Track your season</p>
+    <div style="margin-top:14px;position:relative">
+      <button onclick="promptAdmin()" style="background:none;border:none;
+        color:var(--text3);font-size:12px;cursor:pointer;letter-spacing:.5px;
+        text-decoration:underline;text-underline-offset:3px">Admin login</button>
+    </div>
   </div>
   <div class="body">
     <div class="card">
@@ -321,12 +326,12 @@ firebase.initializeApp({
 var db = firebase.database();
 
 // ── STATE ──
-var G = {teams:{}, roomCode:'', myTeamName:'', matchData:{}, currentMatch:1};
+var G = {teams:{}, roomCode:'', myTeamName:'', matchData:{}, matchLabels:{}, captains:{}, currentMatch:1};
 var fantasyRef = null;
 var currentSquadTeam = 0;
 var syncedIds = {};
-var RAPIDAPI_KEY = '2a8016ce27msh4d7ad33855139d0p1925dajsnae86c2e72164';
-var IS_ADMIN = window.location.search.includes('admin=1');
+var WORKER_URL = 'https://ipl-fantasy-proxy.choprashrey17.workers.dev';
+var IS_ADMIN = false; // set via verifyAdmin()
 
 var PLAYERS = [
   {id:1,name:"Ruturaj Gaikwad",role:"Batter",nat:"India",base:200,photo:"./images/322236.1.webp"},
@@ -871,6 +876,20 @@ function renderSquadView(){
       ptsDiv.innerHTML='<div class="sp-pts">'+pts+'</div><div style="font-size:9px;color:var(--text3);text-align:right">pts</div>';
       row.appendChild(avi); row.appendChild(info); row.appendChild(ptsDiv);
       row.addEventListener('click',function(){openPlayerModal(parseInt(row.dataset.ti),parseInt(row.dataset.pi));});
+      // Show C/VC badges if set
+      var mk='match'+G.currentMatch;
+      var myCaps=G.captains&&G.captains[mk]&&G.captains[mk][currentSquadTeam]?G.captains[mk][currentSquadTeam]:{};
+      if(parseInt(myCaps.c)===idx){
+        var cb=document.createElement('span');
+        cb.style.cssText='background:var(--gold);color:#0a0800;font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;margin-left:5px;font-family:var(--fd)';
+        cb.textContent='C';
+        row.querySelector('div').appendChild(cb);
+      } else if(parseInt(myCaps.vc)===idx){
+        var vcb=document.createElement('span');
+        vcb.style.cssText='background:var(--surface3);color:var(--gold);font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;margin-left:5px;font-family:var(--fd);border:1px solid var(--gold)';
+        vcb.textContent='VC';
+        row.querySelector('div').appendChild(vcb);
+      }
       lst.appendChild(row);
     });
   });
@@ -918,8 +937,46 @@ function openPlayerModal(ti,pi){
   } else {
     body+='<div class="empty" style="padding:20px">No match data yet</div>';
   }
+  // Add C/VC selector to modal
+  var mk2='match'+G.currentMatch;
+  var myCaps2=(G.captains&&G.captains[mk2]&&G.captains[mk2][ti])?G.captains[mk2][ti]:{};
+  var isCurrC=parseInt(myCaps2.c)===pi;
+  var isCurrVC=parseInt(myCaps2.vc)===pi;
+  body+='<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">'
+    +'<div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:2px;text-transform:uppercase;font-family:var(--fd);margin-bottom:8px">Set for M'+G.currentMatch+'</div>'
+    +'<div style="display:flex;gap:8px">'
+    +'<button onclick="setCaptain('+ti+','+pi+',\"c\")" style="flex:1;padding:8px;border-radius:var(--rsm);font-family:var(--fd);font-size:13px;font-weight:700;cursor:pointer;border:none;'
+    +(isCurrC?'background:var(--gold);color:#0a0800':'background:var(--surface2);color:var(--text2);border:1px solid var(--border)')+'">Captain (2×)</button>'
+    +'<button onclick="setCaptain('+ti+','+pi+',\"vc\")" style="flex:1;padding:8px;border-radius:var(--rsm);font-family:var(--fd);font-size:13px;font-weight:700;cursor:pointer;border:none;'
+    +(isCurrVC?'background:var(--surface3);color:var(--gold);border:1px solid var(--gold)':'background:var(--surface2);color:var(--text2);border:1px solid var(--border)')+'">Vice Captain (1.5×)</button>'
+    +'</div></div>';
   document.getElementById('modalBody').innerHTML=body;
   document.getElementById('playerModal').classList.add('show');
+}
+function setCaptain(ti,pi,role){
+  var mk='match'+G.currentMatch;
+  if(!G.captains) G.captains={};
+  if(!G.captains[mk]) G.captains[mk]={};
+  if(!G.captains[mk][ti]) G.captains[mk][ti]={};
+  // Toggle off if already set
+  if(G.captains[mk][ti][role]===pi){
+    delete G.captains[mk][ti][role];
+  } else {
+    G.captains[mk][ti][role]=pi;
+    // Can't be both C and VC
+    var other=role==='c'?'vc':'c';
+    if(G.captains[mk][ti][other]===pi) delete G.captains[mk][ti][other];
+  }
+  if(fantasyRef){
+    var upd={};
+    upd['captains/'+mk+'/'+ti]=G.captains[mk][ti];
+    fantasyRef.update(upd,function(err){
+      if(err){toast('Error saving: '+err);return;}
+      toast((role==='c'?'Captain':'Vice Captain')+' set!');
+      closeModal();
+      renderSquadView();
+    });
+  }
 }
 function closeModal(){document.getElementById('playerModal').classList.remove('show');}
 function squadModal(idx){
@@ -976,7 +1033,7 @@ function findPlayer(apiName){
   });
   return {player:best,score:bestScore};
 }
-function calcPts(bat,bowl,field){
+function calcPts(bat,bowl,field,isCap,isVC){
   var pts=4; // playing XI
   if(bat){
     pts+=bat.runs+(bat.fours||0)+(bat.sixes||0)*2;
@@ -990,6 +1047,8 @@ function calcPts(bat,bowl,field){
     if(bowl.overs>=2){var eco=bowl.runs/bowl.overs;pts+=eco<6?4:eco<=8?2:0;}
   }
   if(field){pts+=(field.c||0)*8+(field.st||0)*12+(field.ro||0)*6;}
+  if(isCap) pts=Math.round(pts*2);
+  else if(isVC) pts=Math.round(pts*1.5);
   return pts;
 }
 function parseCard(scard){
@@ -1018,34 +1077,24 @@ function parseCard(scard){
     (inn.bowlCard||inn.bowlers||[]).forEach(function(b){
       var name=b.bowlName||b.name||''; if(!name) return;
       var st=get(name);
+      var rawOv=parseFloat(b.overs||b.ov||0);
+      var fullOv=Math.floor(rawOv), balls=Math.round((rawOv-fullOv)*10);
+      var realOv=fullOv+(balls/6); // e.g. 3.4 -> 3.667
       st.bowl={wkts:parseInt(b.wickets||b.wkts||b.w||0),
-        overs:parseFloat(b.overs||b.ov||0),runs:parseInt(b.runs||b.r||0),
+        overs:realOv,runs:parseInt(b.runs||b.r||0),
         maidens:parseInt(b.maidens||b.m||0),lbwBowled:stats[name]._lb||0};
     });
   });
   return stats;
 }
 function apiGet(path,cb){
-  fetch('https://cricbuzz-cricket.p.rapidapi.com'+path,{
-    method:'GET',
-    headers:{
-      'x-rapidapi-key':RAPIDAPI_KEY,
-      'x-rapidapi-host':'cricbuzz-cricket.p.rapidapi.com',
-      'Content-Type':'application/json'
-    }
-  }).then(function(r){
-    if(!r.ok){
-      return r.text().then(function(t){
-        throw new Error('HTTP '+r.status+' — '+t.slice(0,120));
-      });
-    }
+  fetch(WORKER_URL+'/cricbuzz'+path)
+  .then(function(r){
+    if(!r.ok) return r.text().then(function(t){throw new Error('HTTP '+r.status+' — '+t.slice(0,120));});
     return r.json();
   })
   .then(function(d){cb(d,null);})
-  .catch(function(e){
-    console.error('API error:',e);
-    cb(null,e.message);
-  });
+  .catch(function(e){console.error('API error:',e);cb(null,e.message);});
 }
 function logSync(msg,type){
   var c=document.getElementById('syncLog'); if(!c) return;
@@ -1095,8 +1144,24 @@ function processMatch(matchId,desc,mNum,done){
   });
 }
 function saveResults(results,mNum,matchId,desc){
-  var upd={};
+  // Apply captain/VC multipliers
   var mk='match'+mNum;
+  var caps=G.captains&&G.captains[mk]?G.captains[mk]:{};
+  Object.keys(results).forEach(function(ti){
+    var cap=caps[ti];
+    if(!cap) return;
+    Object.keys(results[ti]).forEach(function(pi){
+      var isCap=cap.c!==undefined&&parseInt(cap.c)===parseInt(pi);
+      var isVC=cap.vc!==undefined&&parseInt(cap.vc)===parseInt(pi);
+      if(isCap||isVC){
+        // Re-multiply only if not already applied
+        // Store raw pts first, apply multiplier on top
+        // Since we can't re-derive raw pts, apply ratio adjustment
+        results[ti][pi]=Math.round(results[ti][pi]*(isCap?2:1.5));
+      }
+    });
+  });
+  var upd={};
   Object.keys(results).forEach(function(ti){upd['matches/'+mk+'/'+ti]=results[ti];});
   upd['syncedIds/'+matchId]=true;
   upd['matchLabels/'+mk]=desc; // store match label (e.g. 'M1 — RCB vs SRH')
@@ -1204,6 +1269,30 @@ function loadSyncedIds(){
 
 // ── ADMIN ──
 function openAdmin(){document.getElementById('adminPanel').style.display='block';loadAllRooms();}
+function promptAdmin(){
+  var pw=window.prompt('Enter admin password:');
+  if(!pw) return;
+  fetch(WORKER_URL+'/admin/verify',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({password:pw})
+  }).then(function(r){
+    if(r.ok){
+      IS_ADMIN=true;
+      document.getElementById('adminPanel').style.display='block';
+      document.getElementById('mainNav').style.display='flex';
+      document.getElementById('adminBtn').style.display='block';
+      document.getElementById('adminBackBtn').style.display='none';
+      document.getElementById('navSub').textContent='Admin Mode';
+      fantasyRef=db.ref('fantasy/_admin_sync');
+      loadSyncedIds();
+      loadAllRooms();
+    } else {
+      alert('Incorrect password');
+    }
+  }).catch(function(){alert('Could not reach server');});
+}
+
 function loadRoomAsAdmin(code){
   db.ref('rooms/'+code).once('value',function(snap){
     var data=snap.val(); if(!data){toast('Room not found');return;}
@@ -1221,7 +1310,7 @@ function loadRoomAsAdmin(code){
     });
     fantasyRef.on('value',function(snap3){
       var fd=snap3.val()||{};
-      G.matchData=fd.matches||{}; G.matchLabels=fd.matchLabels||{}; G.currentMatch=fd.currentMatch||1;
+      G.matchData=fd.matches||{}; G.matchLabels=fd.matchLabels||{}; G.captains=fd.captains||{}; G.currentMatch=fd.currentMatch||1;
       renderLeaderboard(); renderHistory(); updateNav();
     });
   });
