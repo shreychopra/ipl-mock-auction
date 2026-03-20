@@ -73,10 +73,10 @@
     .pane{display:none;flex:1;overflow-y:auto}
     .pane.on{display:block}
     /* leaderboard */
-    .lb-hdr{padding:10px 16px;display:grid;grid-template-columns:28px 1fr auto auto;gap:8px;
+    .lb-hdr{padding:10px 16px;display:grid;grid-template-columns:28px 1fr 80px 80px;gap:8px;
       font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);
       border-bottom:1px solid var(--border);font-family:var(--fd)}
-    .lb-row{padding:12px 16px;display:grid;grid-template-columns:28px 1fr auto auto;gap:8px;
+    .lb-row{padding:12px 16px;display:grid;grid-template-columns:28px 1fr 80px 80px;gap:8px;
       align-items:center;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
     .lb-row:hover{background:var(--surface2)}
     .lb-row.me{background:rgba(245,184,0,.04);border-left:3px solid var(--gold)}
@@ -244,7 +244,7 @@
       <span id="syncBannerText">Points data loading...</span>
       <span style="font-size:10px;color:var(--text3)">Auto-updated daily</span>
     </div>
-    <div class="lb-hdr"><div>#</div><div>Team</div><div style="text-align:right">This Match</div><div style="text-align:right">Total</div></div>
+    <div class="lb-hdr" style="grid-template-columns:28px 1fr 80px 80px"><div>#</div><div>Team</div><div style="text-align:right">This Match</div><div style="text-align:right">Total</div></div>
     <div id="lbList"></div>
   </div>
 
