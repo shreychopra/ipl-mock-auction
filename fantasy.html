@@ -240,12 +240,12 @@
       <div class="gap"></div>
       <div class="card-title">Your Team Name <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(to highlight your team)</span></div>
       <input type="text" id="setupTeamName" placeholder="e.g. Mumbai Mavericks" maxlength="25"/>
-      <div class="gap"></div>
-      <div class="card-title">RapidAPI Key <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(from rapidapi.com)</span></div>
-      <input type="text" id="setupApiKey" placeholder="Paste your x-rapidapi-key here" autocomplete="off"/>
       <div style="margin-top:16px">
         <button class="btn btn-gold" onclick="loadRoom()">Load Squads</button>
       </div>
+      <a href="./index.html" style="display:block;margin-top:10px;text-decoration:none">
+        <button class="btn btn-ghost" style="width:100%">← Back to Auction</button>
+      </a>
     </div>
     <div class="card">
       <div class="card-title">Scoring System</div>
@@ -458,11 +458,7 @@ function loadRoom(){
       updateNavMatch();
     });
     // Load synced IDs and start auto-sync
-    var apiKeyEl = document.getElementById('setupApiKey');
-    if(apiKeyEl && apiKeyEl.value.trim()){
-      RAPIDAPI_KEY = apiKeyEl.value.trim();
-      localStorage.setItem('fantasy_apikey', RAPIDAPI_KEY);
-    }
+
     loadSyncedIds();
   });
 }
@@ -836,7 +832,7 @@ function showSquadModal(teamIdx){
 // AUTO SYNC — Cricbuzz via RapidAPI
 // ══════════════════════════════════════════════
 
-var RAPIDAPI_KEY = '';
+var RAPIDAPI_KEY = '2a8016ce27msh4d7ad33855139d0p1925dajsnae86c2e7216';
 var IPL_2026_SERIES_ID = '9237'; // Cricbuzz series ID for IPL 2026
 var pendingMatches = {}; // matchId -> parsed scorecard data awaiting confirm
 var syncedMatchIds = {}; // matchId -> true (already synced)
@@ -1057,12 +1053,8 @@ function logSync(msg, type){
 
 // ── MAIN SYNC FUNCTION ──
 function runSync(manual){
-  var key = document.getElementById('setupApiKey') ?
-    document.getElementById('setupApiKey').value.trim() : '';
-  if(!key) key = localStorage.getItem('fantasy_apikey')||'';
-  if(!key){ toast('Enter your RapidAPI key on the setup screen'); return; }
-  RAPIDAPI_KEY = key;
-  localStorage.setItem('fantasy_apikey', key);
+  var key = RAPIDAPI_KEY;
+  if(!key){ toast('API key not configured'); return; }
 
   document.getElementById('syncStatusText').textContent='Syncing...';
   if(manual) logSync('Manual sync started', 'info');
@@ -1254,15 +1246,12 @@ function loadSyncedIds(){
 window.addEventListener('load', function(){
   var savedCode = localStorage.getItem('fantasy_room');
   var savedTeam = localStorage.getItem('fantasy_team');
-  var savedKey = localStorage.getItem('fantasy_apikey');
+
   if(savedCode){
     document.getElementById('setupCode').value=savedCode;
     document.getElementById('setupTeamName').value=savedTeam||'';
   }
-  if(savedKey){
-    document.getElementById('setupApiKey').value=savedKey;
-    RAPIDAPI_KEY=savedKey;
-  }
+
 });
 </script>
 </body>
