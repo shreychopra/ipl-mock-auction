@@ -1170,7 +1170,7 @@ function createRoom(){
   roomRef=db.ref('rooms/'+code);
 
   roomRef.set({
-    roomName:rName, hostName:hName, teamBudget:budget,
+    roomName:rName, hostName:hName, teamBudget:budget, createdAt:Date.now(),
     teams:{}, players:players,
     currentPlayerId:null, currentBid:0, currentBidderIdx:"NONE",
     timerEnabled:timerOn, timerSeconds:timerSec,
