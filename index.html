@@ -92,6 +92,8 @@
     .btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
     .btn-ghost:hover{border-color:var(--border2);background:var(--surface3)}
     .btn-sm{padding:8px 14px;font-size:12px;border-radius:var(--rsm);width:auto}
+    .color-opt{width:32px;height:32px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:all .15s;flex-shrink:0}
+    .color-opt.on{border-color:#fff;transform:scale(1.15);box-shadow:0 0 0 2px rgba(255,255,255,.3)}
     .btn:disabled{opacity:.3;pointer-events:none;box-shadow:none}
 
     /* ── TOGGLE ── */
@@ -542,6 +544,22 @@
     <div class="card">
       <div class="card-title">Your Team Name</div>
       <input type="text" id="myTeamName" placeholder="e.g. Mumbai Mavericks" maxlength="25"/>
+      <div class="gap"></div>
+      <div class="card-title">Team Colour</div>
+      <div id="colorPicker" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">
+        <button class="color-opt on" data-color="#e74c3c" style="background:#e74c3c" onclick="pickColor(this)"></button>
+        <button class="color-opt" data-color="#e67e22" style="background:#e67e22" onclick="pickColor(this)"></button>
+        <button class="color-opt" data-color="#f1c40f" style="background:#f1c40f" onclick="pickColor(this)"></button>
+        <button class="color-opt" data-color="#2ecc71" style="background:#2ecc71" onclick="pickColor(this)"></button>
+        <button class="color-opt" data-color="#1abc9c" style="background:#1abc9c" onclick="pickColor(this)"></button>
+        <button class="color-opt" data-color="#3498db" style="background:#3498db" onclick="pickColor(this)"></button>
+        <button class="color-opt" data-color="#9b59b6" style="background:#9b59b6" onclick="pickColor(this)"></button>
+        <button class="color-opt" data-color="#e91e8c" style="background:#e91e8c" onclick="pickColor(this)"></button>
+        <button class="color-opt" data-color="#ffffff" style="background:#ffffff" onclick="pickColor(this)"></button>
+        <button class="color-opt" data-color="#5091CD" style="background:#5091CD" onclick="pickColor(this)"></button>
+        <button class="color-opt" data-color="#f5b800" style="background:#f5b800" onclick="pickColor(this)"></button>
+        <button class="color-opt" data-color="#00d68f" style="background:#00d68f" onclick="pickColor(this)"></button>
+      </div>
       <div style="margin-top:12px;font-size:12px;color:var(--text3)">Up to 12 teams can join. Each participant creates their own team.</div>
     </div>
     <button class="btn btn-blue" id="joinTeamBtn" onclick="joinTeam()">Join Auction</button>
@@ -1327,6 +1345,12 @@ function joinRoom(){
 }
 
 // --- JOIN TEAM ---
+var selectedColor = '#e74c3c';
+function pickColor(btn){
+  document.querySelectorAll('.color-opt').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  selectedColor = btn.dataset.color;
+}
 function joinTeam(){
   var tName=document.getElementById('myTeamName').value.trim();
   if(!tName){toast('Enter your team name!');return;}
