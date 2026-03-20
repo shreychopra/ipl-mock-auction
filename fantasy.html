@@ -257,7 +257,7 @@
         <div style="font-family:var(--fd);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase">Auto Sync</div>
         <div id="syncStatus" style="font-size:11px;color:var(--text3);margin-top:2px">Syncs completed IPL 2026 matches daily</div>
       </div>
-      <button class="btn btn-blue btn-sm" onclick="runSync(true)">Sync Now</button>
+      <button class="btn btn-blue btn-sm" id="syncNowBtn" style="display:none" onclick="runSync(true)">Sync Now</button>
     </div>
     <div id="unmatchedSection" style="display:none;padding:10px;border-bottom:1px solid var(--border)">
       <div style="font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:2px;
@@ -317,7 +317,7 @@ var G = {teams:{}, roomCode:'', myTeamName:'', matchData:{}, currentMatch:1};
 var fantasyRef = null;
 var currentSquadTeam = 0;
 var syncedIds = {};
-var RAPIDAPI_KEY = '2a8016ce27msh4d7ad33855139d0p1925dajsnae86c2e7216';
+var RAPIDAPI_KEY = '2a8016ce27msh4d7ad33855139d0p1925dajsnae86c2e72164';
 var toastTO;
 
 // ── UTILS ──
@@ -376,12 +376,14 @@ function loadRoom(){
     fantasyRef.once('value',function(snap2){
       var fd=snap2.val()||{};
       G.matchData=fd.matches||{};
+      G.matchLabels=fd.matchLabels||{};
       G.currentMatch=fd.currentMatch||1;
       initApp();
     });
     fantasyRef.on('value',function(snap3){
       var fd=snap3.val()||{};
       G.matchData=fd.matches||{};
+      G.matchLabels=fd.matchLabels||{};
       G.currentMatch=fd.currentMatch||1;
       renderLeaderboard();
       renderHistory();
@@ -402,13 +404,20 @@ function initApp(){
   // Check admin param
   if(window.location.search.includes('admin=1')){
     document.getElementById('adminBtn').style.display='block';
+    document.getElementById('syncNowBtn').style.display='flex';
   }
   // Load synced IDs then auto-sync
   loadSyncedIds();
 }
 
 function updateNav(){
+  var mk='match'+G.currentMatch;
+  var label=G.matchLabels&&G.matchLabels[mk]?G.matchLabels[mk]:'';
   document.getElementById('navMatch').textContent='M'+G.currentMatch;
+  document.getElementById('navMatch').title=label; // tooltip
+  // Update match pill tooltip visually
+  var pill=document.getElementById('navMatch');
+  pill.style.cursor=label?'help':'default';
 }
 
 // ── LEADERBOARD ──
@@ -445,7 +454,7 @@ function renderLeaderboard(){
       +'<div><div style="font-size:14px;font-weight:600">'+r.name+'</div>'
       +'<div style="font-size:11px;color:'+r.color+'">&#9679;'+(isMe?' Your team':'')+'</div></div>'
       +'<div><div class="lb-pts" style="font-size:16px;color:var(--text2)">'+r.match+'</div>'
-      +'<div style="font-size:10px;color:var(--text3);text-align:right">M'+G.currentMatch+'</div></div>'
+      +'<div style="font-size:10px;color:var(--text3);text-align:right">M'+G.currentMatch+(G.matchLabels&&G.matchLabels['match'+G.currentMatch]?' · '+(G.matchLabels['match'+G.currentMatch].split(',')[0]):'')+'</div></div>'
       +'<div><div class="lb-pts">'+r.total+'</div>'
       +'<div style="font-size:10px;color:var(--text3);text-align:right">Total</div></div>'
       +'</div>';
@@ -738,6 +747,9 @@ function saveResults(results,mNum,matchId,desc){
   var mk='match'+mNum;
   Object.keys(results).forEach(function(ti){upd['matches/'+mk+'/'+ti]=results[ti];});
   upd['syncedIds/'+matchId]=true;
+  upd['matchLabels/'+mk]=desc; // store description
+  if(!G.matchLabels) G.matchLabels={};
+  G.matchLabels[mk]=desc;
   if(fantasyRef){
     fantasyRef.update(upd,function(err){
       if(err){logSync('Save error: '+err,'err');return;}
@@ -746,6 +758,7 @@ function saveResults(results,mNum,matchId,desc){
       logSync('Saved Match '+mNum+' ('+desc+')','ok');
       renderLeaderboard();
       renderSquadView();
+      updateNav();
     });
   }
 }
