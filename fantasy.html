@@ -921,6 +921,28 @@ function loadSyncedIds(){
 
 // ── ADMIN ──
 function openAdmin(){document.getElementById('adminPanel').style.display='block';loadAllRooms();}
+function loadRoomAsAdmin(code){
+  db.ref('rooms/'+code).once('value',function(snap){
+    var data=snap.val(); if(!data){toast('Room not found');return;}
+    G.roomCode=code; G.myTeamName=''; G.teams=data.teams||{};
+    if(fantasyRef) fantasyRef.off();
+    fantasyRef=db.ref('fantasy/'+code);
+    fantasyRef.once('value',function(snap2){
+      var fd=snap2.val()||{};
+      G.matchData=fd.matches||{}; G.matchLabels=fd.matchLabels||{}; G.currentMatch=fd.currentMatch||1;
+      document.getElementById('adminPanel').style.display='none';
+      document.getElementById('navSub').textContent='Room: '+code+' (Admin)';
+      updateNav(); buildSquadTabs(); renderLeaderboard(); renderSquadPane(); renderHistory();
+      document.getElementById('tab-sy').style.display='block';
+      showScreen('mainScreen'); toast('Loaded room '+code);
+    });
+    fantasyRef.on('value',function(snap3){
+      var fd=snap3.val()||{};
+      G.matchData=fd.matches||{}; G.matchLabels=fd.matchLabels||{}; G.currentMatch=fd.currentMatch||1;
+      renderLeaderboard(); renderHistory(); updateNav();
+    });
+  });
+}
 function closeAdmin(){
   if(!IS_ADMIN) document.getElementById('adminPanel').style.display='none';
 }
@@ -931,7 +953,16 @@ function loadAllRooms(){
     var rooms=rsnap.val()||{};
     db.ref('fantasy').once('value',function(fsnap){
       var fdata=fsnap.val()||{};
-      var codes=Object.keys(rooms).sort();
+      var codes=Object.keys(rooms).sort(function(a,b){
+        // Sort by creation time descending (newest first)
+        // Room codes contain no timestamp, use Firebase's push order or createdAt if present
+        // Fall back: sort by teamBudget createdAt or just reverse alphabetical as proxy
+        var ra=rooms[a], rb=rooms[b];
+        var ta=ra.createdAt||ra.startTime||0;
+        var tb=rb.createdAt||rb.startTime||0;
+        if(tb!==ta) return tb-ta; // newest first
+        return b.localeCompare(a); // fallback reverse alpha
+      });
       c.innerHTML='<div style="font-size:12px;color:var(--text3);margin-bottom:10px">'+codes.length+' rooms</div>';
       codes.forEach(function(code){
         var room=rooms[code];
@@ -944,9 +975,9 @@ function loadAllRooms(){
         hdr.innerHTML='<div>'
           +'<div style="font-family:var(--fn);font-size:22px;color:var(--gold);letter-spacing:4px">'+code+'</div>'
           +'<div style="font-size:11px;color:var(--text3);margin-top:2px">'
-          +(room.roomName||'Unnamed')+' · '+Object.keys(teams).length+' teams'
+          +(room.roomName||'Unnamed')+' · '+(room.hostName?'Host: '+room.hostName+' · ':'')+Object.keys(teams).length+' teams'
           +(room.auctionEnded?' · Ended':room.auctionStarted?' · In progress':' · Not started')
-          +(fd?' · Fantasy active':'')+'</div></div>'
+          +(fd?' · ✓ Fantasy active':'')+'</div></div>'
           +'<div style="font-size:11px;color:var(--text3)">▶</div>';
         var body=document.createElement('div');
         body.className='room-body';
@@ -966,7 +997,20 @@ function loadAllRooms(){
         });
         if(fd&&fd.matches) bhtml+='<div style="margin-top:8px;padding:8px;background:var(--golddim);'
           +'border-radius:var(--rsm);font-size:12px;color:var(--gold)">Fantasy: '+Object.keys(fd.matches).length+' matches</div>';
-        body.innerHTML=bhtml;
+        // Add Load Fantasy button at top of body
+        var loadBtn=document.createElement('button');
+        loadBtn.className='btn btn-blue btn-sm';
+        loadBtn.style.cssText='margin-bottom:12px;width:auto';
+        loadBtn.textContent='Load Fantasy for this room';
+        loadBtn.addEventListener('click',function(e){
+          e.stopPropagation();
+          loadRoomAsAdmin(code);
+        });
+        body.innerHTML='';
+        body.appendChild(loadBtn);
+        var bodyContent=document.createElement('div');
+        bodyContent.innerHTML=bhtml;
+        body.appendChild(bodyContent);
         hdr.addEventListener('click',function(){
           body.style.display=body.style.display==='block'?'none':'block';
         });
