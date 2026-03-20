@@ -220,8 +220,34 @@
     <div class="nav-title">Fantasy League</div>
     <div class="nav-sub" id="navRoomCode">IPL 2026</div>
   </div>
-  <div class="match-pill" id="navMatchPill">M0</div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="match-pill" id="navMatchPill">M0</div>
+    <button onclick="showAdminPanel()" id="adminBtn" style="display:none;background:var(--surface2);
+      border:1px solid var(--border);border-radius:var(--rsm);padding:4px 10px;
+      font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--text3);cursor:pointer">
+      ADMIN
+    </button>
+  </div>
 </nav>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:200;overflow-y:auto">
+  <div style="padding:16px;background:linear-gradient(135deg,#0e1e4a,#0d1120);
+    border-bottom:1px solid rgba(80,145,205,.2);display:flex;align-items:center;gap:12px;
+    position:sticky;top:0;z-index:10">
+    <button onclick="document.getElementById('adminPanel').style.display='none'"
+      style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);
+      padding:6px 12px;color:var(--text2);cursor:pointer;font-family:var(--font-display);
+      font-size:12px;font-weight:600">← Back</button>
+    <div style="font-family:var(--font-display);font-size:18px;font-weight:700">Admin — All Rooms</div>
+    <button onclick="loadAllRooms()" style="margin-left:auto;background:var(--surface2);
+      border:1px solid var(--border);border-radius:var(--rsm);padding:6px 12px;
+      color:var(--gold);cursor:pointer;font-family:var(--font-display);font-size:12px;font-weight:600">
+      Refresh
+    </button>
+  </div>
+  <div id="adminContent" style="padding:14px"></div>
+</div>
 
 <!-- SETUP SCREEN -->
 <div id="setupScreen" class="screen active">
@@ -470,7 +496,6 @@ function renderApp(){
   renderTeamTabs('entryTeamTabs', selectEntryTeam);
   renderTeamTabs('squadTeamTabs', selectSquadTeam);
   renderLeaderboard();
-  renderEntry();
   renderSquads();
   renderHistory();
   showScreen('mainScreen');
@@ -1242,8 +1267,106 @@ function loadSyncedIds(){
   });
 }
 
+
+// ── ADMIN: VIEW ALL ROOMS ──
+function initAdmin(){
+  // Check URL param ?admin=1
+  if(window.location.search.includes('admin=1')){
+    document.getElementById('adminBtn').style.display='block';
+  }
+}
+
+function showAdminPanel(){
+  document.getElementById('adminPanel').style.display='block';
+  loadAllRooms();
+}
+
+function loadAllRooms(){
+  var c=document.getElementById('adminContent');
+  c.innerHTML='<div style="color:var(--text3);font-size:13px;padding:20px">Loading all rooms...</div>';
+  db.ref('rooms').once('value',function(snap){
+    var rooms=snap.val()||{};
+    var codes=Object.keys(rooms);
+    if(!codes.length){c.innerHTML='<div style="color:var(--text3);padding:20px">No rooms found</div>';return;}
+
+    // Also load fantasy data
+    db.ref('fantasy').once('value',function(fsnap){
+      var fantasyData=fsnap.val()||{};
+      c.innerHTML='<div style="font-size:12px;color:var(--text3);margin-bottom:12px">'+codes.length+' rooms found</div>';
+      codes.sort().forEach(function(code){
+        var room=rooms[code];
+        var teams=room.teams||{};
+        var teamKeys=Object.keys(teams);
+        var fData=fantasyData[code];
+
+        var div=document.createElement('div');
+        div.style.cssText='background:var(--surface);border:1px solid var(--border);'
+          +'border-radius:var(--radius);margin-bottom:10px;overflow:hidden';
+
+        // Header
+        var hdr=document.createElement('div');
+        hdr.style.cssText='padding:12px 14px;display:flex;align-items:center;'
+          +'justify-content:space-between;cursor:pointer;background:linear-gradient(135deg,#0e1e4a,#0d1120)';
+        hdr.innerHTML='<div>'
+          +'<div style="font-family:var(--font-num);font-size:22px;color:var(--gold);letter-spacing:4px">'+code+'</div>'
+          +'<div style="font-size:11px;color:var(--text3);margin-top:2px">'
+          +(room.roomName||'Unnamed')+' · '+teamKeys.length+' teams'
+          +(room.auctionEnded?' · Ended':room.auctionStarted?' · In progress':' · Not started')
+          +(fData?' · Fantasy active':'')
+          +'</div></div>'
+          +'<div style="font-size:11px;color:var(--text3)">tap to expand</div>';
+
+        var body=document.createElement('div');
+        body.style.display='none';
+        body.style.cssText='padding:12px 14px;border-top:1px solid var(--border)';
+
+        // Teams
+        var teamsHtml='<div style="font-family:var(--font-display);font-size:10px;font-weight:700;'
+          +'letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Squads</div>';
+        teamKeys.sort(function(a,b){return parseInt(a)-parseInt(b);}).forEach(function(k){
+          var t=teams[k];
+          teamsHtml+='<div style="margin-bottom:10px;padding:10px;background:var(--surface2);'
+            +'border-radius:var(--rsm);border-left:3px solid '+(t.color||'#5091CD')+'">'
+            +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+            +'<div style="font-family:var(--font-display);font-size:15px;font-weight:700">'+t.name+'</div>'
+            +'<div style="font-family:var(--font-num);font-size:16px;color:var(--gold)">₹'+(t.spent||0)+'L spent</div>'
+            +'</div>';
+          var players=t.players||[];
+          teamsHtml+=players.map(function(p){
+            return '<div style="display:flex;justify-content:space-between;font-size:12px;'
+              +'padding:3px 0;border-bottom:1px solid var(--border);color:var(--text2)">'
+              +'<span>'+p.name+'</span>'
+              +'<span style="color:var(--green);font-family:var(--font-num)">₹'+(p.soldPrice||0)+'L</span>'
+              +'</div>';
+          }).join('');
+          teamsHtml+='</div>';
+        });
+
+        // Fantasy summary if exists
+        if(fData&&fData.matches){
+          var matchCount=Object.keys(fData.matches).length;
+          teamsHtml+='<div style="margin-top:10px;padding:8px 10px;background:var(--golddim);'
+            +'border-radius:var(--rsm);border:1px solid rgba(245,184,0,.2);font-size:12px">'
+            +'Fantasy: '+matchCount+' matches synced</div>';
+        }
+
+        body.innerHTML=teamsHtml;
+
+        hdr.addEventListener('click',function(){
+          body.style.display=body.style.display==='none'?'block':'none';
+        });
+
+        div.appendChild(hdr);
+        div.appendChild(body);
+        c.appendChild(div);
+      });
+    });
+  });
+}
+
 // ── SESSION RESTORE ──
 window.addEventListener('load', function(){
+  initAdmin();
   var savedCode = localStorage.getItem('fantasy_room');
   var savedTeam = localStorage.getItem('fantasy_team');
 
