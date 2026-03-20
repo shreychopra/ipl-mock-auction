@@ -318,6 +318,29 @@ var fantasyRef = null;
 var currentSquadTeam = 0;
 var syncedIds = {};
 var RAPIDAPI_KEY = '2a8016ce27msh4d7ad33855139d0p1925dajsnae86c2e72164';
+var IPL_SCHEDULE = [
+  {num:1,  id:"149618", label:"M1 — RCB vs SRH",  date:"2026-03-22"},
+  {num:2,  id:"149629", label:"M2 — MI vs KKR",   date:"2026-03-23"},
+  {num:3,  id:"149640", label:"M3 — RR vs CSK",   date:"2026-03-23"},
+  {num:4,  id:"149651", label:"M4 — PBKS vs GT",  date:"2026-03-24"},
+  {num:5,  id:"149662", label:"M5 — LSG vs DC",   date:"2026-03-25"},
+  {num:6,  id:"149673", label:"M6 — KKR vs SRH",  date:"2026-03-26"},
+  {num:7,  id:"149684", label:"M7 — CSK vs PBKS", date:"2026-03-27"},
+  {num:8,  id:"149695", label:"M8 — DC vs MI",    date:"2026-03-28"},
+  {num:9,  id:"149699", label:"M9 — GT vs RR",    date:"2026-03-29"},
+  {num:10, id:"149710", label:"M10 — SRH vs LSG", date:"2026-03-29"},
+  {num:11, id:"149721", label:"M11 — RCB vs CSK", date:"2026-03-30"},
+  {num:12, id:"149732", label:"M12 — KKR vs PBKS",date:"2026-03-31"},
+  {num:13, id:"149743", label:"M13 — RR vs MI",   date:"2026-04-01"},
+  {num:14, id:"149746", label:"M14 — DC vs GT",   date:"2026-04-01"},
+  {num:15, id:"149757", label:"M15 — KKR vs LSG", date:"2026-04-02"},
+  {num:16, id:"149768", label:"M16 — RR vs RCB",  date:"2026-04-03"},
+  {num:17, id:"149779", label:"M17 — PBKS vs SRH",date:"2026-04-04"},
+  {num:18, id:"149790", label:"M18 — CSK vs DC",  date:"2026-04-05"},
+  {num:19, id:"149801", label:"M19 — LSG vs GT",  date:"2026-04-05"},
+  {num:20, id:"149812", label:"M20 — MI vs RCB",  date:"2026-04-06"},
+];
+
 var toastTO;
 
 // ── UTILS ──
@@ -412,11 +435,15 @@ function initApp(){
 
 function updateNav(){
   var mk='match'+G.currentMatch;
+  // Try stored label first, then fall back to schedule
   var label=G.matchLabels&&G.matchLabels[mk]?G.matchLabels[mk]:'';
-  document.getElementById('navMatch').textContent='M'+G.currentMatch;
-  document.getElementById('navMatch').title=label; // tooltip
-  // Update match pill tooltip visually
+  if(!label){
+    var sched=IPL_SCHEDULE.find(function(m){return m.num===G.currentMatch;});
+    if(sched) label=sched.label;
+  }
   var pill=document.getElementById('navMatch');
+  pill.textContent=label||('M'+G.currentMatch);
+  pill.title=label;
   pill.style.cursor=label?'help':'default';
 }
 
@@ -711,13 +738,13 @@ function nextMatchNum(){
   return nums.length?Math.max.apply(null,nums)+1:1;
 }
 var pendingConfirm={};
-function processMatch(matchId,desc,done){
+function processMatch(matchId,desc,mNum,done){
+  if(mNum===undefined) mNum=nextMatchNum(); // fallback
   apiGet('/mcenter/v1/'+matchId+'/scard',function(data,err){
     if(err){logSync('Error fetching '+desc+': '+err,'err');done();return;}
     var stats=parseCard(data);
     var results={};
     var lowConf=[];
-    var mNum=nextMatchNum();
     Object.keys(stats).forEach(function(apiName){
       var m=findPlayer(apiName);
       if(!m.player) return;
@@ -747,7 +774,7 @@ function saveResults(results,mNum,matchId,desc){
   var mk='match'+mNum;
   Object.keys(results).forEach(function(ti){upd['matches/'+mk+'/'+ti]=results[ti];});
   upd['syncedIds/'+matchId]=true;
-  upd['matchLabels/'+mk]=desc; // store description
+  upd['matchLabels/'+mk]=desc; // store match label (e.g. 'M1 — RCB vs SRH')
   if(!G.matchLabels) G.matchLabels={};
   G.matchLabels[mk]=desc;
   if(fantasyRef){
@@ -807,40 +834,27 @@ function confirmItem(matchId,i,accept){
 function runSync(manual){
   if(manual) logSync('Manual sync started','info');
   document.getElementById('syncStatus').textContent='Syncing...';
-  apiGet('/matches/v1/recent',function(data,err){
-    if(err){logSync('Failed to fetch matches: '+err,'err');return;}
-    var iplMatches=[];
-    (data.typeMatches||[]).forEach(function(tm){
-      (tm.seriesMatches||[]).forEach(function(sm){
-        var sw=sm.seriesAdWrapper||sm;
-        if(!sw||typeof sw!=='object') return;
-        var sn=(sw.seriesName||'').toLowerCase();
-        if(!sn.includes('ipl')&&!sn.includes('indian premier')) return;
-        (sw.matches||[]).forEach(function(m){
-          var mi=m.matchInfo||{};
-          if((mi.state||'').toLowerCase().includes('complete'))
-            iplMatches.push({id:mi.matchId,desc:mi.matchDesc||'Match'});
-        });
-      });
-    });
-    var toSync=iplMatches.filter(function(m){return !syncedIds[m.id];});
-    logSync('Found '+iplMatches.length+' completed IPL matches, '+toSync.length+' new','info');
-    if(!toSync.length){
-      document.getElementById('syncStatus').textContent='Up to date · '+new Date().toLocaleTimeString();
+  // Use hardcoded schedule — no API call needed to find matches
+  var today = new Date().toISOString().slice(0,10);
+  var toSync = IPL_SCHEDULE.filter(function(m){
+    return m.date <= today && !syncedIds[m.id];
+  });
+  logSync('Schedule: '+IPL_SCHEDULE.length+' matches known, '+toSync.length+' new to sync','info');
+  if(!toSync.length){
+    document.getElementById('syncStatus').textContent='Up to date · '+new Date().toLocaleTimeString();
+    return;
+  }
+  var idx=0;
+  function next(){
+    if(idx>=toSync.length){
+      document.getElementById('syncStatus').textContent='Done · '+new Date().toLocaleTimeString();
       return;
     }
-    var idx=0;
-    function next(){
-      if(idx>=toSync.length){
-        document.getElementById('syncStatus').textContent='Done · '+new Date().toLocaleTimeString();
-        return;
-      }
-      var m=toSync[idx++];
-      logSync('Fetching '+m.desc,'info');
-      setTimeout(function(){processMatch(m.id,m.desc,next);},600);
-    }
-    next();
-  });
+    var m=toSync[idx++];
+    logSync('Fetching '+m.label,'info');
+    setTimeout(function(){processMatch(m.id, m.label, m.num, next);},600);
+  }
+  next();
 }
 function loadSyncedIds(){
   if(!fantasyRef) return;
