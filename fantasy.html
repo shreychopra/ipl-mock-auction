@@ -148,7 +148,7 @@
 <body>
 
 <nav class="nav" id="mainNav" style="display:none">
-  <a href="./index.html" class="nav-back">← Auction</a>
+  <a href="./fantasy.html" class="nav-back">⌂ Home</a>
   <div style="flex:1">
     <div class="nav-title">Fantasy League</div>
     <div class="nav-sub" id="navSub">IPL 2026</div>
@@ -244,7 +244,7 @@
       <span id="syncBannerText">Points data loading...</span>
       <span style="font-size:10px;color:var(--text3)">Auto-updated daily</span>
     </div>
-    <div class="lb-hdr"><div>#</div><div>Team</div><div style="text-align:right">Match</div><div style="text-align:right">Total</div></div>
+    <div class="lb-hdr"><div>#</div><div>Team</div><div style="text-align:right">This Match</div><div style="text-align:right">Total</div></div>
     <div id="lbList"></div>
   </div>
 
@@ -492,7 +492,10 @@ function renderLeaderboard(){
     var t=G.teams[k];
     return {idx:parseInt(k),name:t.name,color:t.color||'#5091CD',
       total:teamTotal(parseInt(k)), match:teamMatchPts(parseInt(k),G.currentMatch)};
-  }).sort(function(a,b){return b.total-a.total;});
+  }).sort(function(a,b){
+    if(b.total!==a.total) return b.total-a.total;
+    return a.name.localeCompare(b.name); // tiebreak: alphabetical
+  });
   var rc=['gold','silver','bronze'];
   var c=document.getElementById('lbList');
   if(!c) return;
@@ -504,7 +507,7 @@ function renderLeaderboard(){
       +'<div><div style="font-size:14px;font-weight:600">'+r.name+'</div>'
       +'<div style="font-size:11px;color:'+r.color+'">&#9679;'+(isMe?' Your team':'')+'</div></div>'
       +'<div><div class="lb-pts" style="font-size:16px;color:var(--text2)">'+r.match+'</div>'
-      +'<div style="font-size:10px;color:var(--text3);text-align:right">M'+G.currentMatch+(G.matchLabels&&G.matchLabels['match'+G.currentMatch]?' · '+(G.matchLabels['match'+G.currentMatch].split(',')[0]):'')+'</div></div>'
+      +'<div style="font-size:10px;color:var(--text3);text-align:right">This match</div></div>'
       +'<div><div class="lb-pts">'+r.total+'</div>'
       +'<div style="font-size:10px;color:var(--text3);text-align:right">Total</div></div>'
       +'</div>';
