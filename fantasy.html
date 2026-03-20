@@ -1305,6 +1305,11 @@ function loadAllRooms(){
 
 // ── SESSION RESTORE ──
 window.addEventListener('load',function(){
+  // Pre-fill code from URL param (e.g. coming from auction end screen)
+  var urlCode=new URLSearchParams(window.location.search).get('code');
+  if(urlCode && !IS_ADMIN){
+    document.getElementById('setupCode').value=urlCode.toUpperCase();
+  }
   if(IS_ADMIN){
     document.getElementById('adminPanel').style.display='block';
     document.getElementById('mainNav').style.display='flex';
