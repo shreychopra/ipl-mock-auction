@@ -718,9 +718,25 @@ function parseCard(scard){
 }
 function apiGet(path,cb){
   fetch('https://cricbuzz-cricket.p.rapidapi.com'+path,{
-    headers:{'x-rapidapi-key':RAPIDAPI_KEY,'x-rapidapi-host':'cricbuzz-cricket.p.rapidapi.com'}
-  }).then(function(r){if(!r.ok) throw new Error('HTTP '+r.status);return r.json();})
-  .then(function(d){cb(d,null);}).catch(function(e){cb(null,e.message);});
+    method:'GET',
+    headers:{
+      'x-rapidapi-key':RAPIDAPI_KEY,
+      'x-rapidapi-host':'cricbuzz-cricket.p.rapidapi.com',
+      'Content-Type':'application/json'
+    }
+  }).then(function(r){
+    if(!r.ok){
+      return r.text().then(function(t){
+        throw new Error('HTTP '+r.status+' — '+t.slice(0,120));
+      });
+    }
+    return r.json();
+  })
+  .then(function(d){cb(d,null);})
+  .catch(function(e){
+    console.error('API error:',e);
+    cb(null,e.message);
+  });
 }
 function logSync(msg,type){
   var c=document.getElementById('syncLog'); if(!c) return;
