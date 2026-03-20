@@ -2025,25 +2025,48 @@ function showEndScreen(){
   clearSession();
   showScreen('endScreen');
 }
-function showParticipantEnd(){renderFinalList();showScreen('endScreen');}
+function showParticipantEnd(){
+  renderFinalList();
+  // Show C/VC picker for participant
+  if(myTeamIdx!==null){
+    var section=document.getElementById('cvcSection');
+    if(section) section.style.display='block';
+    populateCvcSelects();
+  }
+  // Pre-fill fantasy link
+  var fl=document.getElementById('fantasyLink');
+  if(fl && roomCode) fl.href='./fantasy.html?code='+roomCode;
+  showScreen('endScreen');
+}
 function renderFinalList(){
+  var sum=document.getElementById('endSummary');
+  var list=document.getElementById('finalList');
   var teams=G.teams||{};
-  document.getElementById('finalList').innerHTML=Object.keys(teams).sort().map(function(k){
+  var keys=Object.keys(teams);
+  if(!keys.length){if(list)list.innerHTML='';return;}
+  // Count totals
+  var totalPlayers=0,totalSpent=0;
+  keys.forEach(function(k){var t=teams[k];totalPlayers+=(t.players||[]).length;totalSpent+=t.spent||0;});
+  if(sum) sum.textContent=keys.length+' teams · '+totalPlayers+' players · ₹'+totalSpent+'L spent';
+  if(!list) return;
+  // Sort: participant's own team first, then rest
+  var sorted=keys.slice().sort(function(a,b){
+    if(myTeamIdx!==null){
+      if(parseInt(a)===parseInt(myTeamIdx)) return -1;
+      if(parseInt(b)===parseInt(myTeamIdx)) return 1;
+    }
+    return parseInt(a)-parseInt(b);
+  });
+  list.innerHTML=sorted.map(function(k){
     var t=teams[k];
-    return '<div class="ft"><div class="ft-hdr">'
-      +'<div class="ft-name" style="border-left:3px solid '+t.color+';padding-left:9px">'+t.name+'</div>'
-      +'<div class="ft-spent">'+fmtL(t.spent)+'</div></div>'
-      +(t.players&&t.players.length?t.players.map(function(p){
-        return '<div class="fp"><span>'+p.name+' ('+p.role+')</span>'
-          +'<span class="fp-price">'+fmtL(p.soldPrice)+'</span></div>';
-      }).join(''):'<div style="color:var(--text3);font-size:13px">No players</div>')
-      +'</div>';
+    var isMe=myTeamIdx!==null&&parseInt(k)===parseInt(myTeamIdx);
+    var players=t.players||[];
+    return '<div class="ft" style="'+(isMe?'border:2px solid var(--gold)':'')+'">'      +'<div class="ft-hdr">'      +'<div>'      +'<div class="ft-name" style="'+(isMe?'color:var(--gold)':'')+'">'+(isMe?'★ ':'')+t.name+'</div>'      +'<div style="font-size:11px;color:var(--text3);margin-top:2px">'+players.length+' players</div>'      +'</div>'      +'<div class="ft-spent">₹'+t.spent+'L</div>'      +'</div>'      +players.map(function(p){
+        return '<div class="fp"><span>'+p.name+'<span style="font-size:10px;color:var(--text3);margin-left:5px">'+p.role+'</span></span>'          +'<span class="fp-price">₹'+p.soldPrice+'L</span></div>';
+      }).join('')      +'</div>';
   }).join('');
 }
 
-
-// ══ CONFIRM DIALOG ══
-var confirmCallback = null;
 function confirmAction(type) {
   var titles = {
     end: 'End Auction?',
