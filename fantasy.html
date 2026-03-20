@@ -1269,28 +1269,34 @@ function loadSyncedIds(){
 
 // ── ADMIN ──
 function openAdmin(){document.getElementById('adminPanel').style.display='block';loadAllRooms();}
+function activateAdmin(){
+  IS_ADMIN=true;
+  document.getElementById('adminPanel').style.display='block';
+  document.getElementById('mainNav').style.display='flex';
+  document.getElementById('adminBtn').style.display='block';
+  var backBtn=document.getElementById('adminBackBtn');
+  if(backBtn) backBtn.style.display='none';
+  document.getElementById('navSub').textContent='Admin Mode';
+  fantasyRef=db.ref('fantasy/_admin_sync_');
+  loadAllRooms();
+}
+
 function promptAdmin(){
   var pw=window.prompt('Enter admin password:');
   if(!pw) return;
+  // Try Worker verification first, fall back to local check
   fetch(WORKER_URL+'/admin/verify',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({password:pw})
   }).then(function(r){
-    if(r.ok){
-      IS_ADMIN=true;
-      document.getElementById('adminPanel').style.display='block';
-      document.getElementById('mainNav').style.display='flex';
-      document.getElementById('adminBtn').style.display='block';
-      document.getElementById('adminBackBtn').style.display='none';
-      document.getElementById('navSub').textContent='Admin Mode';
-      fantasyRef=db.ref('fantasy/_admin_sync');
-      loadSyncedIds();
-      loadAllRooms();
-    } else {
-      alert('Incorrect password');
-    }
-  }).catch(function(){alert('Could not reach server');});
+    if(r.ok){ activateAdmin(); }
+    else { alert('Incorrect password'); }
+  }).catch(function(e){
+    // Worker unreachable - log and inform
+    console.error('Worker error:',e);
+    alert('Could not reach the auth server. Make sure the Cloudflare Worker is deployed.');
+  });
 }
 
 function loadRoomAsAdmin(code){
