@@ -368,7 +368,7 @@
 
 // ── ERROR BOUNDARY ──
 window.onerror=function(msg,src,line,col,err){
-  var skip=['ResizeObserver','Script error','Non-Error'];
+  var skip=['ResizeObserver','Script error','Non-Error','ServiceWorker','sw.js','Failed to register'];
   if(skip.some(function(s){return msg&&msg.includes(s);})) return false;
   var el=document.getElementById('errorBoundary');
   var em=document.getElementById('errorMsg');
@@ -379,7 +379,7 @@ window.onerror=function(msg,src,line,col,err){
 };
 window.onunhandledrejection=function(e){
   var msg=(e.reason&&e.reason.message)||String(e.reason)||'Promise error';
-  if(msg.includes('permission_denied')||msg.includes('firebase')) return;
+  if(msg.includes('permission_denied')||msg.includes('firebase')||msg.includes('ServiceWorker')||msg.includes('sw.js')||msg.includes('Failed to register')||msg.includes('404')) return;
   var el=document.getElementById('errorBoundary');
   var em=document.getElementById('errorMsg');
   if(el){el.style.display='flex';}
