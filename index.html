@@ -1295,7 +1295,7 @@ function rejoinAsHost() {
   var hName = document.getElementById('hostRejoinName').value.trim();
   var code = document.getElementById('hostRejoinCode').value.trim().toUpperCase();
   if (!hName) { toast('Enter your name!'); return; }
-  if (code.length !== 5) { toast('Enter the 6-character room code!'); return; }
+  if (code.length !== 6) { toast('Enter the 6-character room code!'); return; }
   var ref = db.ref('rooms/' + code);
   ref.once('value', function(snap) {
     var data = snap.val();
@@ -1381,9 +1381,7 @@ function joinRoom(){
     document.getElementById('tsRoomCode').textContent=code;
     showScreen('teamSelectScreen');
     // Load taken colors live and update picker
-    roomRef.child('takenColors').on('value',function(csnap){
-      var taken=csnap.val()||{};
-      var takenVals=Object.values(taken);
+    function applyTakenColors(takenVals){
       document.querySelectorAll('.color-opt').forEach(function(btn){
         var c=btn.dataset.color;
         var isTaken=takenVals.indexOf(c)>=0;
@@ -1396,6 +1394,10 @@ function joinRoom(){
           if(first) pickColor(first);
         }
       });
+    }
+    roomRef.child('takenColors').on('value',function(csnap){
+      var taken=csnap.val()||{};
+      applyTakenColors(Object.values(taken));
     });
     // Poll for auction start - once started, switch to the main participant listener
     var startWatcher = roomRef.on('value', function(snap2){
@@ -1450,7 +1452,7 @@ function joinTeam(){
       var idx=snap.val()-1;
       if(idx>=12){toast('Room is full!');return;}
       myTeamIdx=idx;
-      var color=COLORS[idx%COLORS.length];
+      var color=selectedColor||COLORS[idx%COLORS.length];
       document.documentElement.style.setProperty('--team',color);
       var pid=myName.replace(/\s+/g,'_')+'_'+Date.now();
       var update={};
