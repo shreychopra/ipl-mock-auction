@@ -107,6 +107,8 @@
       overflow:hidden;border:1px solid var(--border2);display:flex;align-items:center;
       justify-content:center;font-size:14px;color:var(--text3)}
     .sp-avi img{width:100%;height:100%;object-fit:cover}
+    .team-logo{vertical-align:middle}
+    .team-logo.broken{display:none}
     .sp-pts{font-family:var(--fn);font-size:20px;color:var(--gold);text-align:right;flex-shrink:0}
     /* sync */
     .sync-hdr{padding:12px 14px;background:var(--surface);border-bottom:1px solid var(--border);
@@ -800,7 +802,13 @@ function updateNav(){
   var statusLabels={upcoming:'Upcoming',live:'● Live',done:'✓ Done',unknown:''};
   var pill=document.getElementById('navMatch');
   pill.title=label+(sched?' · '+sched.time+' IST':'');
-  pill.innerHTML='<span>'+(label||('M'+G.currentMatch))+'</span>'
+  var pillLogos=getTeamLogos(label||'');
+  var pillLogoHtml=pillLogos.length===2
+    ?'<img src="./images/'+pillLogos[0]+'.webp" style="width:16px;height:16px;object-fit:contain;margin-right:3px;vertical-align:middle">'
+     +'<span>'+(label||('M'+G.currentMatch))+'</span>'
+     +'<img src="./images/'+pillLogos[1]+'.webp" style="width:16px;height:16px;object-fit:contain;margin-left:3px;vertical-align:middle">'
+    :'<span>'+(label||('M'+G.currentMatch))+'</span>';
+  pill.innerHTML=pillLogoHtml
     +(statusLabels[status]?'<span style="font-size:9px;margin-left:5px;color:'+statusColors[status]+'">'+statusLabels[status]+'</span>':'');
   pill.style.cursor='help';
 }
@@ -1102,6 +1110,16 @@ document.getElementById('playerModal').addEventListener('click',function(e){
 });
 
 // ── HISTORY ──
+
+function getTeamLogos(label){
+  // e.g. "M1 — RCB vs SRH" -> ['RCB','SRH']
+  var m=label.match(/([A-Z]+)\s+vs\s+([A-Z]+)/);
+  return m?[m[1],m[2]]:[];
+}
+function teamLogoImg(code){
+  return '<img src="./images/'+code+'.webp" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin:0 2px">';
+}
+
 function renderSchedule(){
   var c=document.getElementById('scheduleList'); if(!c) return;
   c.innerHTML='';
@@ -1140,7 +1158,17 @@ function renderSchedule(){
       var infoDiv=document.createElement('div');
       infoDiv.style.cssText='flex:1';
       var teams=m.label.replace('M'+m.num+' — ','');
-      infoDiv.innerHTML='<div style="font-size:14px;font-weight:600">'+teams+'</div>'
+      var logos=getTeamLogos(m.label);
+      var logoHtml=logos.length===2
+        ?'<span style="display:inline-flex;align-items:center;gap:4px;font-weight:600">'
+          +'<img src="./images/'+logos[0]+'.webp" class="team-logo" style="width:22px;height:22px;object-fit:contain">'
+          +'<span>'+logos[0]+'</span>'
+          +'<span style="color:var(--text3);font-size:11px;margin:0 4px">vs</span>'
+          +'<img src="./images/'+logos[1]+'.webp" class="team-logo" style="width:22px;height:22px;object-fit:contain">'
+          +'<span>'+logos[1]+'</span>'
+          +'</span>'
+        :teams;
+      infoDiv.innerHTML='<div style="font-size:14px;font-weight:600">'+logoHtml+'</div>'
         +'<div style="font-size:11px;color:var(--text3);margin-top:2px">'+m.time+'</div>';
       var statusDiv=document.createElement('div');
       statusDiv.style.cssText='text-align:right';
@@ -1879,6 +1907,11 @@ function loadAllRooms(){
 }
 
 // ── SESSION RESTORE ──
+document.addEventListener('error', function(e){
+  if(e.target&&e.target.classList&&e.target.classList.contains('team-logo')){
+    e.target.classList.add('broken');
+  }
+}, true);
 window.addEventListener('load',function(){
   // Pre-fill code from URL param (e.g. coming from auction end screen)
   var urlCode=new URLSearchParams(window.location.search).get('code');
