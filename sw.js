@@ -1,15 +1,8 @@
-// IPL 2026 Service Worker
-const CACHE = 'ipl-v1';
-const STATIC = [
-  './index.html',
-  './fantasy.html',
-  './manifest.json'
-];
+const CACHE = 'ipl-v2';
+const STATIC = ['./index.html', './fantasy.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function(e){
-  e.waitUntil(
-    caches.open(CACHE).then(function(c){ return c.addAll(STATIC); })
-  );
+  e.waitUntil(caches.open(CACHE).then(function(c){ return c.addAll(STATIC); }));
   self.skipWaiting();
 });
 
@@ -23,21 +16,20 @@ self.addEventListener('activate', function(e){
 });
 
 self.addEventListener('fetch', function(e){
-  // Network first for Firebase/API calls, cache first for static assets
   var url = e.request.url;
-  if(url.includes('firebase') || url.includes('rapidapi') || url.includes('workers.dev')){
-    e.respondWith(fetch(e.request).catch(function(){ return caches.match(e.request); }));
-    return;
-  }
-  e.respondWith(
-    caches.match(e.request).then(function(cached){
-      return cached || fetch(e.request).then(function(resp){
-        // Cache images from our repo
-        if(url.includes('/images/')){
+  // Never intercept navigation requests - let browser handle page transitions
+  if(e.request.mode === 'navigate') return;
+  // Never intercept Firebase or API calls
+  if(url.includes('firebase') || url.includes('workers.dev') || url.includes('googleapis')) return;
+  // Cache-first for images
+  if(url.includes('/images/')){
+    e.respondWith(
+      caches.match(e.request).then(function(cached){
+        return cached || fetch(e.request).then(function(resp){
           caches.open(CACHE).then(function(c){ c.put(e.request, resp.clone()); });
-        }
-        return resp;
-      });
-    })
-  );
+          return resp;
+        });
+      })
+    );
+  }
 });
