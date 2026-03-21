@@ -366,25 +366,6 @@
 
 <script>
 
-// ── ERROR BOUNDARY ──
-window.onerror=function(msg,src,line,col,err){
-  var skip=['ResizeObserver','Script error','Non-Error','ServiceWorker','sw.js','Failed to register'];
-  if(skip.some(function(s){return msg&&msg.includes(s);})) return false;
-  var el=document.getElementById('errorBoundary');
-  var em=document.getElementById('errorMsg');
-  if(el){el.style.display='flex';el.style.flexDirection='column';}
-  if(em){em.textContent=(err&&err.message)||msg||'Unknown error';}
-  console.error('App error:',err||msg);
-  return true;
-};
-window.onunhandledrejection=function(e){
-  var msg=(e.reason&&e.reason.message)||String(e.reason)||'Promise error';
-  if(msg.includes('permission_denied')||msg.includes('firebase')||msg.includes('ServiceWorker')||msg.includes('sw.js')||msg.includes('Failed to register')||msg.includes('404')) return;
-  var el=document.getElementById('errorBoundary');
-  var em=document.getElementById('errorMsg');
-  if(el){el.style.display='flex';el.style.flexDirection='column';}
-  if(em){em.textContent=msg;}
-};
 
 
 // ── FIREBASE ──
@@ -1951,6 +1932,7 @@ window.addEventListener('load',function(){
   <div id="errorMsg" style="font-size:13px;color:#7c8ba1;margin-bottom:24px;max-width:300px;line-height:1.6">An unexpected error occurred.</div>
   <button onclick="location.reload()" style="background:linear-gradient(135deg,#5091CD,#1D3D8D);color:#fff;border:none;border-radius:12px;padding:12px 24px;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer">Reload App</button>
 </div>
+
 
   <div style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#f5b800;margin-bottom:8px">Something went wrong</div>
   <div id="errorMsg" style="font-size:13px;color:#7c8ba1;margin-bottom:24px;max-width:300px;line-height:1.6">An unexpected error occurred.</div>
