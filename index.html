@@ -101,7 +101,17 @@
     .btn-sm{padding:8px 14px;font-size:12px;border-radius:var(--rsm);width:auto}
     .color-opt{width:32px;height:32px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:all .15s;flex-shrink:0}
     .color-opt.on{border-color:#fff;transform:scale(1.15);box-shadow:0 0 0 2px rgba(255,255,255,.3)}
+    .squad-sz-btn{flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);
+      border-radius:var(--rsm);color:var(--text2);font-family:var(--fd);font-size:16px;
+      font-weight:700;cursor:pointer;transition:all .15s}
+    .squad-sz-btn.on{background:var(--ipl-mid);border-color:var(--gold);color:#fff}
+    .color-opt.on{border-color:#fff;transform:scale(1.15);box-shadow:0 0 0 2px rgba(255,255,255,.3)}
     .color-opt{width:32px;height:32px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:all .15s;flex-shrink:0}
+    .color-opt.on{border-color:#fff;transform:scale(1.15);box-shadow:0 0 0 2px rgba(255,255,255,.3)}
+    .squad-sz-btn{flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);
+      border-radius:var(--rsm);color:var(--text2);font-family:var(--fd);font-size:16px;
+      font-weight:700;cursor:pointer;transition:all .15s}
+    .squad-sz-btn.on{background:var(--ipl-mid);border-color:var(--gold);color:#fff}
     .color-opt.on{border-color:#fff;transform:scale(1.15);box-shadow:0 0 0 2px rgba(255,255,255,.3)}
     .btn:disabled{opacity:.3;pointer-events:none;box-shadow:none}
 
@@ -480,6 +490,16 @@
       <div class="gap"></div>
       <label>Budget per Team (₹ Lakhs)</label>
       <input type="number" id="teamBudget" value="10000" min="100" max="99999"/>
+      <div class="gap"></div>
+      <label>Max Squad Size</label>
+      <div style="display:flex;gap:8px;margin-bottom:4px">
+        <button type="button" class="squad-sz-btn on" data-sz="16" onclick="pickSquadSize(this)">16</button>
+        <button type="button" class="squad-sz-btn" data-sz="18" onclick="pickSquadSize(this)">18</button>
+        <button type="button" class="squad-sz-btn" data-sz="20" onclick="pickSquadSize(this)">20</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:4px" id="squadSizeHint">
+        Max: 6 Bat / 6 Bowl / 4 AR / 2 WK
+      </div>
       <div class="gap"></div>
       <div class="toggle-row">
         <div><div class="toggle-lbl">Countdown Timer</div><div class="toggle-sub">Auto-close bids on timeout</div></div>
@@ -1233,7 +1253,7 @@ function createRoom(){
   roomRef=db.ref('rooms/'+code);
 
   roomRef.set({
-    roomName:rName, hostName:hName, teamBudget:budget, createdAt:Date.now(),
+    roomName:rName, hostName:hName, teamBudget:budget, squadSize:selectedSquadSize, createdAt:Date.now(),
     teams:{}, players:players,
     currentPlayerId:null, currentBid:0, currentBidderIdx:"NONE",
     timerEnabled:timerOn, timerSeconds:timerSec,
@@ -1381,6 +1401,24 @@ function pickColor(btn){
   selectedColor = btn.dataset.color;
 }
 var selectedColor='#e74c3c';
+var selectedSquadSize=16;
+var SQUAD_LIMITS={
+  16:{total:16,Batter:6,Bowler:6,'All-Rounder':4,WK:2},
+  18:{total:18,Batter:7,Bowler:7,'All-Rounder':4,WK:2},
+  20:{total:20,Batter:7,Bowler:7,'All-Rounder':5,WK:3}
+};
+var SQUAD_HINTS={
+  16:'Max: 6 Bat / 6 Bowl / 4 AR / 2 WK',
+  18:'Max: 7 Bat / 7 Bowl / 4 AR / 2 WK',
+  20:'Max: 7 Bat / 7 Bowl / 5 AR / 3 WK'
+};
+function pickSquadSize(btn){
+  document.querySelectorAll('.squad-sz-btn').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  selectedSquadSize=parseInt(btn.dataset.sz);
+  var hint=document.getElementById('squadSizeHint');
+  if(hint) hint.textContent=SQUAD_HINTS[selectedSquadSize];
+}
 function pickColor(btn){
   document.querySelectorAll('.color-opt').forEach(function(b){b.classList.remove('on');});
   btn.classList.add('on');
@@ -1844,7 +1882,15 @@ function updatePBidInfo(data){
 
   console.log('BID myIdx='+myIdx+' bi='+bi+' leaderIdx='+leaderIdx+' iLead='+iLead+' canAfford='+canAfford+' nb='+nb+' remaining='+remaining);
 
-  document.getElementById('bigBidBtn').disabled=(iLead||!canAfford);
+  var bidCheck=checkBidAllowed();
+  document.getElementById('bigBidBtn').disabled=(iLead||!canAfford||!bidCheck.ok);
+  if(!bidCheck.ok){
+    document.getElementById('bigBidBtn').title=bidCheck.reason;
+    document.getElementById('bigBidBtn').style.opacity='0.4';
+  } else {
+    document.getElementById('bigBidBtn').title='';
+    document.getElementById('bigBidBtn').style.opacity='';
+  }
 
   var lb=document.getElementById('pLeader');
   var lc=document.getElementById('liveCard');
@@ -1886,6 +1932,24 @@ function placeBid(){
   if(!roomRef||myTeamIdx===null) return;
   if(G.paused){toast('Auction is paused!');return;}
   var myIdx2=parseInt(myTeamIdx);
+  // Check squad/category limits before bidding
+  var myTeam=getTeam(G.teams,myIdx2);
+  if(myTeam){
+    var sqSz=G.squadSize||16;
+    var sqLim=SQUAD_LIMITS[sqSz]||SQUAD_LIMITS[16];
+    var totalPl=(myTeam.players||[]).length;
+    if(totalPl>=sqLim.total){toast('Your squad is full ('+sqLim.total+' players)!');return;}
+    var curPlayer=G.players&&G.players.find?G.players.find(function(p){return p.id===G.currentPlayerId;}):null;
+    if(!curPlayer&&G.players){for(var i=0;i<G.players.length;i++){if(G.players[i].id===G.currentPlayerId){curPlayer=G.players[i];break;}}}
+    if(curPlayer&&curPlayer.role){
+      var cats={Batter:0,Bowler:0,'All-Rounder':0,WK:0};
+      (myTeam.players||[]).forEach(function(p){if(cats[p.role]!==undefined)cats[p.role]++;});
+      var catLimit=sqLim[curPlayer.role];
+      if(catLimit!==undefined&&cats[curPlayer.role]>=catLimit){
+        toast('Category full! Max '+catLimit+' '+curPlayer.role+'s allowed');return;
+      }
+    }
+  }
   roomRef.once('value',function(snap){
     var data=snap.val(); if(!data) return;
     if(!data.currentPlayerId){toast('No active player!');return;}
@@ -1914,11 +1978,30 @@ function updatePBudget(){
 function renderSquad(){
   if(myTeamIdx===null||!G.teams) return;
   var t=getTeam(G.teams,myTeamIdx); if(!t) return;
+  var sqSz=G.squadSize||16;
+  var sqLim=SQUAD_LIMITS[sqSz]||SQUAD_LIMITS[16];
+  var cats={Batter:0,Bowler:0,'All-Rounder':0,WK:0};
+  (t.players||[]).forEach(function(p){ if(cats[p.role]!==undefined) cats[p.role]++; });
+  var totalPl=(t.players||[]).length;
   document.getElementById('pSquadBudget').innerHTML=
     '<div class="brow"><span>Budget</span><span class="bv">'+fmtL(t.budget)+'</span></div>'
     +'<div class="brow"><span>Spent</span><span class="bv" style="color:var(--red)">'+fmtL(t.spent)+'</span></div>'
+    +'<div class="brow"><span>Squad</span><span class="bv" style="color:'+(totalPl>=sqLim.total?'var(--red)':'var(--green)')+'">'+totalPl+'/'+sqLim.total+'</span></div>'
     +'<div class="brow"><span>Remaining</span><span class="bv" style="color:var(--green)">'+fmtL(t.budget-t.spent)+'</span></div>'
     +'<div class="brow"><span>Players</span><span class="bv">'+(t.players?t.players.length:0)+'</span></div>';
+  var catTracker='<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;padding:6px 12px;background:var(--surface);border-bottom:1px solid var(--border)">'
+    +'<div style="text-align:center;font-size:10px"><div style="font-family:var(--fn);font-size:14px;color:'+(cats.Batter>=sqLim.Batter?'var(--red)':'var(--text)')+'">'+cats.Batter+'/'+sqLim.Batter+'</div><div style="color:var(--text3)">BAT</div></div>'
+    +'<div style="text-align:center;font-size:10px"><div style="font-family:var(--fn);font-size:14px;color:'+(cats.Bowler>=sqLim.Bowler?'var(--red)':'var(--text)')+'">'+cats.Bowler+'/'+sqLim.Bowler+'</div><div style="color:var(--text3)">BOWL</div></div>'
+    +'<div style="text-align:center;font-size:10px"><div style="font-family:var(--fn);font-size:14px;color:'+(cats['All-Rounder']>=sqLim['All-Rounder']?'var(--red)':'var(--text)')+'">'+cats['All-Rounder']+'/'+sqLim['All-Rounder']+'</div><div style="color:var(--text3)">AR</div></div>'
+    +'<div style="text-align:center;font-size:10px"><div style="font-family:var(--fn);font-size:14px;color:'+(cats.WK>=sqLim.WK?'var(--red)':'var(--text)')+'">'+cats.WK+'/'+sqLim.WK+'</div><div style="color:var(--text3)">WK</div></div>'
+    +'</div>';
+  var catEl=document.getElementById('pCatTracker');
+  if(!catEl){
+    catEl=document.createElement('div'); catEl.id='pCatTracker';
+    var sl=document.getElementById('pSquadList');
+    sl.parentNode.insertBefore(catEl,sl);
+  }
+  catEl.innerHTML=catTracker;
   document.getElementById('pSquadList').innerHTML=(t.players&&t.players.length)
     ?t.players.map(function(p){
       return '<div class="sq-item"><div><div class="sq-name">'+p.name+'</div><div class="sq-role">'+p.role+' - '+p.nat+'</div></div>'
@@ -2348,6 +2431,13 @@ window.addEventListener('load',function(){ setTimeout(tryRestoreSession,600); })
       <ul style="margin:0 0 12px 14px;padding:0"><li>Enter your name and the room code</li><li>Pick a team name and colour</li><li>Wait for the host to start</li></ul>
       <div style="font-family:var(--fd);font-weight:700;font-size:13px;color:var(--text);margin-bottom:4px">During the Auction</div>
       <ul style="margin:0 0 12px 14px;padding:0"><li>The host puts up one player at a time</li><li>Any team can bid &#8212; each bid raises the price by a fixed increment</li><li>Highest bidder when time runs out wins the player</li><li>Watch your remaining budget in the top bar</li></ul>
+      <div style="font-family:var(--fd);font-weight:700;font-size:13px;color:var(--text);margin-bottom:4px">Squad Rules</div>
+      <ul style="margin:0 0 12px 14px;padding:0">
+        <li>Host sets the max squad size: <b>16, 18 or 20</b> players</li>
+        <li>Category limits — <b>16-man:</b> 6 Bat / 6 Bowl / 4 AR / 2 WK &nbsp;|&nbsp; <b>18-man:</b> 7/7/4/2 &nbsp;|&nbsp; <b>20-man:</b> 7/7/5/3</li>
+        <li>Once a category is full, you cannot bid on players of that role</li>
+        <li>Track your counts in the Squad tab during the auction</li>
+      </ul>
       <div style="font-family:var(--fd);font-weight:700;font-size:13px;color:var(--text);margin-bottom:4px">Wrapping Up</div>
       <ul style="margin:0 0 0 14px;padding:0"><li>When all players are sold, the host ends the auction</li><li>Pick your <b>Captain (2&#215; points)</b> and <b>Vice-Captain (1.5&#215;)</b> &#8212; one-time choice for the whole tournament</li><li>Hit Fantasy League Tracker to follow points through the season</li></ul>
     </div>
