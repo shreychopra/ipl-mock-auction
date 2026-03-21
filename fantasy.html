@@ -259,7 +259,13 @@
       <span id="syncBannerText">Points data loading...</span>
       <span style="font-size:10px;color:var(--text3)">Auto-updated daily</span>
     </div>
-    <div class="lb-hdr" style="grid-template-columns:28px 1fr 80px 80px"><div>#</div><div>Team</div><div style="text-align:right">This Match</div><div style="text-align:right">Total</div></div>
+    <div style="display:flex;justify-content:flex-end;padding:6px 14px 0">
+    <button onclick="document.getElementById('scoringModal').classList.add('show')"
+      style="background:var(--surface2);border:1px solid var(--border);border-radius:50%;
+      width:24px;height:24px;color:var(--text3);font-size:13px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;font-weight:700">?</button>
+  </div>
+  <div class="lb-hdr" style="grid-template-columns:28px 1fr 80px 80px"><div>#</div><div>Team</div><div style="text-align:right">This Match</div><div style="text-align:right">Total</div></div>
     <div id="lbList"></div>
   </div>
 
@@ -1950,5 +1956,60 @@ window.addEventListener('load',function(){
   
 
 
+
+<!-- SCORING MODAL -->
+<div class="modal-ov" id="scoringModal">
+  <div class="modal" style="max-height:80vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;margin-bottom:14px">
+      <div style="flex:1;font-family:var(--fd);font-size:18px;font-weight:700">Scoring System</div>
+      <button onclick="document.getElementById('scoringModal').classList.remove('show')"
+        style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer">&#10005;</button>
+    </div>
+    <div style="background:linear-gradient(135deg,rgba(245,184,0,.15),rgba(245,184,0,.05));
+      border:1px solid rgba(245,184,0,.3);border-radius:var(--rsm);padding:10px 12px;margin-bottom:14px">
+      <div style="font-family:var(--fd);font-weight:700;color:var(--gold);margin-bottom:3px">&#128241; Use it as an app</div>
+      <div style="font-size:12px;color:var(--text2)">Tap Share &#8594; <b>&#34;Add to Home Screen&#34;</b> on mobile to track fantasy points as an app.</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px">
+      <div>
+        <div style="font-family:var(--fd);font-weight:700;font-size:13px;color:var(--gold);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)">BATTING</div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">Run</span><span style="color:var(--text);font-family:var(--fn)">1</span></div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">Boundary</span><span style="color:var(--text);font-family:var(--fn)">+1</span></div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">Six</span><span style="color:var(--text);font-family:var(--fn)">+2</span></div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">25+ runs</span><span style="color:var(--green);font-family:var(--fn)">+4</span></div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">50+ runs</span><span style="color:var(--green);font-family:var(--fn)">+8</span></div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">100+ runs</span><span style="color:var(--green);font-family:var(--fn)">+16</span></div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0"><span style="color:var(--text2)">Duck</span><span style="color:var(--red);font-family:var(--fn)">-2</span></div>
+      </div>
+      <div>
+        <div style="font-family:var(--fd);font-weight:700;font-size:13px;color:var(--gold);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)">BOWLING</div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">Wicket</span><span style="color:var(--text);font-family:var(--fn)">25</span></div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">LBW / Bowled</span><span style="color:var(--green);font-family:var(--fn)">+8</span></div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">3 wickets</span><span style="color:var(--green);font-family:var(--fn)">+4</span></div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">4 wickets</span><span style="color:var(--green);font-family:var(--fn)">+8</span></div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">5 wickets</span><span style="color:var(--green);font-family:var(--fn)">+16</span></div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">Maiden over</span><span style="color:var(--green);font-family:var(--fn)">+12</span></div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">Eco &lt;6 (2+ ov)</span><span style="color:var(--green);font-family:var(--fn)">+4</span></div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0"><span style="color:var(--text2)">Eco 6-8 (2+ ov)</span><span style="color:var(--green);font-family:var(--fn)">+2</span></div>
+      </div>
+      <div>
+        <div style="font-family:var(--fd);font-weight:700;font-size:13px;color:var(--gold);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)">FIELDING</div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">Catch</span><span style="color:var(--text);font-family:var(--fn)">8</span></div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">Stumping</span><span style="color:var(--text);font-family:var(--fn)">12</span></div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0"><span style="color:var(--text2)">Run out</span><span style="color:var(--text);font-family:var(--fn)">6</span></div>
+      </div>
+      <div>
+        <div style="font-family:var(--fd);font-weight:700;font-size:13px;color:var(--gold);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)">OTHER</div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">Playing XI</span><span style="color:var(--text);font-family:var(--fn)">4</span></div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">Captain</span><span style="color:var(--gold);font-family:var(--fn)">2x</span></div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0"><span style="color:var(--text2)">Vice-Captain</span><span style="color:var(--gold);font-family:var(--fn)">1.5x</span></div>
+      </div>
+    </div>
+    <div style="margin-top:14px;padding:10px 12px;background:var(--surface2);border-radius:var(--rsm);
+      font-size:12px;color:var(--text3);border:1px solid var(--border)">
+      Points sync automatically ~5 hours after each match ends. Check the Schedule tab for timings.
+    </div>
+  </div>
+</div>
 </body>
 </html>
