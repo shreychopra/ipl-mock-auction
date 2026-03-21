@@ -101,6 +101,8 @@
     .btn-sm{padding:8px 14px;font-size:12px;border-radius:var(--rsm);width:auto}
     .color-opt{width:32px;height:32px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:all .15s;flex-shrink:0}
     .color-opt.on{border-color:#fff;transform:scale(1.15);box-shadow:0 0 0 2px rgba(255,255,255,.3)}
+    .color-opt{width:32px;height:32px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:all .15s;flex-shrink:0}
+    .color-opt.on{border-color:#fff;transform:scale(1.15);box-shadow:0 0 0 2px rgba(255,255,255,.3)}
     .btn:disabled{opacity:.3;pointer-events:none;box-shadow:none}
 
     /* ── TOGGLE ── */
@@ -454,10 +456,7 @@
 <!-- ════ LANDING ════ -->
 <div id="landingScreen" class="screen active">
   <div class="page-hero" style="position:relative">
-    <button onclick="document.getElementById('howItWorksModal').classList.add('show')"
-      style="position:absolute;top:0;right:0;background:var(--surface2);border:1px solid var(--border);
-      border-radius:var(--rsm);padding:5px 10px;color:var(--text3);font-family:var(--fd);
-      font-size:11px;cursor:pointer;font-weight:700;letter-spacing:1px">HOW IT WORKS</button>
+    <button onclick="document.getElementById('howItWorksModal').classList.add('show')" style="position:absolute;top:0;right:0;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);padding:5px 10px;color:var(--text3);font-family:var(--fd);font-size:11px;cursor:pointer;font-weight:700;letter-spacing:1px">HOW IT WORKS</button>
     <span class="icon">🏏</span>
     <h1>IPL 2026</h1>
     <p>Mock Auction</p>
@@ -498,7 +497,7 @@
       <input type="text" id="participantName" placeholder="e.g. Arjun" maxlength="20"/>
       <div class="gap"></div>
       <label>Room Code</label>
-      <input type="text" id="roomCode" class="upper" placeholder="XXXXX" maxlength="5" oninput="this.value=this.value.toUpperCase()"/>
+      <input type="text" id="roomCode" class="upper" placeholder="XXXXXX" maxlength="6" oninput="this.value=this.value.toUpperCase()"/>
       <div style="margin-top:16px"><button class="btn btn-blue" onclick="joinRoom()">Find Room</button></div>
     </div>
     <div class="divider"><span>OR</span></div>
@@ -508,19 +507,62 @@
       <input type="text" id="hostRejoinName" placeholder="e.g. Rahul" maxlength="20"/>
       <div class="gap"></div>
       <label>Room Code</label>
-      <input type="text" id="hostRejoinCode" class="upper" placeholder="XXXXX" maxlength="5" oninput="this.value=this.value.toUpperCase()"/>
+      <input type="text" id="hostRejoinCode" class="upper" placeholder="XXXXXX" maxlength="6" oninput="this.value=this.value.toUpperCase()"/>
       <div style="margin-top:16px"><button class="btn btn-ghost" onclick="rejoinAsHost()">Rejoin as Host</button></div>
     </div>
     <div class="divider"><span>OTHER</span></div>
     <a href="./fantasy.html" style="display:block;text-decoration:none">
       <button class="btn btn-blue" style="width:100%">Fantasy League Tracker</button>
     </a>
+  <div style="width:100%;max-width:420px;margin-top:12px">
+    <button onclick="var d=document.getElementById('howItWorks');d.style.display=d.style.display==='block'?'none':'block'"
+      style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+      padding:12px 16px;color:var(--text2);font-family:var(--fd);font-size:13px;font-weight:600;
+      letter-spacing:1px;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center">
+      <span>HOW IT WORKS</span><span style="color:var(--text3)">&#9660;</span>
+    </button>
+    <div id="howItWorks" style="display:none;background:var(--surface);border:1px solid var(--border);
+      border-top:none;border-radius:0 0 var(--radius) var(--radius);padding:16px;font-size:12px;
+      color:var(--text2);line-height:1.7">
+      <div style="background:linear-gradient(135deg,rgba(245,184,0,.15),rgba(245,184,0,.05));
+        border:1px solid rgba(245,184,0,.3);border-radius:var(--rsm);padding:10px 12px;margin-bottom:12px">
+        <div style="font-family:var(--fd);font-weight:700;color:var(--gold);margin-bottom:3px">&#128241; Use it as an app</div>
+        <div>On mobile, tap your browser&#39;s Share button (iOS) or menu (Android) and select <b>&#34;Add to Home Screen&#34;</b> &#8212; installs with its own icon.</div>
+      </div>
+      <div style="font-family:var(--fd);font-weight:700;color:var(--text);margin-bottom:4px">Creating a Room (Host)</div>
+      <ul style="margin:0 0 10px 14px;padding:0">
+        <li>Enter your name, room name, and budget per team (in Lakhs)</li>
+        <li>Optionally enable a bid timer</li>
+        <li>Share the 6-character room code with friends</li>
+      </ul>
+      <div style="font-family:var(--fd);font-weight:700;color:var(--text);margin-bottom:4px">Joining a Room (Participant)</div>
+      <ul style="margin:0 0 10px 14px;padding:0">
+        <li>Enter your name and the room code</li>
+        <li>Pick a team name and colour</li>
+        <li>Wait for the host to start</li>
+      </ul>
+      <div style="font-family:var(--fd);font-weight:700;color:var(--text);margin-bottom:4px">During the Auction</div>
+      <ul style="margin:0 0 10px 14px;padding:0">
+        <li>The host puts up one player at a time</li>
+        <li>Any team can bid &#8212; each bid raises the price by a fixed increment</li>
+        <li>Highest bidder when time runs out wins the player</li>
+        <li>Watch your remaining budget in the top bar</li>
+      </ul>
+      <div style="font-family:var(--fd);font-weight:700;color:var(--text);margin-bottom:4px">Wrapping Up</div>
+      <ul style="margin:0 0 0 14px;padding:0">
+        <li>When all players are sold, the host ends the auction</li>
+        <li>Pick your <b>Captain (2&#215; points)</b> and <b>Vice-Captain (1.5&#215;)</b> &#8212; one-time choice for the whole tournament</li>
+        <li>Hit Fantasy League Tracker to follow points through the season</li>
+      </ul>
+    </div>
+  </div>
   </div>
 </div>
 
 <!-- ════ LOBBY ════ -->
 <div id="lobbyScreen" class="screen">
-  <div class="page-hero">
+  <div class="page-hero" style="position:relative">
+    
     <span class="icon">🏆</span>
     <h1 id="lobbyRoomName">Room</h1>
     <p id="lobbySubtitle">Share this code with everyone</p>
@@ -545,7 +587,8 @@
 
 <!-- ════ TEAM SELECT (participant) ════ -->
 <div id="teamSelectScreen" class="screen">
-  <div class="page-hero">
+  <div class="page-hero" style="position:relative">
+    
     <span class="icon">🏏</span>
     <h1 id="tsRoomName">Room</h1>
     <p id="tsRoomCode" style="font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:3px;color:var(--gold)">CODE</p>
@@ -845,22 +888,8 @@
 </div>
 
   <!-- ERROR BOUNDARY -->
-      <div style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;
-      color:#f5b800;margin-bottom:8px">Something went wrong</div>
-    <div style="font-size:13px;color:#7c8ba1;margin-bottom:24px;max-width:300px;line-height:1.6"
-      id="errorMsg">An unexpected error occurred.</div>
-    <button onclick="location.reload()" style="background:linear-gradient(135deg,#5091CD,#1D3D8D);
-      color:#fff;border:none;border-radius:12px;padding:12px 24px;font-family:'Rajdhani',sans-serif;
-      font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer">Reload App</button>
-  </div>
-  <div style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;
-    color:#f5b800;margin-bottom:8px">Something went wrong</div>
-  <div style="font-size:13px;color:#7c8ba1;margin-bottom:24px;max-width:300px;line-height:1.6"
-    id="errorMsg">An unexpected error occurred.</div>
-  <button onclick="location.reload()" style="background:linear-gradient(135deg,#5091CD,#1D3D8D);
-    color:#fff;border:none;border-radius:12px;padding:12px 24px;font-family:'Rajdhani',sans-serif;
-    font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer">Reload App</button>
-</div>
+      
+  
 <div class="toast" id="toast"></div>
 
 <!-- CONFIRM DIALOG -->
@@ -1379,6 +1408,12 @@ function pickColor(btn){
   document.querySelectorAll('.color-opt').forEach(function(b){b.classList.remove('on');});
   btn.classList.add('on');
   selectedColor = btn.dataset.color;
+}
+var selectedColor='#e74c3c';
+function pickColor(btn){
+  document.querySelectorAll('.color-opt').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  selectedColor=btn.dataset.color;
 }
 function joinTeam(){
   var tName=document.getElementById('myTeamName').value.trim();
@@ -2318,57 +2353,29 @@ window.addEventListener('load',function(){ setTimeout(tryRestoreSession,600); })
     }
   </script>
 
-  <div style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#f5b800;margin-bottom:8px">Something went wrong</div>
-  <div id="errorMsg" style="font-size:13px;color:#7c8ba1;margin-bottom:24px;max-width:300px;line-height:1.6">An unexpected error occurred.</div>
-  <button onclick="location.reload()" style="background:linear-gradient(135deg,#5091CD,#1D3D8D);color:#fff;border:none;border-radius:12px;padding:12px 24px;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer">Reload App</button>
-</div>
+  
 
-<div id="errorBoundary" style="display:none;position:fixed;inset:0;z-index:9999;background:#070a12;align-items:center;justify-content:center;padding:32px;text-align:center;flex-direction:column">
-  <div style="font-size:48px;margin-bottom:16px">&#9888;</div>
-  <div style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#f5b800;margin-bottom:8px">Something went wrong</div>
-  <div id="errorMsg" style="font-size:13px;color:#7c8ba1;margin-bottom:24px;max-width:300px;line-height:1.6">An unexpected error occurred.</div>
-  <button onclick="location.reload()" style="background:linear-gradient(135deg,#5091CD,#1D3D8D);color:#fff;border:none;border-radius:12px;padding:12px 24px;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer">Reload App</button>
-</div>
 
-<!-- HOW IT WORKS MODAL -->
+
 <div class="modal-ov" id="howItWorksModal">
   <div class="modal" style="max-height:80vh;overflow-y:auto">
     <div style="display:flex;align-items:center;margin-bottom:14px">
       <div style="flex:1;font-family:var(--fd);font-size:18px;font-weight:700">How it Works</div>
-      <button onclick="document.getElementById('howItWorksModal').classList.remove('show')"
-        style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer">&#10005;</button>
+      <button onclick="document.getElementById('howItWorksModal').classList.remove('show')" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer">&#10005;</button>
     </div>
-    <div style="background:linear-gradient(135deg,rgba(245,184,0,.15),rgba(245,184,0,.05));
-      border:1px solid rgba(245,184,0,.3);border-radius:var(--rsm);padding:10px 12px;margin-bottom:14px">
+    <div style="background:linear-gradient(135deg,rgba(245,184,0,.15),rgba(245,184,0,.05));border:1px solid rgba(245,184,0,.3);border-radius:var(--rsm);padding:10px 12px;margin-bottom:14px">
       <div style="font-family:var(--fd);font-weight:700;color:var(--gold);margin-bottom:3px">&#128241; Use it as an app</div>
-      <div style="font-size:12px;color:var(--text2)">On mobile, tap your browser&#39;s Share button (iOS) or menu (Android) and select <b>&#34;Add to Home Screen&#34;</b> &#8212; installs with its own icon.</div>
+      <div style="font-size:12px;color:var(--text2)">On mobile, tap Share (iOS) or menu (Android) and select <b>"Add to Home Screen"</b> — installs with its own icon.</div>
     </div>
     <div style="font-size:12px;color:var(--text2);line-height:1.8">
       <div style="font-family:var(--fd);font-weight:700;font-size:13px;color:var(--text);margin-bottom:4px">Creating a Room (Host)</div>
-      <ul style="margin:0 0 12px 14px;padding:0">
-        <li>Enter your name, room name, and budget per team (in Lakhs)</li>
-        <li>Optionally enable a bid timer</li>
-        <li>Share the 6-character room code with friends</li>
-      </ul>
+      <ul style="margin:0 0 12px 14px;padding:0"><li>Enter your name, room name, and budget per team (in Lakhs)</li><li>Optionally enable a bid timer</li><li>Share the 6-character room code with friends</li></ul>
       <div style="font-family:var(--fd);font-weight:700;font-size:13px;color:var(--text);margin-bottom:4px">Joining a Room (Participant)</div>
-      <ul style="margin:0 0 12px 14px;padding:0">
-        <li>Enter your name and the room code</li>
-        <li>Pick a team name and colour</li>
-        <li>Wait for the host to start</li>
-      </ul>
+      <ul style="margin:0 0 12px 14px;padding:0"><li>Enter your name and the room code</li><li>Pick a team name and colour</li><li>Wait for the host to start</li></ul>
       <div style="font-family:var(--fd);font-weight:700;font-size:13px;color:var(--text);margin-bottom:4px">During the Auction</div>
-      <ul style="margin:0 0 12px 14px;padding:0">
-        <li>The host puts up one player at a time</li>
-        <li>Any team can bid &#8212; each bid raises the price by a fixed increment</li>
-        <li>Highest bidder when time runs out wins the player</li>
-        <li>Watch your remaining budget in the top bar</li>
-      </ul>
+      <ul style="margin:0 0 12px 14px;padding:0"><li>The host puts up one player at a time</li><li>Any team can bid — each bid raises the price by a fixed increment</li><li>Highest bidder when time runs out wins the player</li><li>Watch your remaining budget in the top bar</li></ul>
       <div style="font-family:var(--fd);font-weight:700;font-size:13px;color:var(--text);margin-bottom:4px">Wrapping Up</div>
-      <ul style="margin:0 0 0 14px;padding:0">
-        <li>When all players are sold, the host ends the auction</li>
-        <li>Pick your <b>Captain (2&#215; points)</b> and <b>Vice-Captain (1.5&#215;)</b> &#8212; one-time choice for the whole tournament</li>
-        <li>Hit Fantasy League Tracker to follow points through the season</li>
-      </ul>
+      <ul style="margin:0 0 0 14px;padding:0"><li>When all players are sold, the host ends the auction</li><li>Pick your <b>Captain (2&#215; points)</b> and <b>Vice-Captain (1.5&#215;)</b> — one-time choice for the whole tournament</li><li>Hit Fantasy League Tracker to follow points through the season</li></ul>
     </div>
   </div>
 </div>
