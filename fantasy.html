@@ -156,8 +156,11 @@
 
 <nav class="nav" id="mainNav" style="display:none">
   <a href="./fantasy.html" class="nav-back">⌂ Home</a>
-  
-  
+  <div style="flex:1">
+    <div class="nav-title">Fantasy League</div>
+    <div class="nav-sub" id="navSub">IPL 2026</div>
+  </div>
+  <div class="mpill" id="navMatch">M0</div>
   <button id="adminBtn" onclick="openAdmin()" style="display:none;background:var(--surface2);
     border:1px solid var(--border);border-radius:var(--rsm);padding:5px 10px;
     font-family:var(--fd);font-size:11px;font-weight:600;color:var(--text3);cursor:pointer">
@@ -166,21 +169,190 @@
 </nav>
 
 <!-- SETUP -->
-
+<div id="setupScreen" class="screen active">
+  <div class="hero">
+    <h1>Fantasy League</h1>
+    <p>IPL 2026 · Track your season</p>
+    <div style="margin-top:14px;position:relative">
+      <button onclick="promptAdmin()" style="background:none;border:none;
+        color:var(--text3);font-size:12px;cursor:pointer;letter-spacing:.5px;
+        text-decoration:underline;text-underline-offset:3px">Admin login</button>
+    </div>
+  </div>
+  <div class="body">
+    <div class="card">
+      <div class="card-title">Enter Room Code</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6">
+        Enter the code from your IPL Mock Auction to load squads and track fantasy points.
+      </p>
+      <input type="text" id="setupCode" class="upper" placeholder="XXXXX" maxlength="5"
+        oninput="this.value=this.value.toUpperCase()"/>
+      <div class="gap"></div>
+      <div class="card-title">Your Team Name</div>
+      <input type="text" id="setupTeam" placeholder="e.g. Mumbai Mavericks" maxlength="25"/>
+      <div class="gap"></div>
+      <button class="btn btn-gold" onclick="loadRoom()">Load Squads</button>
+      <div class="gap"></div>
+      <a href="./index.html" class="btn btn-ghost">← Back to Auction</a>
+    </div>
+    <div class="card">
+      <div class="card-title">Scoring System</div>
+      <div class="sg-grid">
+        <div class="sg-card">
+          <div style="font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:1.5px;
+            text-transform:uppercase;color:var(--text3);margin-bottom:8px">Batting</div>
+          <div class="sg-row"><span>Run scored</span><span class="sg-pts">1</span></div>
+          <div class="sg-row"><span>Boundary (4)</span><span class="sg-pts">1</span></div>
+          <div class="sg-row"><span>Six (6)</span><span class="sg-pts">2</span></div>
+          <div class="sg-row"><span>25 runs</span><span class="sg-pts">4</span></div>
+          <div class="sg-row"><span>50 runs</span><span class="sg-pts">8</span></div>
+          <div class="sg-row"><span>100 runs</span><span class="sg-pts">16</span></div>
+          <div class="sg-row"><span>Duck</span><span class="sg-pts" style="color:var(--red)">-2</span></div>
+        </div>
+        <div class="sg-card">
+          <div style="font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:1.5px;
+            text-transform:uppercase;color:var(--text3);margin-bottom:8px">Bowling</div>
+          <div class="sg-row"><span>Wicket</span><span class="sg-pts">25</span></div>
+          <div class="sg-row"><span>LBW / Bowled</span><span class="sg-pts">8</span></div>
+          <div class="sg-row"><span>3 wickets</span><span class="sg-pts">4</span></div>
+          <div class="sg-row"><span>4 wickets</span><span class="sg-pts">8</span></div>
+          <div class="sg-row"><span>5 wickets</span><span class="sg-pts">16</span></div>
+          <div class="sg-row"><span>Maiden over</span><span class="sg-pts">12</span></div>
+          <div class="sg-row"><span>Eco &lt;6 (2+ ov)</span><span class="sg-pts">4</span></div>
+          <div class="sg-row"><span>Eco 6-8 (2+ ov)</span><span class="sg-pts">2</span></div>
+        </div>
+        <div class="sg-card">
+          <div style="font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:1.5px;
+            text-transform:uppercase;color:var(--text3);margin-bottom:8px">Fielding</div>
+          <div class="sg-row"><span>Catch</span><span class="sg-pts">8</span></div>
+          <div class="sg-row"><span>Stumping</span><span class="sg-pts">12</span></div>
+          <div class="sg-row"><span>Run out</span><span class="sg-pts">6</span></div>
+        </div>
+        <div class="sg-card">
+          <div style="font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:1.5px;
+            text-transform:uppercase;color:var(--text3);margin-bottom:8px">Other</div>
+          <div class="sg-row"><span>Playing XI</span><span class="sg-pts">4</span></div>
+          <div class="sg-row"><span>Captain</span><span class="sg-pts">2x</span></div>
+          <div class="sg-row"><span>Vice-Captain</span><span class="sg-pts">1.5x</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- MAIN -->
+<div id="mainScreen" class="screen">
+  <div class="tabs">
+    <div class="tab on" id="tab-lb" onclick="switchTab('lb')">Leaderboard</div>
+    <div class="tab" id="tab-sq" onclick="switchTab('sq')">Squads</div>
+    <div class="tab" id="tab-sc" onclick="switchTab('sc')">Schedule</div>
+    <div class="tab" id="tab-sy" onclick="switchTab('sy')" style="display:none">Auto Sync</div>
+    <div class="tab" id="tab-hi" onclick="switchTab('hi')">History</div>
+  </div>
 
+  <!-- LEADERBOARD PANE -->
+  <div class="pane on" id="pane-lb">
+    <div id="syncBanner" style="padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);
+      font-size:12px;color:var(--text3);display:flex;align-items:center;justify-content:space-between">
+      <span id="syncBannerText">Points data loading...</span>
+      <span style="font-size:10px;color:var(--text3)">Auto-updated daily</span>
+    </div>
+    <div class="lb-hdr" style="grid-template-columns:28px 1fr 80px 80px"><div>#</div><div>Team</div><div style="text-align:right">This Match</div><div style="text-align:right">Total</div></div>
+    <div id="lbList"></div>
+  </div>
+
+  <!-- SQUADS PANE -->
+  <div class="pane" id="pane-sq">
+    <div class="team-tabs" id="squadTabs"></div>
+    <div id="squadHeader"></div>
+    <div id="squadList"></div>
+  </div>
+
+  <!-- SYNC PANE -->
+  <div class="pane" id="pane-sy">
+    <div class="sync-hdr">
+      <div>
+        <div style="font-family:var(--fd);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase">Auto Sync</div>
+        <div id="syncStatus" style="font-size:11px;color:var(--text3);margin-top:2px">Syncs completed IPL 2026 matches daily</div>
+      </div>
+      <button class="btn btn-blue btn-sm" id="syncNowBtn" style="display:none" onclick="runSync(true)">Sync Now</button>
+      <!-- syncNowAdminBtn is in the admin nav bar -->
+    </div>
+    <div id="unmatchedSection" style="display:none;padding:10px;border-bottom:1px solid var(--border)">
+      <div style="font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:2px;
+        text-transform:uppercase;color:var(--gold);margin-bottom:8px">Review Low-Confidence Matches</div>
+      <div id="unmatchedList"></div>
+    </div>
+    <div id="syncReviewSection" style="display:none;padding:10px;border-bottom:1px solid var(--border)">
+      <div style="font-family:var(--fd);font-size:11px;font-weight:700;letter-spacing:2px;
+        text-transform:uppercase;color:var(--gold);margin-bottom:8px;padding:0 4px">
+        Pending Review — Edit Points Before Distributing
+      </div>
+      <div id="syncReviewList"></div>
+    </div>
+    <div style="padding:10px" id="syncLog"></div>
+  </div>
+
+  <!-- SCHEDULE PANE -->
+  <div class="pane" id="pane-sc">
+    <div id="scheduleList"></div>
+  </div>
+
+  <!-- HISTORY PANE -->
+  <div class="pane" id="pane-hi">
+    <div id="historyList"></div>
+  </div>
+</div>
 
 <!-- MATCH EDIT MODAL (admin) -->
-
+<div class="modal-ov" id="matchEditModal">
+  <div class="modal">
+    <div style="display:flex;align-items:center;margin-bottom:16px">
+      <div style="flex:1;font-family:var(--fd);font-size:18px;font-weight:700" id="matchEditTitle">Edit Points</div>
+      <button onclick="document.getElementById('matchEditModal').classList.remove('show')"
+        style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Edit individual player points for this match. Changes save to Firebase immediately.</div>
+    <div id="matchEditList"></div>
+    <button class="btn btn-green" style="margin-top:12px" onclick="saveMatchEdit()">Save Changes</button>
+  </div>
+</div>
 
 <!-- PLAYER MODAL -->
-
+<div class="modal-ov" id="playerModal">
+  <div class="modal">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div class="sp-avi" id="modalAvi" style="width:52px;height:52px"></div>
+      <div style="flex:1">
+        <div style="font-family:var(--fd);font-size:18px;font-weight:700" id="modalName"></div>
+        <div style="font-size:12px;color:var(--text3)" id="modalSub"></div>
+      </div>
+      <button onclick="closeModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
 
 <!-- ADMIN PANEL -->
+<div class="admin-ov" id="adminPanel">
+  <div class="admin-nav">
+    <button onclick="closeAdmin()" class="nav-back" id="adminBackBtn">← Back</button>
+    <a href="./fantasy.html" class="nav-back">⌂ Home</a>
+    <div style="font-family:var(--fd);font-size:18px;font-weight:700;flex:1">Admin — All Rooms</div>
+    <button class="btn btn-blue btn-sm" id="syncNowAdminBtn" onclick="runSync(true)">Sync Now</button>
+    <button onclick="loadAllRooms()" class="nav-back" style="color:var(--gold)">Refresh</button>
+  </div>
+  <div style="padding:12px" id="adminList"></div>
+</div>
 
-
-  <!-- ERROR BOUNDARY --><div class="toast" id="toast"></div>
+  <!-- ERROR BOUNDARY -->
+      
+    <div style="font-size:13px;color:#7c8ba1;margin-bottom:24px;max-width:300px;line-height:1.6"
+      id="errorMsg">An unexpected error occurred.</div></div>
+  
+  <div style="font-size:13px;color:#7c8ba1;margin-bottom:24px;max-width:300px;line-height:1.6"
+    id="errorMsg">An unexpected error occurred.</div></div>
+<div class="toast" id="toast"></div>
 
 <script>
 
@@ -929,7 +1101,7 @@ function squadModal(idx){
   selectSquad(idx,document.querySelector('#squadTabs [data-idx="'+idx+'"]'));
   switchTab('sq');
 }
-var _pm=document.getElementById('playerModal');if(_pm)_pm.addEventListener('click',function(e){
+document.getElementById('playerModal').addEventListener('click',function(e){
   if(e.target===this) closeModal();
 });
 
@@ -1743,31 +1915,10 @@ window.addEventListener('load',function(){
       });
     }
   </script>
-<!-- MATCH EDIT MODAL (admin) -->
-<div class="modal-ov" id="matchEditModal">
-  <div class="modal">
-    <div style="display:flex;align-items:center;margin-bottom:16px">
-      <div style="flex:1;font-family:var(--fd);font-size:18px;font-weight:700" id="matchEditTitle">Edit Points</div>
-      <button onclick="document.getElementById('matchEditModal').classList.remove('show')"
-        style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer">&#10005;</button>
-    </div>
-    <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Edit individual player points for this match. Changes save to Firebase immediately.</div>
-    <div id="matchEditList"></div>
-    <button class="btn btn-green" style="margin-top:12px" onclick="saveMatchEdit()">Save Changes</button>
-  </div>
-</div>
 
-<!-- PLAYER MODAL -->
-<div class="modal-ov" id="playerModal">
-  <div class="modal">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-      <div class="sp-avi" id="modalAvi" style="width:52px;height:52px;font-size:18px;flex-shrink:0"></div>
-      <div style="flex:1"><div style="font-family:var(--fd);font-size:18px;font-weight:700" id="modalName"></div>
-      <div style="font-size:11px;color:var(--text3);margin-top:2px" id="modalMeta"></div></div>
-      <button onclick="closeModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer">&#10005;</button>
-    </div>
-    <div id="modalBody"></div>
-  </div>
-</div>
+  
+  <div id="errorMsg" style="font-size:13px;color:#7c8ba1;margin-bottom:24px;max-width:300px;line-height:1.6">An unexpected error occurred.</div></div>
+
+
 </body>
 </html>
