@@ -803,11 +803,13 @@ function updateNav(){
   var pill=document.getElementById('navMatch');
   pill.title=label+(sched?' · '+sched.time+' IST':'');
   var pillLogos=getTeamLogos(label||'');
+  var matchNum='M'+G.currentMatch;
   var pillLogoHtml=pillLogos.length===2
-    ?'<img src="./images/'+pillLogos[0]+'.webp" style="width:16px;height:16px;object-fit:contain;margin-right:3px;vertical-align:middle">'
-     +'<span>'+(label||('M'+G.currentMatch))+'</span>'
-     +'<img src="./images/'+pillLogos[1]+'.webp" style="width:16px;height:16px;object-fit:contain;margin-left:3px;vertical-align:middle">'
-    :'<span>'+(label||('M'+G.currentMatch))+'</span>';
+    ?matchNum+' — '
+     +'<img src="./images/'+pillLogos[0]+'.webp" class="team-logo" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin:0 2px">'
+     +pillLogos[0]+' vs '+pillLogos[1]
+     +'<img src="./images/'+pillLogos[1]+'.webp" class="team-logo" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin:0 2px">'
+    :(label||matchNum);
   pill.innerHTML=pillLogoHtml
     +(statusLabels[status]?'<span style="font-size:9px;margin-left:5px;color:'+statusColors[status]+'">'+statusLabels[status]+'</span>':'');
   pill.style.cursor='help';
