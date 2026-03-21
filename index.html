@@ -2334,6 +2334,11 @@ window.addEventListener('load',function(){ setTimeout(tryRestoreSession,600); })
     }
   </script>
 
+  <div style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#f5b800;margin-bottom:8px">Something went wrong</div>
+  <div id="errorMsg" style="font-size:13px;color:#7c8ba1;margin-bottom:24px;max-width:300px;line-height:1.6">An unexpected error occurred.</div>
+  <button onclick="location.reload()" style="background:linear-gradient(135deg,#5091CD,#1D3D8D);color:#fff;border:none;border-radius:12px;padding:12px 24px;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer">Reload App</button>
+</div>
+
 <div id="errorBoundary" style="display:none;position:fixed;inset:0;z-index:9999;background:#070a12;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center">
   <div style="font-size:48px;margin-bottom:16px">&#9888;</div>
   <div style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#f5b800;margin-bottom:8px">Something went wrong</div>
