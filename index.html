@@ -1380,6 +1380,23 @@ function joinRoom(){
     document.getElementById('tsRoomName').textContent=data.roomName;
     document.getElementById('tsRoomCode').textContent=code;
     showScreen('teamSelectScreen');
+    // Load taken colors live and update picker
+    roomRef.child('takenColors').on('value',function(csnap){
+      var taken=csnap.val()||{};
+      var takenVals=Object.values(taken);
+      document.querySelectorAll('.color-opt').forEach(function(btn){
+        var c=btn.dataset.color;
+        var isTaken=takenVals.indexOf(c)>=0;
+        btn.disabled=isTaken;
+        btn.style.opacity=isTaken?'0.25':'1';
+        btn.style.cursor=isTaken?'not-allowed':'pointer';
+        btn.title=isTaken?'Already taken':'';
+        if(isTaken&&selectedColor===c){
+          var first=document.querySelector('.color-opt:not([disabled])');
+          if(first) pickColor(first);
+        }
+      });
+    });
     // Poll for auction start - once started, switch to the main participant listener
     var startWatcher = roomRef.on('value', function(snap2){
       var d=snap2.val(); if(!d) return;
@@ -1439,6 +1456,7 @@ function joinTeam(){
       var update={};
       update['participants/'+pid]={name:myName,teamName:tName,teamIdx:idx,joinedAt:Date.now()};
       update['teams/'+idx]={name:tName,budget:G.teamBudget||10000,spent:0,players:[],color:color};
+      update['takenColors/'+idx]=color;
       roomRef.update(update,function(e2){
         if(e2){toast('Error: '+e2.message);return;}
         myTeamName=tName;
