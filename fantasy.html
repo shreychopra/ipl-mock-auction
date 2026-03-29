@@ -744,6 +744,87 @@ function showScreen(id){
   if(el) el.classList.add('active');
 }
 
+function populateMatchSelector(){
+  var sel=document.getElementById('ptMatchSel');
+  if(!sel) return;
+  while(sel.options.length>1) sel.remove(1);
+  var labels=G.matchLabels||{};
+  var keys=Object.keys(labels).sort(function(a,b){
+    return parseInt(a.replace('match',''))-parseInt(b.replace('match',''));
+  });
+  keys.forEach(function(mk){
+    var opt=document.createElement('option');
+    opt.value=mk; opt.textContent=labels[mk];
+    sel.appendChild(opt);
+  });
+}
+
+function renderPointsPane(){
+  var sel=document.getElementById('ptMatchSel');
+  var matchKey=sel?sel.value:'all';
+  var list=document.getElementById('pointsList');
+  if(!list) return;
+
+  var teamCount=Object.keys(G.teams||{}).length;
+  var matchCount=Object.keys(G.matchData||{}).length;
+  if(!teamCount){
+    list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">No room loaded. Use the Auto Sync tab to load a room first.</div>';
+    return;
+  }
+  if(!matchCount){
+    list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">No match data yet. Sync a match first.</div>';
+    return;
+  }
+
+  // Get all match keys to show
+  var allMatchKeys=Object.keys(G.matchData).filter(function(k){return k.startsWith('match');});
+  var matchKeys=matchKey==='all'?allMatchKeys:[matchKey];
+
+  // Build player->points across all teams
+  var rows=[];
+  Object.keys(G.teams).forEach(function(tk){
+    var team=G.teams[tk];
+    (team.players||[]).forEach(function(p,pi){
+      var total=0;
+      matchKeys.forEach(function(mk){
+        var mData=G.matchData[mk];
+        if(!mData) return;
+        var tkData=mData[tk]||mData[parseInt(tk)];
+        if(!tkData) return;
+        total+=(tkData[pi]||tkData[String(pi)]||0);
+      });
+      if(total>0) rows.push({name:p.name,role:p.role,team:team.name,color:team.color||'#fff',pts:total});
+    });
+  });
+
+  rows.sort(function(a,b){return b.pts-a.pts;});
+
+  if(!rows.length){
+    list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">No points found for selected match(es).</div>';
+    return;
+  }
+
+  var html='<table style="width:100%;border-collapse:collapse;font-size:13px">'
+    +'<thead><tr style="color:var(--text3);font-size:11px;font-family:var(--fd);text-align:left;border-bottom:1px solid var(--border)">'
+    +'<th style="padding:8px 4px">#</th>'
+    +'<th style="padding:8px 4px">Player</th>'
+    +'<th style="padding:8px 4px">Role</th>'
+    +'<th style="padding:8px 4px">Team</th>'
+    +'<th style="padding:8px 4px;text-align:right">Pts</th>'
+    +'</tr></thead><tbody>';
+  rows.forEach(function(r,i){
+    html+='<tr style="border-bottom:1px solid var(--border)">'
+      +'<td style="padding:8px 4px;color:var(--text3);font-size:11px">'+(i+1)+'</td>'
+      +'<td style="padding:8px 4px;font-weight:600">'+r.name+'</td>'
+      +'<td style="padding:8px 4px;color:var(--text3);font-size:11px">'+r.role+'</td>'
+      +'<td style="padding:8px 4px"><span style="color:'+r.color+';font-size:11px;font-family:var(--fd);font-weight:700">'+r.team+'</span></td>'
+      +'<td style="padding:8px 4px;text-align:right;font-family:var(--fd);font-weight:700;color:var(--gold)">'+r.pts+'</td>'
+      +'</tr>';
+  });
+  html+='</tbody></table>';
+  list.innerHTML=html;
+}
+
 function switchTab(name){
   ['lb','sq','sc','sy','hi','pt'].forEach(function(n){
     var t=document.getElementById('tab-'+n);
