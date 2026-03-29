@@ -1362,15 +1362,18 @@ function calcPts(bat,bowl,field,isCap,isVC,playedXI){
 function parseCard(scard, filteredInnings){
   var stats={};
   function get(name){if(!stats[name])stats[name]={bat:null,bowl:null,field:{c:0,st:0,ro:0},played:true};return stats[name];}
-  // Use pre-filtered innings if provided, otherwise extract from response
   var inningsList=filteredInnings||(scard.scorecard||scard.scoreCard||scard.inningsScoreList||[]);
   inningsList.forEach(function(inn){
-    (inn.batCard||inn.batsmen||inn.batsmanList||[]).forEach(function(b){
-      var name=b.batName||b.name||''; if(!name) return;
-      var runs=parseInt(b.runs||b.r||0);
-      var dis=(b.outDesc||b.dismissal||'').toLowerCase();
-      var dismissed=dis&&dis!=='not out'&&dis!=='';
-      get(name).bat={runs:runs,fours:parseInt(b.fours||b['4s']||0),sixes:parseInt(b.sixes||b['6s']||0),dismissed:dismissed};
+    // API v2 uses 'batsman' (singular), older used 'batCard'/'batsmen'
+    var bats=inn.batsman||inn.batCard||inn.batsmen||inn.batsmanList||[];
+    var bowls=inn.bowler||inn.bowlCard||inn.bowlers||inn.bowlerList||[];
+    bats.forEach(function(b){
+      // API v2 field names: name, r, fow (dismissal), 4s, 6s
+      var name=b.name||b.batName||''; if(!name) return;
+      var runs=parseInt(b.r||b.runs||0);
+      var dis=(b.dismissal||b.outDesc||b.fow||'').toLowerCase();
+      var dismissed=dis&&dis!=='not out'&&dis!=='batting'&&dis!=='';
+      get(name).bat={runs:runs,fours:parseInt(b['4s']||b.fours||0),sixes:parseInt(b['6s']||b.sixes||0),dismissed:dismissed};
       // fielding from dismissal
       var cm=dis.match(/^c\s+(.+?)\s+b\s/i);
       var sm=dis.match(/^st\s+(.+?)\s+b\s/i);
@@ -1378,21 +1381,21 @@ function parseCard(scard, filteredInnings){
       if(cm){var f=cm[1].trim();if(f&&f!=='sub'){get(f).field.c++;}}
       if(sm){var f2=sm[1].trim();if(f2)get(f2).field.st++;}
       if(rm){var f3=rm[1].split(/[/,&]/)[0].trim();if(f3)get(f3).field.ro++;}
-      // lbw/bowled bonus
       if(dis.match(/^lbw\s+b\s|^b\s+[a-z]/i)||dis.match(/^bowled\s/i)){
         var bname=dis.replace(/^(lbw\s+b|b|bowled)\s+/i,'').trim().split(' ')[0];
         if(bname){if(!stats[bname])get(bname);stats[bname]._lb=(stats[bname]._lb||0)+1;}
       }
     });
-    (inn.bowlCard||inn.bowlers||inn.bowlerList||[]).forEach(function(b){
-      var name=b.bowlName||b.name||''; if(!name) return;
+    bowls.forEach(function(b){
+      // API v2 field names: name, w, ov, r, m
+      var name=b.name||b.bowlName||''; if(!name) return;
       var st=get(name);
-      var rawOv=parseFloat(b.overs||b.ov||0);
+      var rawOv=parseFloat(b.ov||b.overs||0);
       var fullOv=Math.floor(rawOv), balls=Math.round((rawOv-fullOv)*10);
-      var realOv=fullOv+(balls/6); // e.g. 3.4 -> 3.667
-      st.bowl={wkts:parseInt(b.wickets||b.wkts||b.w||0),
-        overs:realOv,runs:parseInt(b.runs||b.r||0),
-        maidens:parseInt(b.maidens||b.m||0),lbwBowled:stats[name]._lb||0};
+      var realOv=fullOv+(balls/6);
+      st.bowl={wkts:parseInt(b.w||b.wickets||b.wkts||0),
+        overs:realOv,runs:parseInt(b.r||b.runs||0),
+        maidens:parseInt(b.m||b.maidens||0),lbwBowled:stats[name]._lb||0};
     });
   });
   return stats;
@@ -1476,6 +1479,8 @@ function processMatch(matchId,desc,mNum,done,retryCount,schedMatch){
       if(bowls.length>0) logSync('Bowler0 keys: '+Object.keys(bowls[0]).join(', '),'info');
     }
     var stats=parseCard(data, innings);
+    var parsedNames=Object.keys(stats);
+    logSync('Parsed '+parsedNames.length+' players from scorecard. Sample: '+parsedNames.slice(0,5).join(', '),'info');
     var results={};
     var lowConf=[];
     Object.keys(stats).forEach(function(apiName){
