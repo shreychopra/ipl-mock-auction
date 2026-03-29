@@ -766,7 +766,7 @@ function renderPointsPane(){
   if(!list) return;
 
   if(!G.roomCode){
-    list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">Load a room first via the Auto Sync tab.</div>';
+    list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">Load a room first.<br><small>Go to Auto Sync tab → click "Load Fantasy for this room"</small></div>';
     return;
   }
   list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">Loading...</div>';
@@ -787,8 +787,12 @@ function renderPointsPane(){
           matchKeys.forEach(function(mk){
             var mData=matchData[mk];
             if(!mData) return;
+            // Try all key variants - Firebase can store numeric keys as strings
             var tkData=mData[tk]||mData[String(parseInt(tk))];
-            if(tkData) total+=(tkData[pi]||tkData[String(pi)]||0);
+            if(!tkData) return;
+            // pi is array index - try both number and string forms
+            var pts=tkData[pi]||tkData[String(pi)];
+            if(pts) total+=pts;
           });
           if(total>0) rows.push({name:p.name,role:p.role,team:team.name,color:team.color||'#aaa',pts:total});
         });
@@ -797,7 +801,8 @@ function renderPointsPane(){
       rows.sort(function(a,b){return b.pts-a.pts;});
 
       if(!rows.length){
-        list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">No points data for this selection.</div>';
+        var debugInfo='Teams: '+Object.keys(teams).length+' | Match keys: '+allMatchKeys.join(',')||'none';
+        list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">No points data found.<br><small style="opacity:.6">'+debugInfo+'</small></div>';
         return;
       }
 
@@ -1021,11 +1026,18 @@ function getMatchStatus(schedMatch){
 }
 
 function updateNav(){
+  // Always show next upcoming or live match
+  var nextSched=null;
+  for(var i=0;i<IPL_SCHEDULE.length;i++){
+    var st=getMatchStatus(IPL_SCHEDULE[i]);
+    if(st==='upcoming'||st==='live'){nextSched=IPL_SCHEDULE[i];break;}
+  }
+  if(!nextSched) nextSched=IPL_SCHEDULE[IPL_SCHEDULE.length-1];
+  var sched=nextSched;
+  G.currentMatch=sched.num;
   var mk='match'+G.currentMatch;
-  var label=G.matchLabels&&G.matchLabels[mk]?G.matchLabels[mk]:'';
-  var sched=IPL_SCHEDULE.find(function(m){return m.num===G.currentMatch;});
-  if(!label&&sched) label=sched.label;
-  var status=sched?getMatchStatus(sched):'unknown';
+  var label=sched.label;
+  var status=getMatchStatus(sched);
   var statusColors={upcoming:'var(--text3)',live:'var(--red)',done:'var(--green)',unknown:'var(--gold)'};
   var statusLabels={upcoming:'Upcoming',live:'● Live',done:'✓ Done',unknown:''};
   var pill=document.getElementById('navMatch');
@@ -1042,6 +1054,7 @@ function updateNav(){
     +(statusLabels[status]?'<span style="font-size:9px;margin-left:5px;color:'+statusColors[status]+'">'+statusLabels[status]+'</span>':'');
   pill.style.cursor='help';
 }
+
 
 // ── LEADERBOARD ──
 function teamTotal(idx){
