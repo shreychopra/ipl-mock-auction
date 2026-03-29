@@ -1359,11 +1359,13 @@ function calcPts(bat,bowl,field,isCap,isVC,playedXI){
   else if(isVC) pts=Math.round(pts*1.5);
   return pts;
 }
-function parseCard(scard){
+function parseCard(scard, filteredInnings){
   var stats={};
   function get(name){if(!stats[name])stats[name]={bat:null,bowl:null,field:{c:0,st:0,ro:0},played:true};return stats[name];}
-  (scard.scoreCard||scard.inningsScoreList||[]).forEach(function(inn){
-    (inn.batCard||inn.batsmen||[]).forEach(function(b){
+  // Use pre-filtered innings if provided, otherwise extract from response
+  var inningsList=filteredInnings||(scard.scorecard||scard.scoreCard||scard.inningsScoreList||[]);
+  inningsList.forEach(function(inn){
+    (inn.batCard||inn.batsmen||inn.batsmanList||[]).forEach(function(b){
       var name=b.batName||b.name||''; if(!name) return;
       var runs=parseInt(b.runs||b.r||0);
       var dis=(b.outDesc||b.dismissal||'').toLowerCase();
@@ -1382,7 +1384,7 @@ function parseCard(scard){
         if(bname){if(!stats[bname])get(bname);stats[bname]._lb=(stats[bname]._lb||0)+1;}
       }
     });
-    (inn.bowlCard||inn.bowlers||[]).forEach(function(b){
+    (inn.bowlCard||inn.bowlers||inn.bowlerList||[]).forEach(function(b){
       var name=b.bowlName||b.name||''; if(!name) return;
       var st=get(name);
       var rawOv=parseFloat(b.overs||b.ov||0);
@@ -1436,38 +1438,34 @@ function processMatch(matchId,desc,mNum,done,retryCount,schedMatch){
       logSync('Failed after 3 attempts: '+desc+' — '+err,'err');
       done();return;
     }
-    // Check match state - handle multiple API response structures
-    var mh=data.matchHeader||data.matchInfo||{};
-    var matchState=(mh.state||mh.matchState||mh.status||'').toLowerCase();
-    var innings=data.scoreCard||data.inningsScoreList||data.scorecard||[];
-    // Filter super overs
-    innings=innings.filter(function(inn){
-      var id=inn.inningsId||inn.innId||(inn.batTeamDetails&&inn.batTeamDetails.innId)||0;
-      return !inn.isSuperOver&&!inn.superOver&&parseInt(id)<=4;
-    });
-    var innWithBowling=innings.filter(function(inn){
-      return (inn.bowlCard||inn.bowlers||[]).length>0;
-    }).length;
-    // Log raw response structure for debugging
-    logSync('API keys: '+Object.keys(data).join(', '),'info');
-    if(data.matchHeader) logSync('matchHeader keys: '+Object.keys(data.matchHeader).join(', '),'info');
-    logSync('State: "'+matchState+'" | innings bowled: '+innWithBowling,'info');
-    if(matchState.indexOf('abandon')>=0){
+    // API v2 structure: scorecard, ismatchcomplete, status
+    var innings=data.scorecard||data.scoreCard||data.inningsScoreList||[];
+    var isComplete=(data.ismatchcomplete===1||data.ismatchcomplete===true||
+      (data.status&&data.status.toLowerCase().indexOf('won')>=0)||
+      (data.status&&data.status.toLowerCase().indexOf('tied')>=0)||
+      (data.status&&data.status.toLowerCase().indexOf('abandon')>=0));
+    var isAbandoned=(data.status&&data.status.toLowerCase().indexOf('abandon')>=0);
+    logSync('ismatchcomplete:'+data.ismatchcomplete+' | status:"'+(data.status||'')+'" | innings:'+innings.length,'info');
+    if(isAbandoned){
       logSync(desc+' abandoned. No points awarded.','warn');
       var upd={};upd['syncedIds/'+matchId]=true;
       if(fantasyRef) fantasyRef.update(upd);
       syncedIds[matchId]=true;done();return;
     }
-    var isComplete=(matchState.indexOf('complet')>=0||matchState.indexOf('result')>=0||innWithBowling>=2);
     if(!isComplete){
-      logSync(desc+' not complete (state:"'+matchState+'", innings:'+innWithBowling+'). Will retry.','warn');
+      logSync(desc+' not complete yet. Will retry.','warn');
       done();return;
     }
+    // Filter super overs
+    innings=innings.filter(function(inn){
+      var id=inn.inningsId||inn.innId||(inn.batTeamDetails&&inn.batTeamDetails.innId)||0;
+      return !inn.isSuperOver&&!inn.superOver&&parseInt(id)<=4;
+    });
     if(!innings.length){
       logSync('No innings data for '+desc+'. Will retry.','warn');
       done();return;
     }
-    var stats=parseCard(data);
+    var stats=parseCard(data, innings);
     var results={};
     var lowConf=[];
     Object.keys(stats).forEach(function(apiName){
