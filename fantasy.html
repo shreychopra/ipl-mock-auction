@@ -1778,7 +1778,7 @@ function distributeToAllRooms(matchId, autoMode){
         // Skip if already synced by Worker for this room
         var roomFantasy=fantasyData&&fantasyData[code];
         if(roomFantasy&&roomFantasy.syncedIds&&roomFantasy.syncedIds[matchId]){
-          // Already synced - don't overwrite Worker's data
+          count++; // count as distributed since Worker already handled it
           return;
         }
         // Match each squad player against scorecard by fuzzy name
@@ -2013,6 +2013,9 @@ function loadRoomAsAdmin(code){
     fantasyRef.once('value',function(snap2){
       var fd=snap2.val()||{};
       G.matchData=fd.matches||{}; G.matchLabels=fd.matchLabels||{}; G.matchResults=fd.matchResults||{}; G.currentMatch=fd.currentMatch||1;
+      if(document.getElementById('tab-pt')&&document.getElementById('tab-pt').classList.contains('on')){
+        populateMatchSelector(); renderPointsPane();
+      }
       // Load captains and auctionEndedAt
       db.ref('rooms/'+code).once('value',function(rs){
         var rd=rs.val()||{};
@@ -2024,6 +2027,9 @@ function loadRoomAsAdmin(code){
       updateNav(); buildSquadTabs(); renderLeaderboard(); renderSquadPane(); renderHistory();
       document.getElementById('tab-sy').style.display='block';
       document.getElementById('tab-pt').style.display='block';
+      if(document.getElementById('tab-pt')&&document.getElementById('tab-pt').classList.contains('on')){
+        populateMatchSelector(); renderPointsPane();
+      }
       showScreen('mainScreen'); toast('Loaded room '+code);
     });
     fantasyRef.on('value',function(snap3){
