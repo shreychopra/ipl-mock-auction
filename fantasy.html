@@ -1337,9 +1337,13 @@ function similarity(a,b){
   if(a===b) return 1;
   if(a.includes(b)||b.includes(a)) return 0.9;
   var aw=a.split(' '), bw=b.split(' ');
-  if(aw.length&&bw.length&&aw[aw.length-1]===bw[bw.length-1]) return 0.85;
+  // Last name match alone is NOT enough — too many players share surnames like Singh, Kumar etc
+  // Require BOTH last name AND at least one other word to match for high confidence
+  var lastMatch=aw.length&&bw.length&&aw[aw.length-1]===bw[bw.length-1];
   var shared=aw.filter(function(w){return w.length>2&&bw.indexOf(w)>=0;}).length;
-  return shared?(0.65+shared*0.05):0;
+  if(lastMatch&&shared>=2) return 0.92; // last name + other word match = very confident
+  if(lastMatch&&shared>=1) return 0.80; // last name + one word = moderate (below 0.85 threshold)
+  return shared?(0.55+shared*0.05):0;   // lowered base score
 }
 function findPlayer(apiName){
   var best=null, bestScore=0;
@@ -1382,7 +1386,7 @@ function parseCard(scard, filteredInnings){
       // API v2 field names: name, r, fow (dismissal), 4s, 6s
       var name=b.name||b.batName||''; if(!name) return;
       var runs=parseInt(b.r||b.runs||0);
-      var dis=(b.dismissal||b.outDesc||b.fow||'').toLowerCase();
+      var dis=(b.dismissal||b.outDesc||b.out||b.how||b.fow||'').toLowerCase();
       var dismissed=dis&&dis!=='not out'&&dis!=='batting'&&dis!=='';
       get(name).bat={runs:runs,fours:parseInt(b['4s']||b.fours||0),sixes:parseInt(b['6s']||b.sixes||0),dismissed:dismissed};
       // fielding from dismissal
