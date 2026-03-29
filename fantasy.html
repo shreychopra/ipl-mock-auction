@@ -1503,6 +1503,10 @@ function processMatch(matchId,desc,mNum,done,retryCount,schedMatch){
     var stats=parseCard(data, innings);
     var parsedNames=Object.keys(stats);
     logSync('Parsed '+parsedNames.length+' players from scorecard. Sample: '+parsedNames.slice(0,5).join(', '),'info');
+    // Log all fielding stats
+    var fieldLog=parsedNames.filter(function(n){var f=stats[n].field;return f.c>0||f.st>0||f.ro>0;}).map(function(n){var f=stats[n].field;return n+'(c:'+f.c+' st:'+f.st+' ro:'+f.ro+')';});
+    if(fieldLog.length) logSync('Fielding: '+fieldLog.join(', '),'info');
+    else logSync('Fielding: NONE FOUND','warn');
     var results={};
     var lowConf=[];
     Object.keys(stats).forEach(function(apiName){
@@ -1675,6 +1679,12 @@ function distributeToAllRooms(matchId, autoMode){
         var rPlayers=rTeam.players||[];
         // Match by player name across teams
         var teamPts={};
+        // Skip if already synced by Worker for this room
+        var roomFantasy=fantasyData&&fantasyData[code];
+        if(roomFantasy&&roomFantasy.syncedIds&&roomFantasy.syncedIds[matchId]){
+          // Already synced - don't overwrite Worker's data
+          return;
+        }
         // Match each squad player against scorecard by fuzzy name
         rPlayers.forEach(function(rp,rpi){
           var bestScore=0, bestPts=0;
