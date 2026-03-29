@@ -1493,9 +1493,12 @@ function processMatch(matchId,desc,mNum,done,retryCount,schedMatch){
       logSync('Inn0 keys: '+Object.keys(inn0).join(', '),'info');
       var bats=inn0.batCard||inn0.batsmen||inn0.batsmanList||[];
       var bowls=inn0.bowlCard||inn0.bowlers||inn0.bowlerList||[];
+      // Force convert object to array and log raw
+      if(!Array.isArray(bats)) bats=Object.values(inn0.batsman||{});
+      if(!Array.isArray(bowls)) bowls=Object.values(inn0.bowler||{});
       logSync('Inn0 batters: '+bats.length+' | bowlers: '+bowls.length,'info');
-      if(bats.length>0) logSync('Batter0 keys: '+Object.keys(bats[0]).join(', '),'info');
-      if(bowls.length>0) logSync('Bowler0 keys: '+Object.keys(bowls[0]).join(', '),'info');
+      if(bats.length>0) logSync('Batter0: '+JSON.stringify(bats[0]).slice(0,250),'info');
+      if(bowls.length>0) logSync('Bowler0: '+JSON.stringify(bowls[0]).slice(0,150),'info');
     }
     var stats=parseCard(data, innings);
     var parsedNames=Object.keys(stats);
