@@ -250,6 +250,7 @@
     <div class="tab" id="tab-sc" onclick="switchTab('sc')">Schedule</div>
     <div class="tab" id="tab-sy" onclick="switchTab('sy')" style="display:none">Auto Sync</div>
     <div class="tab" id="tab-hi" onclick="switchTab('hi')">History</div>
+    <div class="tab" id="tab-pt" onclick="switchTab('pt')" style="display:none">Points</div>
   </div>
 
   <!-- LEADERBOARD PANE -->
@@ -311,6 +312,18 @@
     <div id="historyList"></div>
   </div>
 </div>
+
+  <!-- POINTS PANE (admin only) -->
+  <div class="pane" id="pane-pt">
+    <div style="padding:12px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select id="ptMatchSel" onchange="renderPointsPane()"
+        style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);
+        color:var(--text);padding:8px;font-size:13px;font-family:var(--fd)">
+        <option value="all">— All Matches (Season Total) —</option>
+      </select>
+    </div>
+    <div id="pointsList" style="padding:0 16px 80px"></div>
+  </div>
 
 <!-- MATCH EDIT MODAL (admin) -->
 <div class="modal-ov" id="matchEditModal">
@@ -732,7 +745,7 @@ function showScreen(id){
 }
 
 function switchTab(name){
-  ['lb','sq','sc','sy','hi'].forEach(function(n){
+  ['lb','sq','sc','sy','hi','pt'].forEach(function(n){
     var t=document.getElementById('tab-'+n);
     var p=document.getElementById('pane-'+n);
     if(t) t.classList.toggle('on', n===name);
@@ -742,6 +755,7 @@ function switchTab(name){
   if(name==='sq') renderSquadPane();
   if(name==='sc') renderSchedule();
   if(name==='hi') renderHistory();
+  if(name==='pt'){populateMatchSelector();renderPointsPane();}
 }
 
 function setAvi(el, photo, initial){
