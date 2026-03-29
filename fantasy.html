@@ -1465,6 +1465,16 @@ function processMatch(matchId,desc,mNum,done,retryCount,schedMatch){
       logSync('No innings data for '+desc+'. Will retry.','warn');
       done();return;
     }
+    // Debug: log first innings structure
+    if(innings.length>0){
+      var inn0=innings[0];
+      logSync('Inn0 keys: '+Object.keys(inn0).join(', '),'info');
+      var bats=inn0.batCard||inn0.batsmen||inn0.batsmanList||[];
+      var bowls=inn0.bowlCard||inn0.bowlers||inn0.bowlerList||[];
+      logSync('Inn0 batters: '+bats.length+' | bowlers: '+bowls.length,'info');
+      if(bats.length>0) logSync('Batter0 keys: '+Object.keys(bats[0]).join(', '),'info');
+      if(bowls.length>0) logSync('Bowler0 keys: '+Object.keys(bowls[0]).join(', '),'info');
+    }
     var stats=parseCard(data, innings);
     var results={};
     var lowConf=[];
