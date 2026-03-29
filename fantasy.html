@@ -1032,7 +1032,7 @@ function updateNav(){
   var label=sched.label;
   var status=getMatchStatus(sched);
   var statusColors={upcoming:'var(--text3)',live:'var(--red)',done:'var(--green)',unknown:'var(--gold)'};
-  var statusLabels={upcoming:'Upcoming',live:'&#9679; Live',done:'&#10003; Done',unknown:''};
+  var statusLabels={upcoming:'Upcoming',live:'&#9679; Live',done:'Done',unknown:''};
   var pill=document.getElementById('navMatch');
   if(!pill) return;
   var pillLogos=getTeamLogos(label||'');
@@ -1042,11 +1042,9 @@ function updateNav(){
     :(label||matchNum);
   pill.innerHTML=pillLogoHtml+(statusLabels[status]?'<span style="font-size:9px;margin-left:5px;color:'+statusColors[status]+'">'+statusLabels[status]+'</span>':'');
   pill.style.cursor='help';
-  pill.title=label+' &middot; '+sched.time;
 }
 
 
-// ── LEADERBOARD ──
 function teamTotal(idx){
   var t=0;
   Object.keys(G.matchData).forEach(function(m){
@@ -1559,22 +1557,25 @@ function parseCard(scard, filteredInnings){
     if(!Array.isArray(bats)) bats=Object.values(bats);
     var bowls=inn.bowler||inn.bowlCard||inn.bowlers||inn.bowlerList||[];
     if(!Array.isArray(bowls)) bowls=Object.values(bowls);
+    var bowls=inn.bowler||inn.bowlCard||inn.bowlers||inn.bowlerList||[];
     bats.forEach(function(b){
-      // API v2 field names: name, r, fow (dismissal), 4s, 6s
       var name=b.name||b.batName||''; if(!name) return;
       var runs=parseInt(b.r||b.runs||0);
-      var dis=(b.outdec||b.dismissal||b.outDesc||b.out||b.how||'').toLowerCase();
-      var dismissed=dis&&dis!=='not out'&&dis!=='batting'&&dis!=='';
+      // Keep original case for fielder name extraction, lowercase only for pattern matching
+      var disOrig=b.outdec||b.dismissal||b.outDesc||b.out||b.how||'';
+      var dis=disOrig.toLowerCase();
+      var dismissed=dis&&dis!=='not out'&&dis!=='batting'&&dis!=='yet to bat'&&dis!=='';
       get(name).bat={runs:runs,fours:parseInt(b['4s']||b.fours||0),sixes:parseInt(b['6s']||b.sixes||0),dismissed:dismissed};
-      // fielding from dismissal
-      var cm=dis.match(/^c\s+(.+?)\s+b\s/i);
-      var sm=dis.match(/^st\s+(.+?)\s+b\s/i);
-      var rm=dis.match(/run\s*out\s*\(?([^)]+)\)?/i);
-      if(cm){var f=cm[1].trim();if(f&&f!=='sub'){get(f).field.c++;}}
+      // Extract fielder names from ORIGINAL case string to preserve proper capitalisation
+      var cm=disOrig.match(/^c\s+(.+?)\s+b\s/i);
+      var sm=disOrig.match(/^st\s+(.+?)\s+b\s/i);
+      var rm=disOrig.match(/run\s*out\s*\(?([^)]+)\)?/i);
+      if(cm){var f=cm[1].trim();if(f&&f.toLowerCase()!=='sub'){get(f).field.c++;}}
       if(sm){var f2=sm[1].trim();if(f2)get(f2).field.st++;}
       if(rm){var f3=rm[1].split(/[/,&]/)[0].trim();if(f3)get(f3).field.ro++;}
-      if(dis.match(/^lbw\s+b\s|^b\s+[a-z]/i)||dis.match(/^bowled\s/i)){
-        var bname=dis.replace(/^(lbw\s+b|b|bowled)\s+/i,'').trim().split(' ')[0];
+      // lbw/bowled bonus - use lowercase for matching, original for name
+      if(dis.match(/^lbw\s+b\s|^b\s+[a-z]/)||dis.match(/^bowled\s/)){
+        var bname=disOrig.replace(/^(lbw\s+b|b|bowled)\s+/i,'').trim().split(/\s/)[0];
         if(bname){if(!stats[bname])get(bname);stats[bname]._lb=(stats[bname]._lb||0)+1;}
       }
     });
@@ -1829,7 +1830,7 @@ function distributeToAllRooms(matchId, autoMode){
   // Now distribute to ALL rooms in Firebase that are eligible
   logSync('Distributing '+staged.desc+' to all eligible rooms...','info');
   db.ref('fantasy').once('value',function(fsnap){
-  var fantasyData=fsnap.val()||{};
+    var fantasyData=fsnap.val()||{};
   db.ref('rooms').once('value',function(rsnap){
     var rooms=rsnap.val()||{};
     var roomCodes=Object.keys(rooms);
@@ -1910,8 +1911,8 @@ function distributeToAllRooms(matchId, autoMode){
       if(autoMode) renderSyncReview();
       else { delete stagedResults[matchId]; renderSyncReview(); }
     });
-  }); // end rooms
-  }); // end fantasy
+  }); // rooms
+  }); // fantasy
 }
 function saveResults(results,mNum,matchId,desc){
   // Apply captain/VC multipliers (fixed for whole tournament, stored in rooms/{code}/captains/{teamIdx})
