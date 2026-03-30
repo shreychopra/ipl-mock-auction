@@ -759,6 +759,148 @@ function populateMatchSelector(){
   });
 }
 
+var IPL_TEAM={
+  "Abhinandan Singh":"RCB",
+  "Abhishek Sharma":"SRH",
+  "Abishek Porel":"KKR",
+  "Adam Zampa":"SRH",
+  "Akash Singh":"RR",
+  "Allah Ghazanfar":"MI",
+  "Andre Russell":"KKR",
+  "Angkrish Raghuvanshi":"KKR",
+  "Aniket Verma":"RCB",
+  "Anrich Nortje":"KKR",
+  "Anshul Kamboj":"CSK",
+  "Anuj Rawat":"GT",
+  "Arshad Khan":"GT",
+  "Arshdeep Singh":"PBKS",
+  "Aryan Juyal":"LSG",
+  "Ashutosh Sharma":"DC",
+  "Atharva Taide":"SRH",
+  "Avesh Khan":"LSG",
+  "Axar Patel":"DC",
+  "Azmatullah Omarzai":"PBKS",
+  "Bevon Jacobs":"MI",
+  "Bhuvneshwar Kumar":"RCB",
+  "David Miller":"LSG",
+  "David Payne":"RCB",
+  "Deepak Chahar":"MI",
+  "Devdutt Padikkal":"RCB",
+  "Devon Conway":"CSK",
+  "Dhruv Jurel":"RR",
+  "Digvesh Rathi":"LSG",
+  "Dushmantha Chameera":"DC",
+  "Faf du Plessis":"DC",
+  "Fazalhaq Farooqi":"RR",
+  "Gerald Coetzee":"GT",
+  "Glenn Maxwell":"PBKS",
+  "Gurjapneet Singh":"SRH",
+  "Hardik Pandya":"MI",
+  "Harnoor Pannu":"PBKS",
+  "Harpreet Brar":"PBKS",
+  "Harry Brook":"DC",
+  "Harsh Dubey":"SRH",
+  "Harshal Patel":"SRH",
+  "Harshit Rana":"KKR",
+  "Heinrich Klaasen":"SRH",
+  "Himmat Singh":"LSG",
+  "Ishan Kishan":"MI",
+  "Jacob Duffy":"RCB",
+  "Jake Fraser-McGurk":"DC",
+  "Jasprit Bumrah":"MI",
+  "Jaydev Unadkat":"SRH",
+  "Jitesh Sharma":"RCB",
+  "Jos Buttler":"GT",
+  "Josh Inglis":"PBKS",
+  "KL Rahul":"DC",
+  "Kagiso Rabada":"GT",
+  "Khaleel Ahmed":"CSK",
+  "Krunal Pandya":"RCB",
+  "Kuldeep Yadav":"DC",
+  "Kumar Kartikeya":"GT",
+  "Kumar Kushagra":"RR",
+  "Kwena Maphaka":"RR",
+  "Liam Livingstone":"PBKS",
+  "Liam Plunkett":"RCB",
+  "Luvnith Sisodia":"KKR",
+  "MS Dhoni":"CSK",
+  "Maheesh Theekshana":"RR",
+  "Marco Jansen":"PBKS",
+  "Marcus Stoinis":"PBKS",
+  "Matthew Breetzke":"LSG",
+  "Mayank Markande":"KKR",
+  "Mayank Yadav":"LSG",
+  "Mitchell Marsh":"LSG",
+  "Mitchell Starc":"DC",
+  "Moeen Ali":"KKR",
+  "Mohammed Siraj":"GT",
+  "Mujeeb Ur Rahman":"MI",
+  "Naman Dhir":"MI",
+  "Nathan Ellis":"CSK",
+  "Nicholas Pooran":"LSG",
+  "Nitish Kumar Reddy":"SRH",
+  "Noor Ahmad":"CSK",
+  "Nuwan Thushara":"RCB",
+  "Pat Cummins":"SRH",
+  "Philip Salt":"RCB",
+  "Prabhsimran Singh":"PBKS",
+  "Prashant Solanki":"CSK",
+  "Prasidh Krishna":"GT",
+  "Quinton de Kock":"KKR",
+  "Rachin Ravindra":"CSK",
+  "Rahmanullah Gurbaz":"KKR",
+  "Rahul Tripathi":"SRH",
+  "Rajat Patidar":"RCB",
+  "Ravi Bishnoi":"LSG",
+  "Ravindra Jadeja":"CSK",
+  "Rinku Singh":"KKR",
+  "Rishabh Pant":"LSG",
+  "Robin Minz":"MI",
+  "Rohit Sharma":"MI",
+  "Romario Shepherd":"RCB",
+  "Ruturaj Gaikwad":"CSK",
+  "Ryan Rickelton":"MI",
+  "Sai Kishore":"GT",
+  "Salil Arora":"SRH",
+  "Sameer Rizvi":"DC",
+  "Sandeep Sharma":"RR",
+  "Sanju Samson":"RR",
+  "Shahrukh Khan":"GT",
+  "Shardul Thakur":"LSG",
+  "Shimron Hetmyer":"RR",
+  "Shivam Dube":"CSK",
+  "Shreyas Gopal":"CSK",
+  "Shreyas Iyer":"PBKS",
+  "Shubham Dubey":"RR",
+  "Shubman Gill":"GT",
+  "Simarjeet Singh":"SRH",
+  "Spencer Johnson":"KKR",
+  "Sunil Narine":"KKR",
+  "Suryakumar Yadav":"MI",
+  "Suryansh Shedge":"PBKS",
+  "Suyash Sharma":"RCB",
+  "Swapnil Singh":"RCB",
+  "T Natarajan":"DC",
+  "Tilak Varma":"MI",
+  "Tim David":"RCB",
+  "Travis Head":"SRH",
+  "Trent Boult":"MI",
+  "Tripurana Vijay":"DC",
+  "Triston Stubbs":"DC",
+  "Urvil Patel":"PBKS",
+  "Vansh Bedi":"CSK",
+  "Varun Chakaravarthy":"KKR",
+  "Vijaykumar Vyshak":"PBKS",
+  "Vipraj Nigam":"DC",
+  "Virat Kohli":"RCB",
+  "Wanindu Hasaranga":"RR",
+  "Washington Sundar":"GT",
+  "Will Jacks":"MI",
+  "Yashasvi Jaiswal":"RR",
+  "Yuzvendra Chahal":"PBKS",
+  "Zeeshan Ansari":"SRH",
+};
+
 function onPtRoomChange(){
   var roomSel=document.getElementById('ptRoomSel');
   var matchSel=document.getElementById('ptMatchSel');
@@ -873,14 +1015,14 @@ function renderPointsTable(teams,matchData,matchKey,list){
       if(total>0){
         var key=p.name;
         if(!playerMap[key]){
-          playerMap[key]={name:p.name,role:p.role,team:team.name,color:team.color||'#aaa',pts:total,breakdown:matchBreakdown};
+          playerMap[key]={name:p.name,role:p.role,pts:total,breakdown:matchBreakdown};
         } else if(total>playerMap[key].pts){
-          // Same player in multiple rooms - keep highest to avoid cross-room inflation
-          playerMap[key]={name:p.name,role:p.role,team:team.name,color:team.color||'#aaa',pts:total,breakdown:matchBreakdown};
+          playerMap[key]={name:p.name,role:p.role,pts:total,breakdown:matchBreakdown};
         }
       }
     });
   });
+
   var rows=Object.values(playerMap).sort(function(a,b){return b.pts-a.pts;});
   if(!rows.length){
     list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">No points data yet.</div>';
@@ -889,26 +1031,30 @@ function renderPointsTable(teams,matchData,matchKey,list){
   var matchLabels=G.matchLabels||{};
   var html='<table style="width:100%;border-collapse:collapse;font-size:13px">'
     +'<thead><tr style="color:var(--text3);font-size:11px;font-family:var(--fd);border-bottom:1px solid var(--border)">'
-    +'<th style="padding:8px 4px">#</th><th style="padding:8px 4px">Player</th>'
-    +'<th style="padding:8px 4px">Role</th><th style="padding:8px 4px">Team</th>'
-    +'<th style="padding:8px 4px;text-align:right">Pts</th></tr></thead><tbody>';
+    +'<th style="padding:8px 4px;width:32px">#</th>'
+    +'<th style="padding:8px 4px">Player</th>'
+    +'<th style="padding:8px 4px;width:60px">Role</th>'
+    +'<th style="padding:8px 4px;width:50px">Team</th>'
+    +'<th style="padding:8px 4px;width:44px;text-align:right">Pts</th>'
+    +'</tr></thead><tbody>';
   rows.forEach(function(r,i){
+    var iplTeam=IPL_TEAM[r.name]||'';
     var bKeys=Object.keys(r.breakdown).sort(function(a,b){return parseInt(a.replace('match',''))-parseInt(b.replace('match',''));});
-    var breakdownHtml='';
-    if(bKeys.length>0&&matchKey==='all'){
-      breakdownHtml='<div style="font-size:10px;color:var(--text3);margin-top:2px;line-height:1.8">';
-      bKeys.forEach(function(mk){
-        var lbl=(matchLabels[mk]||mk).replace(/^M(\d+) .* /,'M$1: ');
-        breakdownHtml+=lbl+'<b style="color:var(--text)">'+r.breakdown[mk]+'</b> &nbsp;';
-      });
-      breakdownHtml+='</div>';
+    var breakdownStr='';
+    if(matchKey==='all'&&bKeys.length>0){
+      breakdownStr=bKeys.map(function(mk){
+        var lbl=(matchLabels[mk]||mk).replace(/M(\d+).*/,'M$1');
+        return lbl+':'+r.breakdown[mk];
+      }).join(' · ');
     }
     html+='<tr style="border-bottom:1px solid var(--border)">'
-      +'<td style="padding:8px 4px;color:var(--text3);font-size:11px;vertical-align:top">'+(i+1)+'</td>'
-      +'<td style="padding:8px 4px;vertical-align:top"><div style="font-weight:600">'+r.name+'</div>'+breakdownHtml+'</td>'
-      +'<td style="padding:8px 4px;color:var(--text3);font-size:11px;vertical-align:top">'+r.role+'</td>'
-      +'<td style="padding:8px 4px;vertical-align:top"><span style="color:'+r.color+';font-size:11px;font-weight:700">'+r.team+'</span></td>'
-      +'<td style="padding:8px 4px;text-align:right;font-weight:700;color:var(--gold);vertical-align:top">'+r.pts+'</td>'
+      +'<td style="padding:8px 4px;color:var(--text3);font-size:11px">'+(i+1)+'</td>'
+      +'<td style="padding:8px 4px"><div style="font-weight:600">'+r.name+'</div>'
+      +(breakdownStr?'<div style="font-size:10px;color:var(--text3);margin-top:1px">'+breakdownStr+'</div>':'')
+      +'</td>'
+      +'<td style="padding:8px 4px;color:var(--text3);font-size:11px">'+r.role+'</td>'
+      +'<td style="padding:8px 4px;font-size:11px;font-weight:700;color:var(--gold)">'+iplTeam+'</td>'
+      +'<td style="padding:8px 4px;text-align:right;font-weight:700;color:var(--gold)">'+r.pts+'</td>'
       +'</tr>';
   });
   list.innerHTML=html+'</tbody></table>';
