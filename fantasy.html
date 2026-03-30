@@ -1780,19 +1780,20 @@ function renderHistory(){
 function normName(n){
   return (n||'').toLowerCase().replace(/[^a-z\s]/g,'').replace(/\s+/g,' ').trim();
 }
+var NAME_EXP={'phil':'philip','will':'william','raj':'rajat','dev':'devdutt'};
+function expandName(n){return (n||'').split(' ').map(function(w){return NAME_EXP[w.toLowerCase()]||w;}).join(' ');}
 function similarity(a,b){
-  a=normName(a); b=normName(b);
+  a=normName(expandName(a)); b=normName(expandName(b));
   if(a===b) return 1;
   if(a.includes(b)||b.includes(a)) return 0.9;
   var aw=a.split(' '), bw=b.split(' ');
-  // Last name match alone is NOT enough — too many players share surnames like Singh, Kumar etc
-  // Require BOTH last name AND at least one other word to match for high confidence
   var lastMatch=aw.length&&bw.length&&aw[aw.length-1]===bw[bw.length-1];
   var shared=aw.filter(function(w){return w.length>2&&bw.indexOf(w)>=0;}).length;
-  if(lastMatch&&shared>=2) return 0.92; // last name + other word match = very confident
-  if(lastMatch&&shared>=1) return 0.80; // last name + one word = moderate (below 0.85 threshold)
-  return shared?(0.55+shared*0.05):0;   // lowered base score
+  if(lastMatch&&shared>=2) return 0.92;
+  if(lastMatch&&shared>=1) return 0.80;
+  return shared?(0.55+shared*0.05):0;
 }
+
 function findPlayer(apiName){
   var best=null, bestScore=0;
   Object.keys(G.teams).forEach(function(k){
