@@ -311,7 +311,9 @@
   <div class="pane" id="pane-hi">
     <div id="historyList"></div>
   </div>
+</div>
 
+  <!-- POINTS PANE (admin only) -->
   <div class="pane" id="pane-pt">
     <div style="padding:12px 16px;display:flex;flex-direction:column;gap:8px">
       <select id="ptRoomSel" onchange="onPtRoomChange()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);color:var(--text);padding:8px;font-size:13px;font-family:var(--fd)">
@@ -323,7 +325,6 @@
     </div>
     <div id="pointsList" style="padding:0 16px 80px"></div>
   </div>
-</div>
 
 <!-- MATCH EDIT MODAL (admin) -->
 <div class="modal-ov" id="matchEditModal">
@@ -760,21 +761,39 @@ function populateMatchSelector(){
 }
 
 function onPtRoomChange(){
-  // When room changes, reload match labels then re-render
   var roomSel=document.getElementById('ptRoomSel');
   var matchSel=document.getElementById('ptMatchSel');
-  if(!roomSel||!roomSel.value) return;
+  if(!roomSel) return;
   var code=roomSel.value;
-  db.ref('fantasy/'+code+'/matchLabels').once('value',function(s){
-    var labels=s.val()||{};
-    if(matchSel){
-      while(matchSel.options.length>1) matchSel.remove(1);
-      Object.keys(labels).sort(function(a,b){return parseInt(a.replace('match',''))-parseInt(b.replace('match',''));}).forEach(function(mk){
-        var opt=document.createElement('option');opt.value=mk;opt.textContent=labels[mk];matchSel.appendChild(opt);
+  // Clear match selector
+  if(matchSel){ while(matchSel.options.length>1) matchSel.remove(1); }
+  if(!code){
+    // All rooms - get match labels from any room that has data
+    db.ref('fantasy').once('value',function(s){
+      var fdata=s.val()||{};
+      var labels={};
+      Object.keys(fdata).forEach(function(rc){
+        var ml=fdata[rc].matchLabels||{};
+        Object.keys(ml).forEach(function(mk){ labels[mk]=ml[mk]; });
       });
-    }
-    renderPointsPane();
-  });
+      if(matchSel){
+        Object.keys(labels).sort(function(a,b){return parseInt(a.replace('match',''))-parseInt(b.replace('match',''));}).forEach(function(mk){
+          var opt=document.createElement('option');opt.value=mk;opt.textContent=labels[mk];matchSel.appendChild(opt);
+        });
+      }
+      renderPointsPane();
+    });
+  } else {
+    db.ref('fantasy/'+code+'/matchLabels').once('value',function(s){
+      var labels=s.val()||{};
+      if(matchSel){
+        Object.keys(labels).sort(function(a,b){return parseInt(a.replace('match',''))-parseInt(b.replace('match',''));}).forEach(function(mk){
+          var opt=document.createElement('option');opt.value=mk;opt.textContent=labels[mk];matchSel.appendChild(opt);
+        });
+      }
+      renderPointsPane();
+    });
+  }
 }
 
 function renderPointsPane(){
@@ -789,6 +808,10 @@ function renderPointsPane(){
     db.ref('rooms').once('value',function(s){
       var rooms=s.val()||{};
       while(roomSel.options.length>1) roomSel.remove(1);
+      // Add "All Rooms" option first
+      var allOpt=document.createElement('option');
+      allOpt.value=''; allOpt.textContent='All Rooms (aggregate)';
+      roomSel.appendChild(allOpt);
       Object.keys(rooms).forEach(function(code){
         var opt=document.createElement('option');
         opt.value=code;
@@ -796,60 +819,106 @@ function renderPointsPane(){
         roomSel.appendChild(opt);
       });
       if(G.roomCode) roomSel.value=G.roomCode;
-      if(roomSel.value) onPtRoomChange();
-      else list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">Select a room above.</div>';
+      onPtRoomChange();
     });
     return;
   }
 
-  var code=(roomSel&&roomSel.value)||G.roomCode;
-  if(!code){list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">Select a room above.</div>';return;}
+  var code=(roomSel&&roomSel.value)||'';
   var matchKey=(matchSel&&matchSel.value)||'all';
   list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">Loading...</div>';
 
-  db.ref('rooms/'+code).once('value',function(rs){
-    var teams=(rs.val()||{}).teams||{};
-    db.ref('fantasy/'+code+'/matches').once('value',function(ms){
-      var matchData=ms.val()||{};
-      var allKeys=Object.keys(matchData).filter(function(k){return k.startsWith('match');});
-      var matchKeys=matchKey==='all'?allKeys:[matchKey];
-      var rows=[];
-      Object.keys(teams).forEach(function(tk){
-        var team=teams[tk];
-        (team.players||[]).forEach(function(p,pi){
-          var total=0;
-          matchKeys.forEach(function(mk){
-            var td=matchData[mk]&&(matchData[mk][tk]||matchData[mk][String(parseInt(tk))]);
-            if(td) total+=(td[pi]||td[String(pi)]||0);
+  if(code){
+    // Single room mode
+    db.ref('rooms/'+code).once('value',function(rs){
+      var teams=(rs.val()||{}).teams||{};
+      db.ref('fantasy/'+code+'/matches').once('value',function(ms){
+        var matchData=ms.val()||{};
+        renderPointsTable(teams, matchData, matchKey, list);
+      });
+    });
+  } else {
+    // All rooms mode - aggregate across all rooms
+    db.ref('rooms').once('value',function(rs){
+      var rooms=rs.val()||{};
+      db.ref('fantasy').once('value',function(fs){
+        var fantasy=fs.val()||{};
+        // Build combined teams and matchData
+        var allTeams={};
+        var allMatchData={};
+        var teamOffset=0;
+        Object.keys(rooms).forEach(function(rc){
+          var room=rooms[rc];
+          var froom=fantasy[rc]||{};
+          var teams=room.teams||{};
+          var mdata=froom.matches||{};
+          // Re-key teams to avoid collision
+          Object.keys(teams).forEach(function(tk){
+            var newTk=rc+'_'+tk;
+            allTeams[newTk]=teams[tk];
+            // Re-key match data
+            Object.keys(mdata).forEach(function(mk){
+              if(!allMatchData[mk]) allMatchData[mk]={};
+              if(mdata[mk]&&mdata[mk][tk]){
+                allMatchData[mk][newTk]=mdata[mk][tk];
+              }
+            });
           });
-          if(total>0) rows.push({name:p.name,role:p.role,team:team.name,color:team.color||'#aaa',pts:total});
         });
+        renderPointsTable(allTeams, allMatchData, matchKey, list);
       });
-      rows.sort(function(a,b){return b.pts-a.pts;});
-      if(!rows.length){
-        list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">No points data yet.</div>';
-        return;
+    });
+  }
+}
+
+function renderPointsTable(teams, matchData, matchKey, list){
+  var allKeys=Object.keys(matchData).filter(function(k){return k.startsWith('match');});
+  var matchKeys=matchKey==='all'?allKeys:[matchKey];
+  // Aggregate by player NAME across all teams (dedup)
+  var playerMap={};
+  Object.keys(teams).forEach(function(tk){
+    var team=teams[tk];
+    (team.players||[]).forEach(function(p,pi){
+      var total=0;
+      matchKeys.forEach(function(mk){
+        var td=matchData[mk]&&(matchData[mk][tk]||matchData[mk][String(parseInt(tk))]);
+        if(!td) return;
+        total+=(td[pi]||td[String(pi)]||0);
+      });
+      if(total>0){
+        var key=p.name;
+        if(!playerMap[key]||playerMap[key].pts<total){
+          playerMap[key]={name:p.name,role:p.role,team:team.name,color:team.color||'#aaa',pts:total};
+        } else {
+          playerMap[key].pts+=total; // sum across rooms if same player in multiple rooms
+        }
       }
-      var html='<table style="width:100%;border-collapse:collapse;font-size:13px">'
-        +'<thead><tr style="color:var(--text3);font-size:11px;font-family:var(--fd);border-bottom:1px solid var(--border)">'
-        +'<th style="padding:8px 4px">#</th>'
-        +'<th style="padding:8px 4px">Player</th>'
-        +'<th style="padding:8px 4px">Role</th>'
-        +'<th style="padding:8px 4px">Team</th>'
-        +'<th style="padding:8px 4px;text-align:right">Pts</th>'
-        +'</tr></thead><tbody>';
-      rows.forEach(function(r,i){
-        html+='<tr style="border-bottom:1px solid var(--border)">'
-          +'<td style="padding:8px 4px;color:var(--text3);font-size:11px">'+(i+1)+'</td>'
-          +'<td style="padding:8px 4px;font-weight:600">'+r.name+'</td>'
-          +'<td style="padding:8px 4px;color:var(--text3);font-size:11px">'+r.role+'</td>'
-          +'<td style="padding:8px 4px"><span style="color:'+r.color+';font-size:11px;font-weight:700">'+r.team+'</span></td>'
-          +'<td style="padding:8px 4px;text-align:right;font-weight:700;color:var(--gold)">'+r.pts+'</td>'
-          +'</tr>';
-      });
-      list.innerHTML=html+'</tbody></table>';
     });
   });
+
+  var rows=Object.values(playerMap).sort(function(a,b){return b.pts-a.pts;});
+  if(!rows.length){
+    list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">No points data yet.</div>';
+    return;
+  }
+  var html='<table style="width:100%;border-collapse:collapse;font-size:13px">'
+    +'<thead><tr style="color:var(--text3);font-size:11px;font-family:var(--fd);border-bottom:1px solid var(--border)">'
+    +'<th style="padding:8px 4px">#</th>'
+    +'<th style="padding:8px 4px">Player</th>'
+    +'<th style="padding:8px 4px">Role</th>'
+    +'<th style="padding:8px 4px">Team</th>'
+    +'<th style="padding:8px 4px;text-align:right">Pts</th>'
+    +'</tr></thead><tbody>';
+  rows.forEach(function(r,i){
+    html+='<tr style="border-bottom:1px solid var(--border)">'
+      +'<td style="padding:8px 4px;color:var(--text3);font-size:11px">'+(i+1)+'</td>'
+      +'<td style="padding:8px 4px;font-weight:600">'+r.name+'</td>'
+      +'<td style="padding:8px 4px;color:var(--text3);font-size:11px">'+r.role+'</td>'
+      +'<td style="padding:8px 4px"><span style="color:'+r.color+';font-size:11px;font-weight:700">'+r.team+'</span></td>'
+      +'<td style="padding:8px 4px;text-align:right;font-weight:700;color:var(--gold)">'+r.pts+'</td>'
+      +'</tr>';
+  });
+  list.innerHTML=html+'</tbody></table>';
 }
 
 
@@ -911,7 +980,6 @@ function loadRoom(){
       var fd=snap3.val()||{};
       G.matchData=fd.matches||{};
       G.matchLabels=fd.matchLabels||{};
-      G.matchResults=fd.matchResults||{};
       G.currentMatch=fd.currentMatch||1;
       renderLeaderboard();
       renderHistory();
