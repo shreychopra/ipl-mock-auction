@@ -323,6 +323,7 @@
     </div>
     <div id="pointsList" style="padding:0 16px 80px"></div>
   </div>
+</div>
 
 <!-- MATCH EDIT MODAL (admin) -->
 <div class="modal-ov" id="matchEditModal">
@@ -759,24 +760,6 @@ function populateMatchSelector(){
 }
 
 function onPtRoomChange(){
-  // When room changes, reload match labels then re-render
-  var roomSel=document.getElementById('ptRoomSel');
-  var matchSel=document.getElementById('ptMatchSel');
-  if(!roomSel||!roomSel.value) return;
-  var code=roomSel.value;
-  db.ref('fantasy/'+code+'/matchLabels').once('value',function(s){
-    var labels=s.val()||{};
-    if(matchSel){
-      while(matchSel.options.length>1) matchSel.remove(1);
-      Object.keys(labels).sort(function(a,b){return parseInt(a.replace('match',''))-parseInt(b.replace('match',''));}).forEach(function(mk){
-        var opt=document.createElement('option');opt.value=mk;opt.textContent=labels[mk];matchSel.appendChild(opt);
-      });
-    }
-    renderPointsPane();
-  });
-}
-
-function onPtRoomChange(){
   var roomSel=document.getElementById('ptRoomSel');
   var matchSel=document.getElementById('ptMatchSel');
   if(!roomSel) return;
@@ -891,14 +874,15 @@ function renderPointsTable(teams,matchData,matchKey,list){
         var key=p.name;
         if(!playerMap[key]){
           playerMap[key]={name:p.name,role:p.role,team:team.name,color:team.color||'#aaa',pts:total,breakdown:matchBreakdown};
-        } else if(total>playerMap[key].pts){
-          // Same player in multiple rooms - keep highest (avoids cross-room inflation)
-          playerMap[key]={name:p.name,role:p.role,team:team.name,color:team.color||'#aaa',pts:total,breakdown:matchBreakdown};
+        } else {
+          playerMap[key].pts+=total;
+          Object.keys(matchBreakdown).forEach(function(mk){
+            playerMap[key].breakdown[mk]=(playerMap[key].breakdown[mk]||0)+matchBreakdown[mk];
+          });
         }
       }
     });
   });
-
   var rows=Object.values(playerMap).sort(function(a,b){return b.pts-a.pts;});
   if(!rows.length){
     list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text3)">No points data yet.</div>';
@@ -913,11 +897,11 @@ function renderPointsTable(teams,matchData,matchKey,list){
   rows.forEach(function(r,i){
     var bKeys=Object.keys(r.breakdown).sort(function(a,b){return parseInt(a.replace('match',''))-parseInt(b.replace('match',''));});
     var breakdownHtml='';
-    if(bKeys.length>1||(bKeys.length===1&&matchKey==='all')){
+    if(bKeys.length>0&&matchKey==='all'){
       breakdownHtml='<div style="font-size:10px;color:var(--text3);margin-top:2px;line-height:1.8">';
       bKeys.forEach(function(mk){
-        var lbl=(matchLabels[mk]||mk).replace(/^M(\d+) — .* vs /,'M$1: ');
-        breakdownHtml+=lbl+'<b style="color:var(--gold)">'+r.breakdown[mk]+'</b>&nbsp; ';
+        var lbl=(matchLabels[mk]||mk).replace(/^M(\d+) .* /,'M$1: ');
+        breakdownHtml+=lbl+'<b style="color:var(--text)">'+r.breakdown[mk]+'</b> &nbsp;';
       });
       breakdownHtml+='</div>';
     }
