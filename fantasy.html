@@ -228,7 +228,7 @@
             text-transform:uppercase;color:var(--text3);margin-bottom:8px">Fielding</div>
           <div class="sg-row"><span>Catch</span><span class="sg-pts">8</span></div>
           <div class="sg-row"><span>Stumping</span><span class="sg-pts">12</span></div>
-          <div class="sg-row"><span>Run out</span><span class="sg-pts">6</span></div>
+          <div class="sg-row"><span>Run out (direct)</span><span class="sg-pts">12</span></div><div class="sg-row"><span>Run out (indirect)</span><span class="sg-pts">6</span></div>
         </div>
         <div class="sg-card">
           <div style="font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:1.5px;
@@ -992,6 +992,12 @@ var IPL_TEAM={
   "Vaibhav Arora":"KKR",
   "Vaibhav Sooryavanshi":"RR",
   "Varun Chakravarthy":"KKR",
+  "Varun Chakaravarthy":"KKR",
+  "Varun Chakaravarthy ":"KKR",
+  "Varun Chakravarthy ":"KKR",
+  "V Chakravarthy":"KKR",
+  "Varun Chakravarti":"KKR",
+  "Varun Chakravarty":"KKR",
   "Venkatesh Iyer":"RCB",
   "Vicky Ostwal":"RCB",
   "Vignesh Puthur":"RR",
@@ -1113,7 +1119,14 @@ function renderPointsPane(){
           });
         });
         Object.keys(playerTotals).forEach(function(pname){
-          var iplTeam=IPL_TEAM[pname]||'';
+          // Case-insensitive lookup to handle any encoding differences
+        var iplTeam=IPL_TEAM[pname]||IPL_TEAM[pname.trim()]||'';
+        if(!iplTeam){
+          var pnorm=pname.toLowerCase().replace(/[^a-z\s]/g,'').trim();
+          Object.keys(IPL_TEAM).forEach(function(k){
+            if(k.toLowerCase().replace(/[^a-z\s]/g,'').trim()===pnorm) iplTeam=IPL_TEAM[k];
+          });
+        }
           rows.push({name:pname,role:'',team:iplTeam,color:'var(--text3)',pts:playerTotals[pname].pts,breakdown:playerTotals[pname].breakdown});
         });
         rows.sort(function(a,b){return b.pts-a.pts;});
@@ -1918,7 +1931,18 @@ function parseCard(scard, filteredInnings){
       }
       if(cm){var f=cm[1].trim();var cf=inParticipants(f);if(cf&&cf.toLowerCase()!=='sub'){get(cf).field.c++;}}
       if(sm){var f2=cm&&sm[1].trim()||sm[1].trim();var cf2=inParticipants(f2);if(cf2)get(cf2).field.st++;}
-      if(rm){var f3=rm[1].split(/[/,&]/)[0].trim();var cf3=inParticipants(f3);if(cf3)get(cf3).field.ro++;}
+      if(rm){
+        var roParts=rm[1].split(/[\/,&]/).map(function(s){return s.trim();}).filter(function(s){return s.length>0;});
+        if(roParts.length===1){
+          var cf3=inParticipants(roParts[0]);
+          if(cf3) get(cf3).field.ro+=2; // direct hit = 12pts (ro*6)
+        } else {
+          roParts.slice(0,2).forEach(function(p){
+            var cfp=inParticipants(p);
+            if(cfp) get(cfp).field.ro+=1; // indirect = 6pts each
+          });
+        }
+      }
       // lbw/bowled bonus - use lowercase for matching, original for name
       if(dis.match(/^lbw\s+b\s|^b\s+[a-z]/)||dis.match(/^bowled\s/)){
         var bname=disOrig.replace(/^(lbw\s+b|b|bowled)\s+/i,'').trim().split(/\s/)[0];
@@ -2634,7 +2658,8 @@ window.addEventListener('load',function(){
         <div style="font-family:var(--fd);font-weight:700;font-size:13px;color:var(--gold);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)">FIELDING</div>
         <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">Catch</span><span style="color:var(--text);font-family:var(--fn)">8</span></div>
         <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">Stumping</span><span style="color:var(--text);font-family:var(--fn)">12</span></div>
-        <div style="display:flex;justify-content:space-between;padding:3px 0"><span style="color:var(--text2)">Run out</span><span style="color:var(--text);font-family:var(--fn)">6</span></div>
+        <div style="display:flex;justify-content:space-between;padding:3px 0"><span style="color:var(--text2)">Run out (direct)</span><span style="color:var(--text);font-family:var(--fn)">12</span></div>
+      <div class="sg-row"><span style="color:var(--text2)">Run out (indirect)</span><span style="color:var(--text);font-family:var(--fn)">6</span></div>
       </div>
       <div>
         <div style="font-family:var(--fd);font-weight:700;font-size:13px;color:var(--gold);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)">OTHER</div>
