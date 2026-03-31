@@ -648,9 +648,9 @@ var PLAYERS = [
 var PHOTO_MAP = {};
 (function(){ PLAYERS.forEach(function(p){ if(p.photo) PHOTO_MAP[p.id]=p.photo; }); })();
 function getPhotoByName(name){
-  var n=(name||'').toLowerCase().trim();
+  var n=normName(expandName(name||''));
   for(var i=0;i<PLAYERS.length;i++){
-    if(PLAYERS[i].name.toLowerCase().trim()===n) return PLAYERS[i].photo||'';
+    if(normName(expandName(PLAYERS[i].name))===n) return PLAYERS[i].photo||'';
   }
   return '';
 }
