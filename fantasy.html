@@ -80,10 +80,10 @@
     .pane{display:none;flex:1;overflow-y:auto}
     .pane.on{display:block}
     /* leaderboard */
-    .lb-hdr{padding:10px 16px;display:grid;grid-template-columns:28px 1fr 80px 80px;gap:8px;
+    .lb-hdr{padding:10px 16px;display:grid;grid-template-columns:28px 1fr 68px 80px 80px;gap:8px;
       font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);
       border-bottom:1px solid var(--border);font-family:var(--fd)}
-    .lb-row{padding:12px 16px;display:grid;grid-template-columns:28px 1fr 80px 80px;gap:8px;
+    .lb-row{padding:12px 16px;display:grid;grid-template-columns:28px 1fr 68px 80px 80px;gap:8px;
       align-items:center;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
     .lb-row:hover{background:var(--surface2)}
     .lb-row.me{background:rgba(245,184,0,.04);border-left:3px solid var(--gold)}
@@ -266,7 +266,8 @@
       width:24px;height:24px;color:var(--text3);font-size:13px;cursor:pointer;
       display:flex;align-items:center;justify-content:center;font-weight:700">?</button>
   </div>
-  <div class="lb-hdr" style="grid-template-columns:28px 1fr 80px 80px"><div>#</div><div>Team</div><div style="text-align:right">This Match</div><div style="text-align:right">Total</div></div>
+  <div class="lb-hdr" style="grid-template-columns:28px 1fr 68px 80px 80px"><div>#</div><div>Team</div><div style="text-align:center">Trend</div><div style="text-align:right">Match</div><div style="text-align:right">Total</div></div>
+    <div id="syncAlert" style="display:none;background:linear-gradient(135deg,rgba(245,184,0,.12),rgba(245,184,0,.06));border-bottom:2px solid rgba(245,184,0,.3);padding:10px 16px;"></div>
     <div id="lbList"></div>
   </div>
 
@@ -385,7 +386,7 @@ firebase.initializeApp({
 var db = firebase.database();
 
 // ── STATE ──
-var G = {teams:{}, roomCode:'', myTeamName:'', matchData:{}, matchLabels:{}, captains:{}, matchResults:{}, auctionEndedAt:0, currentMatch:1};
+var G = {teams:{}, roomCode:'', myTeamName:'', matchData:{}, matchLabels:{}, captains:{}, matchResults:{}, auctionEndedAt:0, currentMatch:1, playingXI:null, playingXIMatchId:null};
 var fantasyRef = null;
 var currentSquadTeam = 0;
 var syncedIds = {};
@@ -1251,7 +1252,7 @@ function switchTab(name){
     if(p) p.classList.toggle('on', n===name);
   });
   if(name==='lb') renderLeaderboard();
-  if(name==='sq') renderSquadPane();
+  if(name==='sq'){fetchPlayingXI();renderSquadPane();}
   if(name==='sc') renderSchedule();
   if(name==='hi') renderHistory();
   if(name==='pt'){renderPointsPane();}
@@ -1299,10 +1300,19 @@ function loadRoom(){
     });
     fantasyRef.on('value',function(snap3){
       var fd=snap3.val()||{};
+      var prevKeys=Object.keys(G.matchData||{});
       G.matchData=fd.matches||{};
       G.matchLabels=fd.matchLabels||{};
       G.matchResults=fd.matchResults||{};
       G.currentMatch=fd.currentMatch||1;
+      // Show in-app alert when a new match syncs
+      var newKeys=Object.keys(G.matchData).filter(function(k){return prevKeys.indexOf(k)<0;});
+      if(newKeys.length){
+        newKeys.sort(function(a,b){return parseInt(b.replace('match',''))-parseInt(a.replace('match',''));});
+        var latestKey=newKeys[0];
+        showSyncAlert(G.matchLabels[latestKey]||latestKey, latestKey);
+        sendNotif('Fantasy Points Updated',(G.matchLabels[latestKey]||latestKey)+' synced!');
+      }
       renderLeaderboard();
       renderHistory();
       updateNav();
@@ -1314,6 +1324,38 @@ function requestNotifPermission(){
   if('Notification' in window && Notification.permission==='default'){
     Notification.requestPermission();
   }
+}
+
+// In-app sync notification banner
+var lastNotifMatchKey = null;
+function showSyncAlert(matchLabel, matchKey){
+  if(lastNotifMatchKey === matchKey) return;
+  lastNotifMatchKey = matchKey;
+  var topName='', topPts=0;
+  var mdata=G.matchData[matchKey]||{};
+  Object.keys(G.teams).forEach(function(tk){
+    var td=mdata[tk]||{};
+    (G.teams[tk].players||[]).forEach(function(p,pi){
+      var pts=td[pi]||0;
+      if(pts>topPts){topPts=pts;topName=p.name;}
+    });
+  });
+  var banner=document.getElementById('syncAlert');
+  if(!banner) return;
+  var topHtml=topName ? ' &middot; <span style="color:var(--green)">'+topName+' '+topPts+'pts</span>' : '';
+  banner.innerHTML=''
+    +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+    +'<div style="font-size:18px">&#127183;</div>'
+    +'<div style="flex:1;min-width:0">'
+    +'<div style="font-family:var(--fd);font-size:13px;font-weight:700;color:var(--gold)">Points Updated!</div>'
+    +'<div style="font-size:12px;color:var(--text2);margin-top:1px">'+matchLabel+topHtml+'</div>'
+    +'</div>'
+    +'<button id="syncAlertClose" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:0 4px;line-height:1">&times;</button>'
+    +'</div>';
+  banner.style.display='block';
+  var cb=document.getElementById('syncAlertClose');
+  if(cb) cb.onclick=function(){ banner.style.display='none'; };
+  setTimeout(function(){ if(banner) banner.style.display='none'; }, 12000);
 }
 
 function sendNotif(title, body){
@@ -1347,6 +1389,7 @@ function initApp(){
   loadSyncedIds();
   listenForSyncTrigger();
   requestNotifPermission();
+  fetchPlayingXI();
 }
 
 function getMatchStatus(schedMatch){
@@ -1433,10 +1476,35 @@ function renderLeaderboard(){
   if(!rows.length){c.innerHTML='<div class="empty">No teams</div>';return;}
   c.innerHTML=rows.map(function(r,i){
     var isMe=G.myTeamName&&r.name.toLowerCase()===G.myTeamName.toLowerCase();
+    // Sparkline: points per match played
+    var sparkPts=[];
+    for(var si=1;si<=70;si++){
+      var smk='match'+si;
+      if(G.matchData[smk]) sparkPts.push(teamMatchPts(r.idx,si));
+    }
+    var sparkHtml='<div style="display:flex;align-items:center;justify-content:center;height:28px"><span style="font-size:10px;color:var(--text3)">—</span></div>';
+    if(sparkPts.length>=2){
+      var W=64,H=24,pad=2;
+      var mn=Math.min.apply(null,sparkPts),mx=Math.max.apply(null,sparkPts),rng=mx-mn||1;
+      var pts=sparkPts.map(function(v,si){
+        var x=(pad+(si/(sparkPts.length-1))*(W-pad*2)).toFixed(1);
+        var y=(H-pad-((v-mn)/rng*(H-pad*2))).toFixed(1);
+        return x+','+y;
+      });
+      var sc=r.color||'#5091CD';
+      var lastPt=pts[pts.length-1];
+      sparkHtml='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" style="display:block;margin:0 auto">'
+        +'<polyline points="'+pts.join(' ')+'" fill="none" stroke="'+sc+'" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>'
+        +'<circle cx="'+lastPt.split(',')[0]+'" cy="'+lastPt.split(',')[1]+'" r="2.2" fill="'+sc+'"/>'
+        +'</svg>';
+    }
     return '<div class="lb-row'+(isMe?' me':'')+'" onclick="squadModal('+r.idx+')">'
       +'<div class="lb-rank '+(i<3?rc[i]:'')+'">'+(i+1)+'</div>'
       +'<div><div style="font-size:14px;font-weight:600">'+r.name+'</div>'
-      +'<div style="display:flex;align-items:center;gap:5px;margin-top:2px">'+'<span style="width:10px;height:10px;border-radius:50%;background:'+r.color+';flex-shrink:0;display:inline-block;box-shadow:0 0 6px '+r.color+'"></span>'+'<span style="font-size:11px;color:var(--text3)">'+(isMe?'Your team':'')+'</span></div></div>'
+      +'<div style="display:flex;align-items:center;gap:5px;margin-top:2px">'
+      +'<span style="width:10px;height:10px;border-radius:50%;background:'+r.color+';flex-shrink:0;display:inline-block;box-shadow:0 0 6px '+r.color+'"></span>'
+      +'<span style="font-size:11px;color:var(--text3)">'+(isMe?'Your team':'')+'</span></div></div>'
+      +'<div>'+sparkHtml+'</div>'
       +'<div><div class="lb-pts" style="font-size:16px;color:var(--text2)">'+r.match+'</div>'
       +'<div style="font-size:10px;color:var(--text3);text-align:right">This match</div></div>'
       +'<div><div class="lb-pts">'+r.total+'</div>'
@@ -1470,6 +1538,51 @@ function selectSquad(idx,btn){
 function renderSquadPane(){
   // Just re-render the current squad view
   renderSquadView();
+}
+
+// ── SQUAD LOCK INDICATOR ──
+function fetchPlayingXI(){
+  var target=null;
+  for(var si=0;si<IPL_SCHEDULE.length;si++){
+    var st=getMatchStatus(IPL_SCHEDULE[si]);
+    if(st==='live'||st==='upcoming'){target=IPL_SCHEDULE[si];break;}
+  }
+  if(!target) return;
+  if(G.playingXIMatchId===target.id && G.playingXI!==null) return;
+  G.playingXI=null; G.playingXIMatchId=target.id;
+  fetch(WORKER_URL+'/cricbuzz/mcenter/v1/'+target.id+'/squad')
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(data){
+      if(!data){G.playingXI={};return;}
+      var xi={};
+      var teams=data.teams||data.squad||[];
+      if(!Array.isArray(teams)) teams=Object.values(teams);
+      teams.forEach(function(team){
+        var players=team.players||team.player||[];
+        if(!Array.isArray(players)) players=Object.values(players);
+        players.forEach(function(p){
+          var name=p.name||p.fullName||'';
+          if(!name) return;
+          xi[name]=(p.isPlayingXI===1||p.isPlayingXI===true||p.role==='playing');
+        });
+      });
+      G.playingXI=xi;
+      if(document.getElementById('pane-sq')&&document.getElementById('pane-sq').classList.contains('on')){
+        renderSquadView();
+      }
+    })
+    .catch(function(){G.playingXI={};});
+}
+
+function isPlayerInXI(playerName){
+  if(!G.playingXI||Object.keys(G.playingXI).length===0) return null;
+  if(G.playingXI[playerName]!==undefined) return G.playingXI[playerName];
+  var best=null, bestScore=0;
+  Object.keys(G.playingXI).forEach(function(apiName){
+    var s=similarity(playerName,apiName);
+    if(s>bestScore){bestScore=s;best=G.playingXI[apiName];}
+  });
+  return bestScore>=0.82 ? best : null;
 }
 
 function renderSquadView(){
@@ -1531,6 +1644,27 @@ function renderSquadView(){
       ptsDiv.innerHTML='<div class="sp-pts">'+pts+'</div><div style="font-size:9px;color:var(--text3);text-align:right">pts</div>';
       row.appendChild(avi); row.appendChild(info); row.appendChild(ptsDiv);
       row.addEventListener('click',function(){openPlayerModal(parseInt(row.dataset.ti),parseInt(row.dataset.pi));});
+      // Squad lock indicator badge
+      var xiStatus=isPlayerInXI(p.name);
+      if(xiStatus===true){
+        var xiBadge=document.createElement('div');
+        xiBadge.style.cssText='position:absolute;right:60px;top:50%;transform:translateY(-50%);'
+          +'background:rgba(0,214,143,.12);border:1px solid rgba(0,214,143,.35);'
+          +'color:var(--green);font-size:8px;font-weight:700;padding:2px 5px;border-radius:4px;'
+          +'font-family:var(--fd);letter-spacing:.5px;pointer-events:none';
+        xiBadge.textContent='PLAYING';
+        row.style.position='relative';
+        row.appendChild(xiBadge);
+      } else if(xiStatus===false){
+        var xiBadge2=document.createElement('div');
+        xiBadge2.style.cssText='position:absolute;right:60px;top:50%;transform:translateY(-50%);'
+          +'background:rgba(255,69,102,.08);border:1px solid rgba(255,69,102,.25);'
+          +'color:var(--red);font-size:8px;font-weight:700;padding:2px 5px;border-radius:4px;'
+          +'font-family:var(--fd);letter-spacing:.5px;opacity:0.65;pointer-events:none';
+        xiBadge2.textContent='BENCH';
+        row.style.position='relative';
+        row.appendChild(xiBadge2);
+      }
       // Show C/VC badges if set
       var myCaps=G.captains&&G.captains[currentSquadTeam]?G.captains[currentSquadTeam]:{};
       if(parseInt(myCaps.c)===idx){
