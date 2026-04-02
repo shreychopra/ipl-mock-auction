@@ -1249,7 +1249,7 @@ function renderPointsTable(teams,matchData,matchKey,list){
     if(matchKey==='all'&&bKeys.length>0){
       breakdownStr=bKeys.map(function(mk){
         var lbl=(matchLabels[mk]||mk).replace(/M(\d+).*/,'M$1');
-        return lbl+':'+r.breakdown[mk];
+        return lbl+':'+ptsVal(r.breakdown[mk]);
       }).join(' · ');
     }
     html+='<tr style="border-bottom:1px solid var(--border)">'
@@ -2571,8 +2571,17 @@ function distributeToAllRooms(matchId, autoMode){
     finalResults[entry.ti][entry.pi]=bd;
   });
   // Apply captain/VC multipliers (to .t only)
+  // G.captains may be flat {ti:{c,vc}} (from auction rooms data)
+  // OR match-keyed {matchKey:{ti:{c,vc}}} (from setCaptain in-session)
+  // Try match-keyed first, fall back to flat
+  var capMk='match'+staged.mNum;
   Object.keys(finalResults).forEach(function(ti){
-    var cap=G.captains&&G.captains[ti]?G.captains[ti]:{};
+    var matchCaps=G.captains&&G.captains[capMk]?G.captains[capMk]:{};
+    // Fall back to flat structure if no match-keyed captains found
+    var cap=matchCaps[ti]||matchCaps[String(ti)]
+      ||(G.captains&&G.captains[ti]?G.captains[ti]:null)
+      ||(G.captains&&G.captains[String(ti)]?G.captains[String(ti)]:null)
+      ||{};
     if(!cap.c&&!cap.vc) return;
     Object.keys(finalResults[ti]).forEach(function(pi){
       var isCap=cap.c!==undefined&&parseInt(cap.c)===parseInt(pi);
@@ -2668,14 +2677,19 @@ function distributeToAllRooms(matchId, autoMode){
 }
 function saveResults(results,mNum,matchId,desc){
   // Apply captain/VC multipliers (fixed for whole tournament, stored in rooms/{code}/captains/{teamIdx})
+  var saveMk='match'+mNum;
   Object.keys(results).forEach(function(ti){
-    var cap=G.captains&&G.captains[ti]?G.captains[ti]:{};
+    var matchCaps=G.captains&&G.captains[saveMk]?G.captains[saveMk]:{};
+    var cap=matchCaps[ti]||matchCaps[String(ti)]
+      ||(G.captains&&G.captains[ti]?G.captains[ti]:null)
+      ||(G.captains&&G.captains[String(ti)]?G.captains[String(ti)]:null)
+      ||{};
     if(!cap.c&&!cap.vc) return;
     Object.keys(results[ti]).forEach(function(pi){
       var isCap=cap.c!==undefined&&parseInt(cap.c)===parseInt(pi);
       var isVC=cap.vc!==undefined&&parseInt(cap.vc)===parseInt(pi);
-      if(isCap) results[ti][pi]=Math.round(results[ti][pi]*2);
-      else if(isVC) results[ti][pi]=Math.round(results[ti][pi]*1.5);
+      if(isCap && results[ti][pi] && typeof results[ti][pi]==='object') results[ti][pi].t=Math.round(results[ti][pi].t*2);
+      else if(isVC && results[ti][pi] && typeof results[ti][pi]==='object') results[ti][pi].t=Math.round(results[ti][pi].t*1.5);
     });
   });
   var upd={};
