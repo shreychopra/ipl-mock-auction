@@ -311,7 +311,10 @@
           <div style="font-family:var(--fd);font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">Match ID Verifier</div>
           <div style="font-size:11px;color:var(--text3);margin-top:2px">Ping Cricbuzz to confirm upcoming match IDs</div>
         </div>
+        <div style="display:flex;gap:8px">
         <button onclick="runMatchVerifier()" class="btn btn-ghost btn-sm" id="verifyBtn">Verify All Upcoming</button>
+        <button onclick="forceResyncMatches(['149618','149629','149640','149651','149662'])" class="btn btn-red btn-sm" id="forceResyncBtn">Re-sync M1–M5</button>
+      </div>
       </div>
       <div id="verifyResults" style="padding:8px 10px;max-height:260px;overflow-y:auto"></div>
     </div>
@@ -2231,23 +2234,33 @@ function findPlayer(apiName){
   return {player:best,score:bestScore};
 }
 function calcPts(bat,bowl,field,isCap,isVC,playedXI){
-  // Playing XI bonus only if actually participated (batted or bowled), not just as sub
-  var pts=playedXI?4:0;
+  // Supports both old 6-arg call (isCap,isVC,playedXI) and new 4-arg call (playedXI as 4th arg)
+  // When called as calcPts(bat,bowl,field,playedXI) -> isCap=playedXI(bool), isVC=undefined, playedXI=undefined
+  var _playedXI, _isCap=false, _isVC=false;
+  if(typeof isVC === 'undefined') {
+    // 4-arg call: calcPts(bat, bowl, field, playedXI)
+    _playedXI = !!isCap;
+  } else {
+    // 6-arg call: calcPts(bat, bowl, field, isCap, isVC, playedXI)
+    _isCap = !!isCap; _isVC = !!isVC; _playedXI = !!playedXI;
+  }
+  var p=_playedXI?4:0, b=0, bw=0, f=0;
   if(bat){
-    pts+=bat.runs+(bat.fours||0)+(bat.sixes||0)*2;
-    if(bat.runs>=100) pts+=16; else if(bat.runs>=50) pts+=8; else if(bat.runs>=25) pts+=4;
-    if(bat.runs===0&&bat.dismissed) pts-=2;
+    b+=bat.runs+(bat.fours||0)+(bat.sixes||0)*2;
+    if(bat.runs>=100) b+=16; else if(bat.runs>=50) b+=8; else if(bat.runs>=25) b+=4;
+    if(bat.runs===0&&bat.dismissed) b-=2;
   }
   if(bowl){
-    pts+=bowl.wkts*25+(bowl.lbwBowled||0)*8;
-    if(bowl.wkts>=5) pts+=16; else if(bowl.wkts>=4) pts+=8; else if(bowl.wkts>=3) pts+=4;
-    pts+=bowl.maidens*12;
-    if(bowl.overs>=2){var eco=bowl.runs/bowl.overs;pts+=eco<6?4:eco<=8?2:0;}
+    bw+=bowl.wkts*25+(bowl.lbwBowled||0)*8;
+    if(bowl.wkts>=5) bw+=16; else if(bowl.wkts>=4) bw+=8; else if(bowl.wkts>=3) bw+=4;
+    bw+=bowl.maidens*12;
+    if(bowl.overs>=2){var eco=bowl.runs/bowl.overs;bw+=eco<6?4:eco<=8?2:0;}
   }
-  if(field){pts+=(field.c||0)*8+(field.st||0)*12+(field.ro||0)*6;}
-  if(isCap) pts=Math.round(pts*2);
-  else if(isVC) pts=Math.round(pts*1.5);
-  return pts;
+  if(field){f+=(field.c||0)*8+(field.st||0)*12+(field.ro||0)*6;}
+  var bd={p:p,b:b,w:bw,f:f,t:p+b+bw+f};
+  if(_isCap) bd.t=Math.round(bd.t*2);
+  else if(_isVC) bd.t=Math.round(bd.t*1.5);
+  return bd;
 }
 function parseCard(scard, filteredInnings){
   var stats={};
@@ -2427,14 +2440,14 @@ function processMatch(matchId,desc,mNum,done,retryCount,schedMatch){
       var m=findPlayer(apiName);
       if(!m.player) return;
       var st=stats[apiName];
-      var playedXI=!!(st.bat||st.bowl); var pts=calcPts(st.bat,st.bowl,st.field,false,false,playedXI);
-      if(pts<=0) return;
+      var playedXI=!!(st.bat||st.bowl); var bd=calcPts(st.bat,st.bowl,st.field,false,false,playedXI);
+      if(bd.t<=0) return;
       if(m.score>=0.85){
         var ti=m.player.ti,pi=m.player.pi;
         if(!results[ti]) results[ti]={};
-        results[ti][pi]=(results[ti][pi]||0)+pts;
+        results[ti][pi]=bd;
       } else if(m.score>=0.6){
-        lowConf.push({apiName:apiName,matched:m.player.name,score:m.score,pts:pts,
+        lowConf.push({apiName:apiName,matched:m.player.name,score:m.score,pts:bd.t,bd:bd,
           ti:m.player.ti,pi:m.player.pi,matchId:matchId,mNum:mNum});
       }
     });
@@ -2451,11 +2464,11 @@ function stageForReview(matchId, mNum, desc, stats, autoResults, lowConf, schedM
   Object.keys(stats).forEach(function(apiName){
     var st=stats[apiName];
     var playedXI=!!(st.bat||st.bowl);
-    var pts=calcPts(st.bat,st.bowl,st.field,false,false,playedXI);
-    if(pts>0) playerPts.push({name:apiName,pts:pts,confidence:1.0});
+    var bd=calcPts(st.bat,st.bowl,st.field,false,false,playedXI);
+    if(bd.t>0) playerPts.push({name:apiName,pts:bd.t,bd:bd,confidence:1.0});
   });
   lowConf.forEach(function(item){
-    playerPts.push({name:item.apiName,matched:item.matched,pts:item.pts,confidence:item.score,isLowConf:true});
+    playerPts.push({name:item.apiName,matched:item.matched,pts:item.pts,bd:item.bd||null,confidence:item.score,isLowConf:true});
   });
   playerPts.sort(function(a,b){return b.pts-a.pts;});
   logSync('Staged '+playerPts.length+' player entries for distribution','info');
@@ -2553,17 +2566,19 @@ function distributeToAllRooms(matchId, autoMode){
   staged.playerPts.forEach(function(entry){
     if(entry.excluded) return;
     if(!finalResults[entry.ti]) finalResults[entry.ti]={};
-    finalResults[entry.ti][entry.pi]=(finalResults[entry.ti][entry.pi]||0)+entry.pts;
+    // Store breakdown object; pts field may have been edited by admin in review panel
+    var bd=entry.bd?{p:entry.bd.p,b:entry.bd.b,w:entry.bd.w,f:entry.bd.f,t:entry.pts}:{p:0,b:0,w:0,f:0,t:entry.pts};
+    finalResults[entry.ti][entry.pi]=bd;
   });
-  // Apply captain/VC multipliers
+  // Apply captain/VC multipliers (to .t only)
   Object.keys(finalResults).forEach(function(ti){
     var cap=G.captains&&G.captains[ti]?G.captains[ti]:{};
     if(!cap.c&&!cap.vc) return;
     Object.keys(finalResults[ti]).forEach(function(pi){
       var isCap=cap.c!==undefined&&parseInt(cap.c)===parseInt(pi);
       var isVC=cap.vc!==undefined&&parseInt(cap.vc)===parseInt(pi);
-      if(isCap) finalResults[ti][pi]=Math.round(finalResults[ti][pi]*2);
-      else if(isVC) finalResults[ti][pi]=Math.round(finalResults[ti][pi]*1.5);
+      if(isCap) finalResults[ti][pi].t=Math.round(finalResults[ti][pi].t*2);
+      else if(isVC) finalResults[ti][pi].t=Math.round(finalResults[ti][pi].t*1.5);
     });
   });
   // Now distribute to ALL rooms in Firebase that are eligible
@@ -2604,14 +2619,15 @@ function distributeToAllRooms(matchId, autoMode){
         // Match each squad player against scorecard by fuzzy name
         // Only include matches >= 0.85 to prevent surname-only false matches
         rPlayers.forEach(function(rp,rpi){
-          var bestScore=0, bestPts=0;
+          var bestScore=0, bestEntry=null;
           staged.playerPts.forEach(function(entry){
             if(entry.excluded) return;
             var s=similarity(rp.name, entry.matched||entry.name);
-            if(s>bestScore){bestScore=s;bestPts=entry.pts;}
+            if(s>bestScore){bestScore=s;bestEntry=entry;}
           });
-          if(bestScore>=0.85){
-            teamPts[rpi]=(teamPts[rpi]||0)+bestPts;
+          if(bestScore>=0.85&&bestEntry){
+            var bd=bestEntry.bd?{p:bestEntry.bd.p,b:bestEntry.bd.b,w:bestEntry.bd.w,f:bestEntry.bd.f,t:bestEntry.pts}:{p:0,b:0,w:0,f:0,t:bestEntry.pts};
+            teamPts[rpi]=bd;
           }
         });
         if(Object.keys(teamPts).length){
@@ -2858,6 +2874,65 @@ function runMatchVerifier(){
         }
       });
   });
+}
+
+
+// ── FORCE RE-SYNC HISTORICAL MATCHES ──
+function forceResyncMatches(matchIds){
+  var btn=document.getElementById('forceResyncBtn');
+  if(btn){btn.textContent='Resyncing...';btn.disabled=true;}
+  logSync('Force re-sync started for: M'+matchIds.map(function(id){
+    var m=IPL_SCHEDULE.filter(function(s){return s.id===id;})[0];
+    return m?m.num:id;
+  }).join(', M'),'info');
+
+  // Step 1: Clear local syncedIds in memory
+  matchIds.forEach(function(id){ delete syncedIds[id]; });
+
+  // Step 2: Clear Firebase syncedIds across ALL rooms then re-sync
+  db.ref('fantasy').once('value',function(fsnap){
+    var fantasyData=fsnap.val()||{};
+    var updates={};
+    Object.keys(fantasyData).forEach(function(code){
+      if(code==='global') return;
+      matchIds.forEach(function(id){
+        if(fantasyData[code]&&fantasyData[code].syncedIds&&fantasyData[code].syncedIds[id]!==undefined){
+          updates['fantasy/'+code+'/syncedIds/'+id]=null;
+        }
+      });
+    });
+    if(Object.keys(updates).length){
+      db.ref().update(updates,function(err){
+        if(err){logSync('Error clearing syncedIds: '+err,'err');return;}
+        logSync('Cleared syncedIds for '+matchIds.length+' matches across '+Object.keys(fantasyData).length+' rooms','ok');
+        // Step 3: Run sync for just these matches
+        runForcedSync(matchIds);
+      });
+    } else {
+      logSync('No syncedIds to clear — running sync directly','info');
+      runForcedSync(matchIds);
+    }
+  });
+}
+
+function runForcedSync(matchIds){
+  var toSync=IPL_SCHEDULE.filter(function(m){return matchIds.indexOf(m.id)>=0;});
+  logSync('Fetching '+toSync.length+' matches...','info');
+  var idx=0;
+  function next(){
+    if(idx>=toSync.length){
+      var btn=document.getElementById('forceResyncBtn');
+      if(btn){btn.textContent='Re-sync M1–M5';btn.disabled=false;}
+      logSync('Force re-sync complete!','ok');
+      return;
+    }
+    var m=toSync[idx++];
+    logSync('Fetching '+m.label,'info');
+    setTimeout(function(){
+      processMatch(m.id, m.label, m.num, next, 0, m);
+    },800);
+  }
+  next();
 }
 
 
