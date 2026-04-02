@@ -1123,7 +1123,7 @@ function renderPointsPane(){
           var mdata=matchData[mk]||{};
           Object.keys(mdata).forEach(function(pname){
             if(!playerTotals[pname]) playerTotals[pname]={pts:0,breakdown:{}};
-            playerTotals[pname].pts+=(mdata[pname]||0);
+            playerTotals[pname].pts+=ptsVal(mdata[pname]);
             if(mdata[pname]) playerTotals[pname].breakdown[mk]=mdata[pname];
           });
         });
@@ -1789,11 +1789,11 @@ function openPlayerModalFromEl(el){
   var bKeys = Object.keys(pbd).sort(function(a,b){
     return parseInt(a.replace('match','')) - parseInt(b.replace('match',''));
   });
-  var total = bKeys.reduce(function(s,k){ return s + (pbd[k]||0); }, 0);
+  var total = bKeys.reduce(function(s,k){ return s + ptsVal(pbd[k]); }, 0);
   var avg   = bKeys.length ? Math.round(total / bKeys.length) : 0;
 
-  var bestEl=bKeys.length?bKeys.reduce(function(a,b){return (pbd[b]||0)>(pbd[a]||0)?b:a;},bKeys[0]):null;
-  var bestElPts=bestEl?pbd[bestEl]||0:0;
+  var bestEl=bKeys.length?bKeys.reduce(function(a,b){return ptsVal(pbd[b])>ptsVal(pbd[a])?b:a;},bKeys[0]):null;
+  var bestElPts=bestEl?ptsVal(pbd[bestEl]):0;
   var bestElLbl=bestEl?(G.matchLabels&&G.matchLabels[bestEl]?G.matchLabels[bestEl].replace(/M(\d+).*/,'M$1'):bestEl.replace('match','M')):'—';
   var body = '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0;background:var(--surface2);'
     + 'border-radius:var(--rsm);margin-bottom:14px;overflow:hidden;border:1px solid var(--border)">'
