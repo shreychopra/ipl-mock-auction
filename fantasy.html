@@ -2680,6 +2680,18 @@ function distributeToAllRooms(matchId, autoMode){
       syncedIds[matchId]=true;
       if(!autoMode) delete stagedResults[matchId];
       sendNotif('Fantasy Points Updated',staged.desc+' points synced to all rooms!');
+      // Also write breakdown objects to fantasy/global so Points tab All Players view works
+      var globalPts={};
+      staged.playerPts.forEach(function(entry){
+        if(entry.excluded||!entry.bd) return;
+        var name=entry.matched||entry.name;
+        globalPts[name]={p:entry.bd.p,b:entry.bd.b,w:entry.bd.w,f:entry.bd.f,t:entry.pts};
+      });
+      if(Object.keys(globalPts).length){
+        db.ref('fantasy/global/matches/match'+staged.mNum).set(globalPts);
+        db.ref('fantasy/global/matchLabels/match'+staged.mNum).set(staged.desc);
+        if(staged.matchResult) db.ref('fantasy/global/matchResults/match'+staged.mNum).set(staged.matchResult);
+      }
       // Update local data if current room is loaded
       if(G.roomCode && fantasyRef){
         fantasyRef.once('value',function(s){
