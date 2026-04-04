@@ -313,7 +313,7 @@
         </div>
         <div style="display:flex;gap:8px">
         <button onclick="runMatchVerifier()" class="btn btn-ghost btn-sm" id="verifyBtn">Verify All Upcoming</button>
-        <button onclick="forceResyncMatches(['149618','149629','149640','149651','149662'])" class="btn btn-red btn-sm" id="forceResyncBtn">Re-sync M1–M5</button>
+        <button onclick="forceResyncAllPlayed()" class="btn btn-red btn-sm" id="forceResyncBtn">Re-sync All Played</button>
       </div>
       </div>
       <div id="verifyResults" style="padding:8px 10px;max-height:260px;overflow-y:auto"></div>
@@ -2924,6 +2924,20 @@ function runMatchVerifier(){
 
 
 // ── FORCE RE-SYNC HISTORICAL MATCHES ──
+function forceResyncAllPlayed(){
+  // Dynamically build list of all match IDs whose sync window has passed
+  var now = Date.now();
+  var playedIds = IPL_SCHEDULE.filter(function(m){
+    var tp = m.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    var hr = parseInt(tp[1]) + (tp[3].toUpperCase()==='PM' && tp[1]!=='12' ? 12 : 0);
+    var startUTC = new Date(m.date+'T00:00:00Z').getTime() + (hr*60+parseInt(tp[2])-330)*60000;
+    return now >= startUTC + (4.5*60*60*1000); // 4.5h after start
+  }).map(function(m){ return m.id; });
+  if(!playedIds.length){ toast('No completed matches to re-sync'); return; }
+  logSync('Re-syncing all '+playedIds.length+' played matches with captain multipliers...','info');
+  forceResyncMatches(playedIds);
+}
+
 function forceResyncMatches(matchIds){
   var btn=document.getElementById('forceResyncBtn');
   if(btn){btn.textContent='Resyncing...';btn.disabled=true;}
