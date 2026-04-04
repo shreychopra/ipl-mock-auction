@@ -2469,7 +2469,7 @@ function processMatch(matchId,desc,mNum,done,retryCount,schedMatch){
         var ti=m.player.ti,pi=m.player.pi;
         if(!results[ti]) results[ti]={};
         results[ti][pi]=bd;
-      } else if(m.score>=0.6){
+      } else if(m.score>=0.75){
         lowConf.push({apiName:apiName,matched:m.player.name,score:m.score,pts:bd.t,bd:bd,
           ti:m.player.ti,pi:m.player.pi,matchId:matchId,mNum:mNum});
       }
@@ -2491,7 +2491,8 @@ function stageForReview(matchId, mNum, desc, stats, autoResults, lowConf, schedM
     if(bd.t>0) playerPts.push({name:apiName,pts:bd.t,bd:bd,confidence:1.0});
   });
   lowConf.forEach(function(item){
-    playerPts.push({name:item.apiName,matched:item.matched,pts:item.pts,bd:item.bd||null,confidence:item.score,isLowConf:true});
+    // Low-confidence entries are EXCLUDED by default — admin must manually include them
+    playerPts.push({name:item.apiName,matched:item.matched,pts:item.pts,bd:item.bd||null,confidence:item.score,isLowConf:true,excluded:true});
   });
   playerPts.sort(function(a,b){return b.pts-a.pts;});
   logSync('Staged '+playerPts.length+' player entries for distribution','info');
@@ -2517,7 +2518,7 @@ function renderSyncReview(){
     var hdr = document.createElement('div');
     hdr.style.cssText='padding:10px 14px;background:linear-gradient(135deg,#0e1e4a,#0d1120);display:flex;align-items:center;justify-content:space-between';
     hdr.innerHTML='<div><div style="font-family:var(--fd);font-size:14px;font-weight:700">'+staged.desc+'</div>'
-      +'<div style="font-size:11px;color:var(--text3);margin-top:2px">'+staged.playerPts.length+' player entries — review and edit before saving</div></div>';
+      +'<div style="font-size:11px;color:var(--text3);margin-top:2px">'+staged.playerPts.length+' player entries — red rows EXCLUDED by default, click to include</div></div>';
     var approveBtn = document.createElement('button');
     approveBtn.className='btn btn-green btn-sm';
     approveBtn.textContent='Re-Save Corrections';
@@ -2564,15 +2565,18 @@ function renderSyncReview(){
       var tog = document.createElement('button');
       tog.style.cssText='background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);'
         +'color:var(--text3);font-size:10px;padding:4px 8px;cursor:pointer;font-family:var(--fd);white-space:nowrap';
-      tog.textContent=entry.excluded?'Excluded':'Include';
+      tog.textContent=entry.excluded?'Excluded':'Included';
       tog.style.color=entry.excluded?'var(--red)':'var(--green)';
+      tog.style.border=entry.excluded?'1px solid rgba(255,69,102,.4)':'1px solid rgba(0,214,143,.3)';
       tog.addEventListener('click',function(){
         var e2=stagedResults[matchId].playerPts[parseInt(inp.dataset.idx)];
         e2.excluded=!e2.excluded;
-        tog.textContent=e2.excluded?'Excluded':'Include';
+        tog.textContent=e2.excluded?'Excluded':'Included';
         tog.style.color=e2.excluded?'var(--red)':'var(--green)';
+        tog.style.border=e2.excluded?'1px solid rgba(255,69,102,.4)':'1px solid rgba(0,214,143,.3)';
         row.style.opacity=e2.excluded?'0.4':'1';
       });
+      if(entry.excluded) row.style.opacity='0.4';
       row.appendChild(nameDiv); row.appendChild(inp); row.appendChild(tog);
       body.appendChild(row);
     });
