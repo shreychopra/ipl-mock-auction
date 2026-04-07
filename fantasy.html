@@ -311,9 +311,10 @@
           <div style="font-family:var(--fd);font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">Match ID Verifier</div>
           <div style="font-size:11px;color:var(--text3);margin-top:2px">Ping Cricbuzz to confirm upcoming match IDs</div>
         </div>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button onclick="runMatchVerifier()" class="btn btn-ghost btn-sm" id="verifyBtn">Verify All Upcoming</button>
         <button onclick="forceResyncAllPlayed()" class="btn btn-red btn-sm" id="forceResyncBtn">Re-sync All Played</button>
+        <button onclick="clearNoResultMatch()" class="btn btn-ghost btn-sm" id="clearNRBtn" style="border-color:var(--gold);color:var(--gold)">Clear No-Result Match</button>
       </div>
       </div>
       <div id="verifyResults" style="padding:8px 10px;max-height:260px;overflow-y:auto"></div>
@@ -1337,7 +1338,6 @@ function loadRoom(){
       G.matchLabels=fd.matchLabels||{};
       G.matchResults=fd.matchResults||{};
       G.currentMatch=fd.currentMatch||1;
-      // Also load fantasy-level captains if present
       if(fd.captains) G.captains=fd.captains;
       initApp();
     });
@@ -1350,7 +1350,6 @@ function loadRoom(){
       G.matchResults=fd.matchResults||{};
       G.currentMatch=fd.currentMatch||1;
       if(fd.captains) G.captains=fd.captains;
-      // Show in-app alert ONLY after the app is initialised (skip initial load fire)
       if(appInitialized){
         var newKeys=Object.keys(G.matchData).filter(function(k){return prevKeys.indexOf(k)<0;});
         if(newKeys.length){
@@ -1685,19 +1684,14 @@ function renderSquadView(){
       ptsDiv.innerHTML='<div class="sp-pts">'+pts+'</div><div style="font-size:9px;color:var(--text3);text-align:right">pts</div>';
       row.appendChild(avi); row.appendChild(info); row.appendChild(ptsDiv);
       row.addEventListener('click',function(){openPlayerModal(parseInt(row.dataset.ti),parseInt(row.dataset.pi));});
-      // Show C/VC badges next to name (not overlapping avatar)
-      // G.captains can be flat {teamIdx:{c,vc}} (from rooms data) OR
-      // match-keyed {matchN:{teamIdx:{c,vc}}} (from fantasy captains).
-      // Check both structures.
+      // Show C/VC badges next to name
       var myCaps={};
       var capMkSq='match'+G.currentMatch;
       var ti2=currentSquadTeam;
-      // Match-keyed structure (fantasy captains)
       if(G.captains&&G.captains[capMkSq]){
         var mc=G.captains[capMkSq];
         myCaps=mc[ti2]||mc[String(ti2)]||mc[parseInt(ti2)]||{};
       }
-      // If not found, fall back to flat structure (rooms captains)
       if(!myCaps||myCaps.c===undefined){
         var flat=G.captains&&(G.captains[ti2]||G.captains[String(ti2)]||G.captains[parseInt(ti2)]);
         if(flat&&flat.c!==undefined) myCaps=flat;
@@ -1815,7 +1809,6 @@ function openPlayerModal(ti,pi){
     body+='<div class="empty" style="padding:20px">No match data yet</div>';
   }
   // Show C/VC status in modal (read-only - set during auction)
-  // Resolve captains — check match-keyed (fantasy) then flat (rooms)
   var myCaps2={};
   var capMk2='match'+G.currentMatch;
   if(G.captains&&G.captains[capMk2]){
@@ -2451,7 +2444,6 @@ function processMatch(matchId,desc,mNum,done,retryCount,schedMatch){
     logSync('ismatchcomplete:'+data.ismatchcomplete+' | status:"'+(data.status||'')+'" | innings:'+innings.length,'info');
     if(isNoPoints){
       logSync(desc+' — No Result/Abandoned. No points awarded.','warn');
-      // Mark synced across all eligible rooms but write NO match data (zero points)
       db.ref('rooms').once('value',function(rsnap){
         var rooms=rsnap.val()||{};
         var updates={};
@@ -2981,17 +2973,73 @@ function runMatchVerifier(){
 
 
 // ── FORCE RE-SYNC HISTORICAL MATCHES ──
+// ── CLEAR NO-RESULT MATCH ──
+// Use this to wipe points for a match that was washed out but had already been synced.
+// Prompts for match number, deletes all match data for that match across all rooms,
+// marks the match result as "No Result" and leaves syncedIds intact.
+function clearNoResultMatch(){
+  var mNumStr = window.prompt('Enter match number to clear as No Result (e.g. 12 for M12):');
+  if(!mNumStr) return;
+  var mNum = parseInt(mNumStr);
+  if(isNaN(mNum)||mNum<1||mNum>70){ toast('Invalid match number'); return; }
+  var mKey = 'match'+mNum;
+  var sched = IPL_SCHEDULE.filter(function(s){return s.num===mNum;})[0];
+  var label = sched ? sched.label : 'M'+mNum;
+  if(!window.confirm('This will DELETE all M'+mNum+' points from every room and mark it as No Result. Cannot be undone. Proceed?')) return;
+  logSync('Clearing M'+mNum+' as No Result across all rooms...','warn');
+  var btn = document.getElementById('clearNRBtn');
+  if(btn){ btn.textContent='Clearing...'; btn.disabled=true; }
+  db.ref('fantasy').once('value', function(fsnap){
+    var fantasyData = fsnap.val()||{};
+    var updates = {};
+    Object.keys(fantasyData).forEach(function(code){
+      if(code==='global') return;
+      // Delete all match points data for this match in this room
+      updates['fantasy/'+code+'/matches/'+mKey] = null;
+      // Keep syncedIds = true so it doesn't get re-synced
+      updates['fantasy/'+code+'/syncedIds/'+(sched?sched.id:mKey)] = true;
+      updates['fantasy/'+code+'/matchLabels/'+mKey] = label;
+      updates['fantasy/'+code+'/matchResults/'+mKey] = 'No Result';
+    });
+    // Also clear global
+    updates['fantasy/global/matches/'+mKey] = null;
+    updates['fantasy/global/matchResults/'+mKey] = 'No Result';
+    updates['fantasy/global/matchLabels/'+mKey] = label;
+    db.ref().update(updates, function(err){
+      if(btn){ btn.textContent='Clear No-Result Match'; btn.disabled=false; }
+      if(err){ logSync('Error clearing M'+mNum+': '+err,'err'); return; }
+      // Also clear local matchData
+      if(G.matchData&&G.matchData[mKey]) delete G.matchData[mKey];
+      logSync('M'+mNum+' cleared as No Result across '+Object.keys(fantasyData).length+' rooms','ok');
+      renderLeaderboard();
+      renderHistory();
+      toast('M'+mNum+' cleared — No Result');
+    });
+  });
+}
+
 function forceResyncAllPlayed(){
-  // Dynamically build list of all match IDs whose sync window has passed
+  // Dynamically build list of all match IDs whose sync window has passed,
+  // excluding any already marked as No Result in matchResults
   var now = Date.now();
-  var playedIds = IPL_SCHEDULE.filter(function(m){
+  var noResultKeys = {};
+  Object.keys(G.matchResults||{}).forEach(function(mk){
+    var res = (G.matchResults[mk]||'').toLowerCase();
+    if(res.indexOf('no result')>=0||res.indexOf('abandon')>=0||res.indexOf('cancel')>=0){
+      noResultKeys[mk]=true;
+    }
+  });
+  var playedMatches = IPL_SCHEDULE.filter(function(m){
     var tp = m.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
     var hr = parseInt(tp[1]) + (tp[3].toUpperCase()==='PM' && tp[1]!=='12' ? 12 : 0);
     var startUTC = new Date(m.date+'T00:00:00Z').getTime() + (hr*60+parseInt(tp[2])-330)*60000;
-    return now >= startUTC + (4.5*60*60*1000); // 4.5h after start
-  }).map(function(m){ return m.id; });
+    if(now < startUTC + (4.5*60*60*1000)) return false;
+    if(noResultKeys['match'+m.num]){ logSync('Skipping M'+m.num+' (No Result)','info'); return false; }
+    return true;
+  });
+  var playedIds = playedMatches.map(function(m){ return m.id; });
   if(!playedIds.length){ toast('No completed matches to re-sync'); return; }
-  logSync('Re-syncing all '+playedIds.length+' played matches with captain multipliers...','info');
+  logSync('Re-syncing '+playedIds.length+' played matches with captain multipliers (No Result matches skipped)...','info');
   forceResyncMatches(playedIds);
 }
 
