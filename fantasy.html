@@ -2450,17 +2450,19 @@ function processMatch(matchId,desc,mNum,done,retryCount,schedMatch){
           var room=rooms[code];
           if(!room.auctionEnded) return;
           var endedAt=room.auctionEndedAt||0;
+          // Always write label+result so schedule tab works for all rooms
+          updates['fantasy/'+code+'/matchLabels/match'+mNum]=desc;
+          updates['fantasy/'+code+'/matchResults/match'+mNum]=data.status||'No Result';
+          updates['fantasy/'+code+'/syncedIds/'+matchId]=true;
+          // Points: null for ineligible rooms (created after this match)
           if(schedMatch&&endedAt){
             var tp=schedMatch.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
             if(tp){
               var hh=parseInt(tp[1])+(tp[3].toUpperCase()==='PM'&&tp[1]!=='12'?12:0);
               var matchStart=new Date(schedMatch.date+'T00:00:00Z').getTime()+(hh*60+parseInt(tp[2])-330)*60000;
-              if(endedAt>=matchStart) return;
+              if(endedAt>=matchStart) updates['fantasy/'+code+'/matches/match'+mNum]=null;
             }
           }
-          updates['fantasy/'+code+'/syncedIds/'+matchId]=true;
-          updates['fantasy/'+code+'/matchLabels/match'+mNum]=desc;
-          updates['fantasy/'+code+'/matchResults/match'+mNum]=data.status||'No Result';
         });
         if(Object.keys(updates).length) db.ref().update(updates,function(){
           logSync('Marked '+desc+' as No Result across all rooms','ok');
@@ -2673,7 +2675,14 @@ function distributeToAllRooms(matchId, autoMode){
         var matchStartUTC=new Date(staged.schedMatch.date+'T00:00:00Z').getTime()+(h*60+mn-330)*60000;
         eligible=endedAt<matchStartUTC;
       }
-      if(!eligible) return;
+      // Always write matchLabels+matchResults so schedule tab works for all rooms
+      updates['fantasy/'+code+'/matchLabels/match'+staged.mNum]=staged.desc;
+      if(staged.matchResult) updates['fantasy/'+code+'/matchResults/match'+staged.mNum]=staged.matchResult;
+      if(!eligible){
+        // Room created after this match — write label/result but no points
+        updates['fantasy/'+code+'/syncedIds/'+matchId]=true;
+        return;
+      }
       // Write points for each team in this room that has matching players
       var roomTeams=room.teams||{};
       Object.keys(roomTeams).forEach(function(rk){
@@ -2713,8 +2722,6 @@ function distributeToAllRooms(matchId, autoMode){
         count++;
       });
       updates['fantasy/'+code+'/syncedIds/'+matchId]=true;
-      updates['fantasy/'+code+'/matchLabels/match'+staged.mNum]=staged.desc;
-      if(staged.matchResult) updates['fantasy/'+code+'/matchResults/match'+staged.mNum]=staged.matchResult;
       logSync('Room '+code+': wrote '+Object.keys(updates).length+' update entries','info');
     });
     logSync('Applying '+Object.keys(updates).length+' Firebase updates for '+count+' room(s)...','info');
