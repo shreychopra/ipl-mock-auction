@@ -404,7 +404,7 @@ firebase.initializeApp({
 var db = firebase.database();
 
 // ── STATE ──
-var G = {teams:{}, roomCode:'', myTeamName:'', matchData:{}, matchLabels:{}, captains:{}, matchResults:{}, auctionEndedAt:0, currentMatch:1};
+var G = {teams:{}, roomCode:'', myTeamName:'', matchData:{}, matchLabels:{}, captains:{}, matchResults:{}, globalMatchResults:{}, globalMatchLabels:{}, auctionEndedAt:0, currentMatch:1};
 // Safely extract total pts from a value that may be a number (old data) or {p,b,w,f,t} object (new)
 function ptsVal(v){ return (v!==null&&v!==undefined&&typeof v==='object') ? (v.t||0) : (v||0); }
 function ptsBd(v){ return (v!==null&&v!==undefined&&typeof v==='object') ? v : null; }
@@ -1440,6 +1440,8 @@ function initApp(){
   loadSyncedIds();
   listenForSyncTrigger();
   requestNotifPermission();
+  // Load global match results for schedule tab (works regardless of room eligibility)
+  loadGlobalMatchResults();
 }
 
 function getMatchStatus(schedMatch){
@@ -2078,7 +2080,7 @@ function renderSchedule(){
       var logos=getTeamLogos(m.label);
       var t1=logos[0]||'', t2=logos[1]||'';
       var mk='match'+m.num;
-      var rawRes=G.matchResults&&G.matchResults[mk]?G.matchResults[mk]:'';
+      var rawRes=(G.matchResults&&G.matchResults[mk])?G.matchResults[mk]:(G.globalMatchResults&&G.globalMatchResults[mk]?G.globalMatchResults[mk]:'');
       var shortRes=shortResult(rawRes);
       var winner=winnerTeam(shortRes);
       var winColor=winner&&IPL_COLORS[winner]?IPL_COLORS[winner]:'var(--green)';
@@ -2734,7 +2736,7 @@ function distributeToAllRooms(matchId, autoMode){
       logSync('Distributed to '+count+' team(s) across all rooms!','ok');
       syncedIds[matchId]=true;
       if(!autoMode) delete stagedResults[matchId];
-      sendNotif('Fantasy Points Updated',staged.desc+' points synced to all rooms!');
+      // notification handled by fantasyRef.on listener (batched)
       // Also write breakdown objects to fantasy/global so Points tab All Players view works
       var globalPts={};
       staged.playerPts.forEach(function(entry){
@@ -2791,7 +2793,7 @@ function saveResults(results,mNum,matchId,desc){
       syncedIds[matchId]=true;
       G.matchData[mk]=results;
       logSync('Saved Match '+mNum+' ('+desc+')','ok');
-      sendNotif('Fantasy Points Updated', desc+' points have been synced!');
+      // notification handled by fantasyRef.on listener (batched)
       renderLeaderboard();
       renderSquadView();
       updateNav();
@@ -2895,6 +2897,28 @@ function listenForSyncTrigger(){
       logSync('Scheduled sync triggered by server','info');
       runSync(false);
     }
+  });
+}
+
+function loadGlobalMatchResults(){
+  // Load match results/labels from global node — always populated for every match
+  // regardless of which rooms are eligible. Used by schedule tab so all rooms
+  // can show historical results even if they were created after those matches.
+  db.ref('fantasy/global/matchResults').once('value',function(snap){
+    var results=snap.val()||{};
+    G.globalMatchResults=results;
+    // Re-render schedule if it's currently visible
+    if(document.getElementById('pane-sc')&&document.getElementById('pane-sc').classList.contains('on')){
+      renderSchedule();
+    }
+  });
+  db.ref('fantasy/global/matchLabels').once('value',function(snap){
+    var labels=snap.val()||{};
+    G.globalMatchLabels=labels;
+  });
+  // Also listen for live updates to global results (for when new matches sync)
+  db.ref('fantasy/global/matchResults').on('value',function(snap){
+    G.globalMatchResults=snap.val()||{};
   });
 }
 
