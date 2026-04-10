@@ -889,6 +889,11 @@
       <div id="cvcStatus" style="font-size:12px;color:var(--green);margin-top:8px;text-align:center;display:none">✓ Saved!</div>
     </div>
   </div>
+  <div id="endRoomCode" style="width:100%;max-width:300px;margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;text-align:center;display:none">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;font-family:var(--font-display)">Your Room Code — share with your team for Fantasy</div>
+    <div id="endRoomCodeVal" style="font-family:var(--font-num);font-size:32px;color:var(--gold);letter-spacing:6px;cursor:pointer" onclick="copyRoomCode()" title="Click to copy">------</div>
+    <div style="font-size:10px;color:var(--text3);margin-top:4px">Tap to copy · Use this to enter the Fantasy Tracker</div>
+  </div>
   <a id="fantasyLink" href="./fantasy.html" style="display:block;max-width:300px;margin-top:12px;text-decoration:none">
     <button class="btn btn-blue" style="width:100%">Fantasy League Tracker</button>
   </a>
@@ -1215,9 +1220,9 @@ var IPL_TEAM={
   "Zeeshan Ansari":"SRH",
 };
 var IPL_COLORS={
-  RCB:'#D4001A', MI:'#005DA0', CSK:'#F4C400', KKR:'#3A177C',
+  RCB:'#D4001A', MI:'#005DA0', CSK:'#F4C400', KKR:'#3A225D',
   DC:'#0078BC', SRH:'#F26522', RR:'#EA1A8E', PBKS:'#D71920',
-  GT:'#1C2E4A', LSG:'#A72056'
+  GT:'#DBBE6E', LSG:'#A72056'
 };
 function getPlayerTeam(name){
   return (IPL_TEAM&&IPL_TEAM[name])||null;
@@ -2016,9 +2021,19 @@ function hideSoldOverlay(){
 
 function markUnsold(){
   if(!G.currentPlayerId) return;
+  // Block if any bid has been placed
+  if(G.currentBid && G.currentBid>0){
+    toast('Cannot mark unsold — a bid has already been placed');
+    return;
+  }
   stopTimer();
   roomRef.once('value',function(snap){
     var data=snap.val(); if(!data) return;
+    // Double-check bid on fresh data
+    if(data.currentBid && data.currentBid>0){
+      toast('Cannot mark unsold — a bid has already been placed');
+      return;
+    }
     var players=data.players||[];
     var pidx=-1;
     for(var i=0;i<players.length;i++){if(players[i].id===data.currentPlayerId){pidx=i;break;}}
@@ -2061,15 +2076,17 @@ function bringUnsoldPlayer(id){
   var p=(G.players||[]).find(function(x){return x.id===id;});
   if(!p) return;
   if(p.status!=='unsold'){toast('Player is not unsold');return;}
-  // Reset status to pending so they can be bid on again
+  // Reset status to pending both locally and in Firebase
   var players=(G.players||[]).map(function(x){
     if(x.id===id){var c=Object.assign({},x);c.status='pending';return c;}
     return x;
   });
+  // Update G.players locally immediately so bringPlayer sees the correct status
+  G.players=players;
   pushRoom({players:players});
   document.getElementById('unsoldPanel').style.display='none';
-  // Now bring them up for auction
-  setTimeout(function(){ bringPlayer(id); }, 300);
+  // Call bringPlayer directly — no setTimeout needed since G is already updated
+  bringPlayer(id);
 }
 
 function updateUnsoldCount(){
@@ -2628,9 +2645,19 @@ function saveCaptains(){
   }
 }
 
+function copyRoomCode(){
+  var code=document.getElementById('endRoomCodeVal').textContent;
+  if(navigator.clipboard){navigator.clipboard.writeText(code).then(function(){toast('Room code copied!');});}
+  else{var t=document.createElement('textarea');t.value=code;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);toast('Room code copied!');}
+}
+
 function showEndScreen(){
   var fl=document.getElementById('fantasyLink');
   if(fl && roomCode) fl.href='./fantasy.html?code='+roomCode;
+  // Show room code card
+  var rcDiv=document.getElementById('endRoomCode');
+  var rcVal=document.getElementById('endRoomCodeVal');
+  if(rcDiv && roomCode){rcDiv.style.display='block'; if(rcVal) rcVal.textContent=roomCode;}
   // Show C/VC picker for participants
   if(role==='participant' && myTeamIdx!==null){
     var section=document.getElementById('cvcSection');
@@ -2658,6 +2685,9 @@ function showParticipantEnd(){
   // Pre-fill fantasy link
   var fl=document.getElementById('fantasyLink');
   if(fl && roomCode) fl.href='./fantasy.html?code='+roomCode;
+  var rcDiv2=document.getElementById('endRoomCode');
+  var rcVal2=document.getElementById('endRoomCodeVal');
+  if(rcDiv2 && roomCode){rcDiv2.style.display='block'; if(rcVal2) rcVal2.textContent=roomCode;}
   showScreen('endScreen');
 }
 function renderFinalList(){
