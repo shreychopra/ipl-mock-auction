@@ -2,7 +2,7 @@
 
 A two-file web app hosted on GitHub Pages that lets a friend group run a live mock IPL auction and then track fantasy points automatically across the real IPL season. No backend server — Firebase Realtime Database handles all live state, and a Cloudflare Worker handles scheduled point syncing via the Cricbuzz API.
 
-**Live:** `shreychopra.github.io/ipl-auction-claude/`
+**Live:** `shreychopra.github.io/ipl-mock-auction/`
 
 ---
 
