@@ -315,6 +315,7 @@
         <button onclick="runMatchVerifier()" class="btn btn-ghost btn-sm" id="verifyBtn">Verify All Upcoming</button>
         <button onclick="forceResyncAllPlayed()" class="btn btn-red btn-sm" id="forceResyncBtn">Re-sync All Played</button>
         <button onclick="clearNoResultMatch()" class="btn btn-ghost btn-sm" id="clearNRBtn" style="border-color:var(--gold);color:var(--gold)">Clear No-Result Match</button>
+        <button onclick="migrateBreakdownData()" class="btn btn-ghost btn-sm" id="migrateBtn" style="border-color:var(--blue);color:var(--blue)">Migrate Old Points</button>
       </div>
       </div>
       <div id="verifyResults" style="padding:8px 10px;max-height:260px;overflow-y:auto"></div>
@@ -1314,6 +1315,23 @@ function setAvi(el, photo, initial){
   }
 }
 
+// ── SESSION PERSISTENCE HELPERS ──
+function autoJoinSession(){
+  var s=window._savedSession||{};
+  if(!s.code||!s.team){return;}
+  document.getElementById('setupCode').value=s.code;
+  document.getElementById('setupTeam').value=s.team;
+  loadRoom();
+}
+function clearWelcomeBack(){
+  localStorage.removeItem('fl_code');
+  localStorage.removeItem('fl_team');
+  localStorage.removeItem('fl_teamIdx');
+  var wb=document.getElementById('welcomeBackBanner');
+  if(wb) wb.remove();
+  window._savedSession={};
+}
+
 // ── LOAD ROOM ──
 function loadRoom(){
   var code=document.getElementById('setupCode').value.trim().toUpperCase();
@@ -1330,6 +1348,7 @@ function loadRoom(){
     G.captains=data.captains||{};
     localStorage.setItem('fl_code',code);
     localStorage.setItem('fl_team',team);
+    // teamIdx stored after we know which team is theirs (set below after initApp)
     fantasyRef=db.ref('fantasy/'+code);
     fantasyRef.once('value',function(snap2){
       var fd=snap2.val()||{};
@@ -1405,7 +1424,13 @@ function showSyncAlert(matchLabel, matchKey){
     +'</div>';
   banner.style.display='block';
   var cb=document.getElementById('syncAlertClose');
-  if(cb) cb.onclick=function(){ banner.style.display='none'; };
+  if(cb) cb.onclick=function(){
+    banner.style.display='none';
+    // Ask for notification permission on first user gesture (much higher acceptance rate)
+    if('Notification' in window && Notification.permission==='default'){
+      Notification.requestPermission();
+    }
+  };
   setTimeout(function(){ if(banner) banner.style.display='none'; }, 12000);
 }
 
@@ -1423,6 +1448,19 @@ function sendNotif(title, body){
 function initApp(){
   document.getElementById('mainNav').style.display='flex';
   document.getElementById('navSub').textContent='Room: '+G.roomCode;
+  // Resolve myTeamIdx by matching stored team name
+  G.myTeamIdx = -1;
+  if(G.myTeamName){
+    Object.keys(G.teams).forEach(function(k){
+      if(G.teams[k].name && G.teams[k].name.toLowerCase()===G.myTeamName.toLowerCase()){
+        G.myTeamIdx=parseInt(k);
+      }
+    });
+  }
+  // Persist session including teamIdx
+  localStorage.setItem('fl_code', G.roomCode);
+  localStorage.setItem('fl_team', G.myTeamName||'');
+  localStorage.setItem('fl_teamIdx', G.myTeamIdx);
   updateNav();
   buildSquadTabs();
   renderLeaderboard();
@@ -1439,7 +1477,6 @@ function initApp(){
   // Load synced IDs then auto-sync
   loadSyncedIds();
   listenForSyncTrigger();
-  requestNotifPermission();
   // Load global match results for schedule tab (works regardless of room eligibility)
   loadGlobalMatchResults();
 }
@@ -1555,12 +1592,22 @@ function renderLeaderboard(){
     if(b.total!==a.total) return b.total-a.total;
     return a.name.localeCompare(b.name); // tiebreak: alphabetical
   });
+  // Compute rank changes vs previous render
+  var prevRankMap = renderLeaderboard._prevRanks || {};
+  var newRankMap = {};
+  rows.forEach(function(r,i){ newRankMap[r.idx] = i+1; });
+  renderLeaderboard._prevRanks = newRankMap;
   var rc=['gold','silver','bronze'];
   var c=document.getElementById('lbList');
   if(!c) return;
   if(!rows.length){c.innerHTML='<div class="empty">No teams</div>';return;}
   c.innerHTML=rows.map(function(r,i){
     var isMe=G.myTeamName&&r.name.toLowerCase()===G.myTeamName.toLowerCase();
+    var prevRank=prevRankMap[r.idx];
+    var rankDelta=prevRank!==undefined ? prevRank-(i+1) : 0;
+    var rankBadge='';
+    if(rankDelta>0) rankBadge='<span style="font-size:10px;color:var(--green);font-family:var(--fd);font-weight:700;margin-left:3px">▲'+rankDelta+'</span>';
+    else if(rankDelta<0) rankBadge='<span style="font-size:10px;color:var(--red);font-family:var(--fd);font-weight:700;margin-left:3px">▼'+Math.abs(rankDelta)+'</span>';
     // Sparkline: points per match played
     var sparkPts=[];
     for(var si=1;si<=70;si++){
@@ -1583,8 +1630,8 @@ function renderLeaderboard(){
         +'<circle cx="'+lastPt.split(',')[0]+'" cy="'+lastPt.split(',')[1]+'" r="2.2" fill="'+sc+'"/>'
         +'</svg>';
     }
-    return '<div class="lb-row'+(isMe?' me':'')+'" onclick="squadModal('+r.idx+')">'
-      +'<div class="lb-rank '+(i<3?rc[i]:'')+'">'+(i+1)+'</div>'
+    return '<div class="lb-row'+(isMe?' me':'')+(rankDelta>0?' rank-up':rankDelta<0?' rank-dn':'')+'" onclick="squadModal('+r.idx+')">'
+      +'<div class="lb-rank '+(i<3?rc[i]:'')+'" style="position:relative">'+(i+1)+rankBadge+'</div>'
       +'<div><div style="font-size:14px;font-weight:600">'+r.name+'</div>'
       +'<div style="display:flex;align-items:center;gap:5px;margin-top:2px">'
       +'<span style="width:10px;height:10px;border-radius:50%;background:'+r.color+';flex-shrink:0;display:inline-block;box-shadow:0 0 6px '+r.color+'"></span>'
@@ -1809,7 +1856,7 @@ function openPlayerModal(ti,pi){
   } else {
     body+='<div class="empty" style="padding:20px">No match data yet</div>';
   }
-  // Show C/VC status in modal (read-only - set during auction)
+  // C/VC status — read-only for other teams, interactive for your own team
   var myCaps2={};
   var capMk2='match'+G.currentMatch;
   if(G.captains&&G.captains[capMk2]){
@@ -1822,7 +1869,25 @@ function openPlayerModal(ti,pi){
   }
   var isCurrC=parseInt(myCaps2.c)===pi;
   var isCurrVC=parseInt(myCaps2.vc)===pi;
-  if(isCurrC||isCurrVC){
+  var isMyTeam=(G.myTeamIdx>=0 && G.myTeamIdx===ti);
+  if(isMyTeam){
+    // Interactive C/VC picker — visible only on your own squad
+    var cLabel = parseInt(myCaps2.c)>=0 && G.teams[ti] && G.teams[ti].players[parseInt(myCaps2.c)] ? G.teams[ti].players[parseInt(myCaps2.c)].name : 'Not set';
+    var vcLabel = parseInt(myCaps2.vc)>=0 && G.teams[ti] && G.teams[ti].players[parseInt(myCaps2.vc)] ? G.teams[ti].players[parseInt(myCaps2.vc)].name : 'Not set';
+    var cActive = isCurrC ? 'background:var(--gold);color:#000;' : 'background:var(--golddim);color:var(--gold);';
+    var vcActive = isCurrVC ? 'background:var(--blue);color:#fff;' : 'background:rgba(80,145,205,.12);color:var(--blue);';
+    body+='<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">'
+      +'<div style="font-size:10px;font-family:var(--fd);font-weight:700;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-bottom:8px">Captain / VC — M'+G.currentMatch+'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      +'<button onclick="setCaptain('+ti+','+pi+',\'c\')" style="'+cActive+'border:1px solid rgba(245,184,0,.4);border-radius:var(--rsm);padding:8px 10px;font-family:var(--fd);font-size:12px;font-weight:700;cursor:pointer;text-align:left">'
+        +(isCurrC?'★ ':'')+'Captain'+(isCurrC?'<br><span style="font-size:10px;font-weight:400;opacity:.8">Tap to remove</span>':'<br><span style="font-size:10px;font-weight:400;opacity:.7">'+cLabel+'</span>')
+      +'</button>'
+      +'<button onclick="setCaptain('+ti+','+pi+',\'vc\')" style="'+vcActive+'border:1px solid rgba(80,145,205,.3);border-radius:var(--rsm);padding:8px 10px;font-family:var(--fd);font-size:12px;font-weight:700;cursor:pointer;text-align:left">'
+        +(isCurrVC?'◆ ':'')+'Vice-Captain'+(isCurrVC?'<br><span style="font-size:10px;font-weight:400;opacity:.8">Tap to remove</span>':'<br><span style="font-size:10px;font-weight:400;opacity:.7">'+vcLabel+'</span>')
+      +'</button>'
+      +'</div>'
+      +'</div>';
+  } else if(isCurrC||isCurrVC){
     body+='<div style="margin-top:12px;padding:8px 12px;background:var(--golddim);border-radius:var(--rsm);border:1px solid rgba(245,184,0,.3);font-size:12px;font-family:var(--fd);font-weight:700;letter-spacing:1px;color:var(--gold)">'
       +(isCurrC?'★ CAPTAIN (2×)':'◆ VICE-CAPTAIN (1.5×)')+'</div>';
   }
@@ -3045,6 +3110,75 @@ function clearNoResultMatch(){
   });
 }
 
+function migrateBreakdownData(){
+  // One-time migration: converts all plain-number point entries in Firebase
+  // to the {p,b,w,f,t} breakdown object format.
+  // Safe to run multiple times — already-converted entries are skipped.
+  var btn=document.getElementById('migrateBtn');
+  if(btn){btn.textContent='Migrating...';btn.disabled=true;}
+  logSync('Starting breakdown migration — scanning all rooms...','info');
+  db.ref('fantasy').once('value',function(snap){
+    var fantasy=snap.val()||{};
+    var updates={};
+    var converted=0, skipped=0;
+    Object.keys(fantasy).forEach(function(code){
+      var fd=fantasy[code];
+      if(!fd||!fd.matches) return;
+      Object.keys(fd.matches).forEach(function(mk){
+        var matchData=fd.matches[mk];
+        if(!matchData) return;
+        Object.keys(matchData).forEach(function(ti){
+          var teamData=matchData[ti];
+          if(!teamData) return;
+          Object.keys(teamData).forEach(function(pi){
+            var v=teamData[pi];
+            if(v===null||v===undefined) return;
+            if(typeof v==='object'){
+              // Already in new format — skip
+              skipped++;
+              return;
+            }
+            // Plain number — convert to breakdown object with t=value, others 0
+            var num=typeof v==='number'?v:parseFloat(v)||0;
+            updates['fantasy/'+code+'/matches/'+mk+'/'+ti+'/'+pi]={p:0,b:0,w:0,f:0,t:num};
+            converted++;
+          });
+        });
+      });
+    });
+    // Also migrate fantasy/global/matches
+    if(fantasy.global&&fantasy.global.matches){
+      Object.keys(fantasy.global.matches).forEach(function(mk){
+        var matchData=fantasy.global.matches[mk];
+        if(!matchData) return;
+        Object.keys(matchData).forEach(function(apiName){
+          var v=matchData[apiName];
+          if(v===null||v===undefined) return;
+          if(typeof v==='object'){ skipped++; return; }
+          var num=typeof v==='number'?v:parseFloat(v)||0;
+          updates['fantasy/global/matches/'+mk+'/'+apiName]={p:0,b:0,w:0,f:0,t:num};
+          converted++;
+        });
+      });
+    }
+    if(!Object.keys(updates).length){
+      logSync('Nothing to migrate — all entries already in breakdown format ('+skipped+' entries checked)','ok');
+      if(btn){btn.textContent='Migrate Old Points';btn.disabled=false;}
+      return;
+    }
+    logSync('Found '+converted+' plain-number entries to convert ('+skipped+' already new format)','info');
+    db.ref().update(updates,function(err){
+      if(err){
+        logSync('Migration error: '+err,'err');
+        if(btn){btn.textContent='Migrate Old Points';btn.disabled=false;}
+        return;
+      }
+      logSync('Migration complete! Converted '+converted+' entries to breakdown format.','ok');
+      if(btn){btn.textContent='Migrate Old Points';btn.disabled=false;}
+    });
+  });
+}
+
 function forceResyncAllPlayed(){
   // Dynamically build list of all match IDs whose sync window has passed,
   // skipping any marked as No Result in matchResults
@@ -3324,8 +3458,31 @@ window.addEventListener('load',function(){
   }
   var code=localStorage.getItem('fl_code');
   var team=localStorage.getItem('fl_team');
-  if(code) document.getElementById('setupCode').value=code;
-  if(team) document.getElementById('setupTeam').value=team||'';
+  var savedIdx=parseInt(localStorage.getItem('fl_teamIdx')||'-1');
+  if(code && team && savedIdx>=0){
+    // Show welcome-back banner above the card
+    var card=document.querySelector('#setupScreen .card');
+    if(card){
+      var wb=document.createElement('div');
+      wb.id='welcomeBackBanner';
+      wb.style.cssText='background:linear-gradient(135deg,rgba(80,145,205,.12),rgba(80,145,205,.05));border:1px solid rgba(80,145,205,.3);border-radius:var(--rsm);padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px';
+      wb.innerHTML='<div style="font-size:20px">👋</div>'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-family:var(--fd);font-size:13px;font-weight:700;color:var(--blue)">Welcome back!</div>'
+        +'<div style="font-size:12px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+team+' · Room <span style="font-family:var(--fd);color:var(--text)">'+code+'</span></div>'
+        +'</div>'
+        +'<div style="display:flex;flex-direction:column;gap:6px">'
+        +'<button onclick="autoJoinSession()" class="btn btn-gold" style="padding:6px 14px;font-size:13px;min-height:0;height:auto">Load</button>'
+        +'<button onclick="clearWelcomeBack()" style="background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;text-decoration:underline;text-underline-offset:2px">Not you?</button>'
+        +'</div>';
+      card.insertBefore(wb, card.firstChild);
+    }
+  } else {
+    if(code) document.getElementById('setupCode').value=code;
+    if(team) document.getElementById('setupTeam').value=team||'';
+  }
+
+  window._savedSession={code:code,team:team,idx:savedIdx};
 });
 </script>
   <script>
