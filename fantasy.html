@@ -423,7 +423,18 @@ var db = firebase.database();
 // ── STATE ──
 var G = {teams:{}, roomCode:'', myTeamName:'', matchData:{}, matchLabels:{}, captains:{}, matchResults:{}, globalMatchResults:{}, globalMatchLabels:{}, auctionEndedAt:0, currentMatch:1};
 // Safely extract total pts from a value that may be a number (old data) or {p,b,w,f,t} object (new)
-function ptsVal(v){ return (v!==null&&v!==undefined&&typeof v==='object') ? (v.t||0) : (v||0); }
+// Always returns a number. Handles the case where t is itself a nested breakdown object
+// (Cloudflare Worker bug: wrote t:bd instead of t:bd.t — this unwraps it correctly).
+function ptsVal(v){
+  if(v===null||v===undefined) return 0;
+  if(typeof v==='object'){
+    var t=v.t;
+    if(typeof t==='number') return t;
+    if(typeof t==='object'&&t!==null) return ptsVal(t); // nested breakdown: unwrap one level
+    return 0;
+  }
+  return typeof v==='number'?v:0;
+}
 function ptsBd(v){ return (v!==null&&v!==undefined&&typeof v==='object') ? v : null; }
 var fantasyRef = null;
 var currentSquadTeam = 0;
