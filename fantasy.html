@@ -2845,15 +2845,33 @@ function distributeToAllRooms(matchId, autoMode){
           count++; // count as distributed since Worker already handled it
           return;
         }
-        // Read this room's captain/VC from Firebase fantasy captains
-        // Look up captains for this specific match; fall back to any saved key
-        // (C/VC is tournament-wide so users may only have saved under match1)
-        var roomCaps=(function(){
-          if(!roomFantasy||!roomFantasy.captains) return {};
-          if(roomFantasy.captains[capMk]) return roomFantasy.captains[capMk];
-          var keys=Object.keys(roomFantasy.captains);
-          return keys.length ? roomFantasy.captains[keys[0]] : {};
-        })();
+        // Resolve captain/VC for this specific team from Firebase.
+        // Captains may be stored in two formats depending on when they were saved:
+        //   match-keyed: captains/match1/0 = {c:3,vc:5}  (new format)
+        //   flat:        captains/0 = {c:3,vc:5}          (old format)
+        // We resolve per-team so mixed-format rooms are handled correctly.
+        var caps=roomFantasy&&roomFantasy.captains;
+        function resolveTeamCap(rkStr){
+          if(!caps) return {};
+          var rki=parseInt(rkStr);
+          // 1. Match-specific key (most precise)
+          if(caps[capMk]){
+            var c=caps[capMk][rkStr]||caps[capMk][rki];
+            if(c) return c;
+          }
+          // 2. Any other match-keyed entry for this team
+          var mkeys=Object.keys(caps).filter(function(k){return k.indexOf('match')===0;});
+          for(var ki=0;ki<mkeys.length;ki++){
+            var mc=caps[mkeys[ki]];
+            var c2=mc[rkStr]||mc[rki];
+            if(c2) return c2;
+          }
+          // 3. Flat format: caps[ti] = {c,vc}
+          var flat=caps[rkStr]||caps[rki];
+          if(flat&&(flat.c!==undefined||flat.vc!==undefined)) return flat;
+          return {};
+        }
+        var teamCap=resolveTeamCap(String(rk));
         // Match each squad player against scorecard by fuzzy name
         rPlayers.forEach(function(rp,rpi){
           var bestScore=0, bestEntry=null;
@@ -2864,8 +2882,6 @@ function distributeToAllRooms(matchId, autoMode){
           });
           if(bestScore>=0.85&&bestEntry){
             var bd=bestEntry.bd?{p:bestEntry.bd.p,b:bestEntry.bd.b,w:bestEntry.bd.w,f:bestEntry.bd.f,t:bestEntry.pts}:{p:0,b:0,w:0,f:0,t:bestEntry.pts};
-            var rk2=String(rk);
-            var teamCap=(roomCaps[rk2]||roomCaps[parseInt(rk2)]||{});
             if(teamCap.c!==undefined&&parseInt(teamCap.c)===rpi) bd.t=Math.round(bd.t*2);
             else if(teamCap.vc!==undefined&&parseInt(teamCap.vc)===rpi) bd.t=Math.round(bd.t*1.5);
             teamPts[rpi]=bd;
