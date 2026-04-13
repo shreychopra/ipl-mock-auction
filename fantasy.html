@@ -1415,7 +1415,19 @@ function loadRoom(){
       G.matchLabels=fd.matchLabels||{};
       G.matchResults=fd.matchResults||{};
       G.currentMatch=fd.currentMatch||1;
-      if(fd.captains) G.captains=fd.captains;
+      if(fd.captains){
+        // Fantasy path has captain data — use it (authoritative)
+        G.captains=fd.captains;
+      } else if(G.captains&&Object.keys(G.captains).length){
+        // Fantasy path has no captains but rooms path does — migrate it now.
+        // This handles captain data saved by older app versions or the auction app.
+        var migrateUpd={};
+        Object.keys(G.captains).forEach(function(key){
+          migrateUpd['captains/'+key]=G.captains[key];
+        });
+        fantasyRef.update(migrateUpd);
+        // G.captains already has the right data, no need to change it
+      }
       initApp();
     });
     var appInitialized=false;
@@ -2874,7 +2886,37 @@ function distributeToAllRooms(matchId, autoMode){
       var roomTeams=room.teams||{};
       var roomFantasy=fantasyData&&fantasyData[code];
       var roomAlreadySynced=autoMode&&roomFantasy&&roomFantasy.syncedIds&&roomFantasy.syncedIds[matchId];
-      var capMap=captainMap[code]||{};
+      // Build per-room captain map: fantasy captains are primary, rooms captains are fallback.
+      // rooms/{code}/captains may contain captain data saved by older app versions or the auction app,
+      // while fantasy/{code}/captains is where the current setCaptain() saves new picks.
+      var capMap={};
+      // 1. Fantasy captains (primary, already pre-built)
+      var fantasyCapMap=captainMap[code]||{};
+      Object.keys(fantasyCapMap).forEach(function(k){ capMap[k]=fantasyCapMap[k]; });
+      // 2. Rooms captains (fallback — only fill in teams not already covered by fantasy path)
+      var roomCapsSrc=room.captains;
+      if(roomCapsSrc&&typeof roomCapsSrc==='object'){
+        Object.keys(roomCapsSrc).forEach(function(key){
+          var val=roomCapsSrc[key];
+          if(!val||typeof val!=='object') return;
+          if(key.indexOf('match')===0){
+            // match-keyed: rooms/CODE/captains/match1/ti = {c,vc}
+            Object.keys(val).forEach(function(ti){
+              if(capMap[ti]) return; // fantasy wins
+              var cv=val[ti];
+              if(cv&&typeof cv==='object'&&(cv.c!==undefined||cv.vc!==undefined)) capMap[ti]=cv;
+            });
+          } else if(val.c!==undefined||val.vc!==undefined){
+            // flat: rooms/CODE/captains/ti = {c,vc}
+            if(!capMap[key]) capMap[key]=val;
+          }
+        });
+      }
+      if(Object.keys(capMap).length&&!Object.keys(fantasyCapMap).length){
+        logSync('Room '+code+' caps (from rooms/): '+Object.keys(capMap).map(function(k){
+          var cv=capMap[k]; return 'T'+k+'→C:'+cv.c+'/VC:'+cv.vc;
+        }).join(' | '),'info');
+      }
       Object.keys(roomTeams).forEach(function(rk){
         // Skip already-synced rooms in auto mode (manual re-save always overwrites)
         if(roomAlreadySynced){ count++; return; }
