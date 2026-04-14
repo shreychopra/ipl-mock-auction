@@ -702,13 +702,17 @@ var PLAYERS = [
   {id:247,name:"Sakib Hussain",role:"Bowler",nat:"India",base:30,photo:"./images/387604.1.webp"},
   {id:248,name:"Onkar Tarmale",role:"Bowler",nat:"India",base:30,photo:"./images/1515304.1.webp"},
   {id:249,name:"Jaydev Unadkat",role:"Bowler",nat:"India",base:50,photo:"./images/399715.2.webp"},
-  {id:250,name:"Zeeshan Ansari",role:"Bowler",nat:"India",base:30,photo:"./images/399247.2.webp"}
+  {id:250,name:"Zeeshan Ansari",role:"Bowler",nat:"India",base:30,photo:"./images/399247.2.webp"},
+  {id:251,name:"Navdeep Saini",role:"Bowler",nat:"India",base:30,photo:"./images/322702.1.webp"}
 ];
 
 var PHOTO_MAP = {};
 (function(){ PLAYERS.forEach(function(p){ if(p.photo) PHOTO_MAP[p.id]=p.photo; }); })();
 function getPhotoByName(name){
   var n=(name||'').toLowerCase().trim();
+  // Normalize known auction-name variants to Cricbuzz canonical names
+  var aliases={'phil salt':'philip salt','digvesh rathi':'digvesh singh rathi','varun chakravarthy':'varun chakaravarthy'};
+  n=aliases[n]||n;
   for(var i=0;i<PLAYERS.length;i++){
     if(PLAYERS[i].name.toLowerCase().trim()===n) return PLAYERS[i].photo||'';
   }
@@ -1803,7 +1807,7 @@ function renderSquadView(){
       ptsDiv.innerHTML='<div class="sp-pts">'+pts+'</div><div style="font-size:9px;color:var(--text3);text-align:right">pts</div>';
       row.appendChild(avi); row.appendChild(info); row.appendChild(ptsDiv);
       row.addEventListener('click',function(){openPlayerModal(parseInt(row.dataset.ti),parseInt(row.dataset.pi));});
-      // Show C/VC badges — check match-keyed (fantasy) then flat (rooms)
+      // Show C/VC badges — check match-keyed (fantasy) then flat (rooms) then any match key
       var myCaps={};
       var capMkSq='match'+G.currentMatch;
       var ti2=currentSquadTeam;
@@ -1814,6 +1818,17 @@ function renderSquadView(){
       if(!myCaps||myCaps.c===undefined){
         var flatCap=G.captains&&(G.captains[ti2]||G.captains[String(ti2)]||G.captains[parseInt(ti2)]);
         if(flatCap&&flatCap.c!==undefined) myCaps=flatCap;
+      }
+      if(!myCaps||myCaps.c===undefined){
+        var capKeys2=Object.keys(G.captains||{});
+        for(var cki=0;cki<capKeys2.length;cki++){
+          var ck2=capKeys2[cki];
+          if(ck2.indexOf('match')===0){
+            var mc3=G.captains[ck2];
+            var fc3=mc3&&(mc3[ti2]||mc3[String(ti2)]||mc3[parseInt(ti2)]);
+            if(fc3&&fc3.c!==undefined){myCaps=fc3;break;}
+          }
+        }
       }
       if(parseInt(myCaps.c)===idx){
         var nameEl=info.querySelector('div');
@@ -1937,6 +1952,17 @@ function openPlayerModal(ti,pi){
   if(!myCaps2||myCaps2.c===undefined){
     var flat2=G.captains&&(G.captains[ti]||G.captains[String(ti)]||G.captains[parseInt(ti)]);
     if(flat2&&flat2.c!==undefined) myCaps2=flat2;
+  }
+  if(!myCaps2||myCaps2.c===undefined){
+    var capKeys3=Object.keys(G.captains||{});
+    for(var cki3=0;cki3<capKeys3.length;cki3++){
+      var ck3=capKeys3[cki3];
+      if(ck3.indexOf('match')===0){
+        var mc4=G.captains[ck3];
+        var fc4=mc4&&(mc4[ti]||mc4[String(ti)]||mc4[parseInt(ti)]);
+        if(fc4&&fc4.c!==undefined){myCaps2=fc4;break;}
+      }
+    }
   }
   var isCurrC=parseInt(myCaps2.c)===pi;
   var isCurrVC=parseInt(myCaps2.vc)===pi;
