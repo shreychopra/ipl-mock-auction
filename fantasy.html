@@ -318,6 +318,7 @@
         <button onclick="forceResyncAllPlayed()" class="btn btn-red btn-sm" id="forceResyncBtn">Re-sync All Played</button>
         <button onclick="clearNoResultMatch()" class="btn btn-ghost btn-sm" id="clearNRBtn" style="border-color:var(--gold);color:var(--gold)">Clear No-Result Match</button>
         <button onclick="migrateBreakdownData()" class="btn btn-ghost btn-sm" id="migrateBtn" style="border-color:var(--blue);color:var(--blue)">Migrate Old Points</button>
+        <button onclick="findIPLIds()" class="btn btn-ghost btn-sm" id="findIdsBtn" style="border-color:#a855f7;color:#a855f7">Find IPL IDs</button>
       </div>
       </div>
       <div id="verifyResults" style="padding:8px 10px;max-height:260px;overflow-y:auto"></div>
@@ -749,17 +750,17 @@ var IPL_SCHEDULE = [
   {num:27, id:"151818", label:"M27 — SRH vs CSK", date:"2026-04-18", time:"7:30 PM IST"},
   {num:28, id:"151829", label:"M28 — KKR vs RR", date:"2026-04-19", time:"3:30 PM IST"},
   {num:29, id:"151840", label:"M29 — PBKS vs LSG", date:"2026-04-19", time:"7:30 PM IST"},
-  {num:30, id:"151851", label:"M30 — GT vs MI", date:"2026-04-20", time:"7:30 PM IST"},
-  {num:31, id:"151862", label:"M31 — SRH vs DC", date:"2026-04-21", time:"7:30 PM IST"},
-  {num:32, id:"151873", label:"M32 — LSG vs RR", date:"2026-04-22", time:"7:30 PM IST"},
-  {num:33, id:"151884", label:"M33 — MI vs CSK", date:"2026-04-23", time:"7:30 PM IST"},
-  {num:34, id:"151895", label:"M34 — RCB vs GT", date:"2026-04-24", time:"7:30 PM IST"},
-  {num:35, id:"151906", label:"M35 — DC vs PBKS", date:"2026-04-25", time:"3:30 PM IST"},
-  {num:36, id:"151917", label:"M36 — RR vs SRH", date:"2026-04-25", time:"7:30 PM IST"},
-  {num:37, id:"151928", label:"M37 — CSK vs GT", date:"2026-04-26", time:"3:30 PM IST"},
-  {num:38, id:"151939", label:"M38 — LSG vs KKR", date:"2026-04-26", time:"7:30 PM IST"},
-  {num:39, id:"151950", label:"M39 — DC vs RCB", date:"2026-04-27", time:"7:30 PM IST"},
-  {num:40, id:"151961", label:"M40 — PBKS vs RR", date:"2026-04-28", time:"7:30 PM IST"},
+  {num:30, id:"151845", label:"M30 — GT vs MI", date:"2026-04-20", time:"7:30 PM IST"},
+  {num:31, id:"151856", label:"M31 — SRH vs DC", date:"2026-04-21", time:"7:30 PM IST"},
+  {num:32, id:"151867", label:"M32 — LSG vs RR", date:"2026-04-22", time:"7:30 PM IST"},
+  {num:33, id:"151878", label:"M33 — MI vs CSK", date:"2026-04-23", time:"7:30 PM IST"},
+  {num:34, id:"151889", label:"M34 — RCB vs GT", date:"2026-04-24", time:"7:30 PM IST"},
+  {num:35, id:"151891", label:"M35 — DC vs PBKS", date:"2026-04-25", time:"3:30 PM IST"},
+  {num:36, id:"151902", label:"M36 — RR vs SRH", date:"2026-04-25", time:"7:30 PM IST"},
+  {num:37, id:"151913", label:"M37 — CSK vs GT", date:"2026-04-26", time:"3:30 PM IST"},
+  {num:38, id:"151924", label:"M38 — LSG vs KKR", date:"2026-04-26", time:"7:30 PM IST"},
+  {num:39, id:"151935", label:"M39 — DC vs RCB", date:"2026-04-27", time:"7:30 PM IST"},
+  {num:40, id:"151943", label:"M40 — PBKS vs RR", date:"2026-04-28", time:"7:30 PM IST"},
   {num:41, id:"151972", label:"M41 — MI vs SRH", date:"2026-04-29", time:"7:30 PM IST"},
   {num:42, id:"151983", label:"M42 — GT vs RCB", date:"2026-04-30", time:"7:30 PM IST"},
   {num:43, id:"151994", label:"M43 — RR vs DC", date:"2026-05-01", time:"7:30 PM IST"},
@@ -3293,6 +3294,47 @@ function clearNoResultMatch(){
       renderLeaderboard(); renderHistory();
       toast('M'+mNum+' cleared — No Result');
     });
+  });
+}
+
+
+function findIPLIds(){
+  var btn=document.getElementById('findIdsBtn');
+  if(btn){btn.textContent='Fetching...';btn.disabled=true;}
+  logSync('Fetching IPL 2026 match IDs from Cricbuzz series endpoint...','info');
+  
+  fetch(WORKER_URL+'/find-ipl-ids',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({password:adminPassword})
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    if(btn){btn.textContent='Find IPL IDs';btn.disabled=false;}
+    
+    if(data.iplMatches && data.iplMatches.length){
+      logSync('Found '+data.iplMatches.length+' IPL matches:','ok');
+      // Sort by startDate then matchId
+      data.iplMatches.sort(function(a,b){
+        if(a.startDate!==b.startDate) return a.startDate.localeCompare(b.startDate);
+        return parseInt(a.matchId)-parseInt(b.matchId);
+      });
+      data.iplMatches.forEach(function(m){
+        logSync('ID '+m.matchId+' | '+m.startDate+' | '+m.teams+' | '+m.matchDesc,'info');
+      });
+      logSync('Copy the IDs above and share them to update the SCHEDULE array.','ok');
+    } else {
+      logSync('No IPL matches found. Total matches from all series IDs tried: '+data.totalFound,'warn');
+      logSync('Raw API snippets:','warn');
+      Object.keys(data.rawSnippets||{}).forEach(function(sid){
+        logSync('Series '+sid+': '+data.rawSnippets[sid],'info');
+      });
+      logSync('The series ID may be wrong. Try passing different series IDs to the endpoint.','warn');
+    }
+  })
+  .catch(function(e){
+    if(btn){btn.textContent='Find IPL IDs';btn.disabled=false;}
+    logSync('Error: '+e.message,'err');
   });
 }
 
