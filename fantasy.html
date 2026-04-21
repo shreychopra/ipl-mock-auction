@@ -3301,38 +3301,31 @@ function clearNoResultMatch(){
 function findIPLIds(){
   var pw=window.prompt('Enter admin password:');
   if(!pw) return;
-  // Allow trying different endpoints — default is upcoming
-  var ep=window.prompt('Endpoint to try (press OK for default):','/matches/v1/upcoming');
-  if(ep===null) return;
-  if(!ep) ep='/matches/v1/upcoming';
   var btn=document.getElementById('findIdsBtn');
   if(btn){btn.textContent='Fetching...';btn.disabled=true;}
-  logSync('Calling '+ep+' (1 request)...','info');
+  logSync('Scraping Cricbuzz schedule page for IPL 2026 match IDs...','info');
 
   fetch(WORKER_URL+'/find-ipl-ids',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({password:pw, endpoint:ep})
+    body:JSON.stringify({password:pw})
   })
   .then(function(r){return r.json();})
   .then(function(data){
     if(btn){btn.textContent='Find IPL IDs';btn.disabled=false;}
     if(data.error){
-      logSync('Error from API: '+data.error,'err');
-      logSync('Raw: '+data.rawSnippet,'info');
+      logSync('Error: '+data.error,'err');
+      if(data.rawSnippet) logSync('Page snippet: '+data.rawSnippet.slice(0,300),'info');
       return;
     }
-    logSync('Endpoint: '+data.endpoint+' | Total matches in response: '+data.totalMatches,'info');
-    logSync('Raw snippet: '+data.rawSnippet,'info');
-    if(data.iplMatches && data.iplMatches.length){
-      logSync('IPL matches found: '+data.iplMatches.length,'ok');
-      data.iplMatches.forEach(function(m){
-        logSync('ID '+m.matchId+' | '+m.startDate+' | '+m.teams,'info');
+    if(data.matches && data.matches.length){
+      logSync('Found '+data.total+' IPL matches on Cricbuzz:','ok');
+      data.matches.forEach(function(m){
+        logSync('M'+m.matchNum+' → ID: '+m.matchId+' ('+m.slug+')','info');
       });
-      logSync('Done — share IDs above to update SCHEDULE.','ok');
+      logSync('Share the M→ID list above to update the SCHEDULE array.','ok');
     } else {
-      logSync('No IPL matches found in response.','warn');
-      logSync('Try a different endpoint — e.g. /matches/v1/recent or /schedule/v1/domestic','warn');
+      logSync('No matches found. Data: '+JSON.stringify(data).slice(0,300),'warn');
     }
   })
   .catch(function(e){
