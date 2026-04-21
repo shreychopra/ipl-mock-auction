@@ -3299,6 +3299,8 @@ function clearNoResultMatch(){
 
 
 function findIPLIds(){
+  var pw=window.prompt('Enter admin password:');
+  if(!pw) return;
   var btn=document.getElementById('findIdsBtn');
   if(btn){btn.textContent='Fetching...';btn.disabled=true;}
   logSync('Fetching IPL 2026 match IDs from Cricbuzz series endpoint...','info');
@@ -3306,7 +3308,7 @@ function findIPLIds(){
   fetch(WORKER_URL+'/find-ipl-ids',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({password:adminPassword})
+    body:JSON.stringify({password:pw})
   })
   .then(function(r){return r.json();})
   .then(function(data){
