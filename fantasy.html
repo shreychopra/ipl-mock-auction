@@ -1673,7 +1673,16 @@ function renderLeaderboard(){
           if(st==='upcoming'||st==='live'){nextUnsync=nm;break;}
         }
       }
-      if(nextUnsync){
+      // Check for completed matches not yet synced
+      var unsyncedPlayed = IPL_SCHEDULE.filter(function(m){
+        return !syncedIds[m.id] && getMatchStatus(m)==='recent';
+      });
+      if(unsyncedPlayed.length){
+        var labels=unsyncedPlayed.slice(0,3).map(function(m){return (m.label.match(/^M\d+/)||[m.label])[0];}).join(', ');
+        bannerNext.innerHTML='<span style="color:var(--gold)">&#9888; '+unsyncedPlayed.length+' played match'
+          +(unsyncedPlayed.length>1?'es':'')+' pending sync: <strong>'+labels
+          +(unsyncedPlayed.length>3?' +more':'')+'</strong></span>';
+      } else if(nextUnsync){
         var tp=nextUnsync.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
         var hr=parseInt(tp[1])+(tp[3].toUpperCase()==='PM'&&tp[1]!=='12'?12:0);
         var startUTC=new Date(nextUnsync.date+'T00:00:00Z').getTime()+(hr*60+parseInt(tp[2])-330)*60000;
@@ -2790,7 +2799,10 @@ function renderSyncReview(){
     approveBtn.className='btn btn-green btn-sm';
     approveBtn.textContent='Re-Save Corrections';
     approveBtn.style.flexShrink='0';
-    approveBtn.addEventListener('click',function(){ distributeToAllRooms(matchId); });
+    approveBtn.addEventListener('click',function(){
+      var btn=this; btn.disabled=true; btn.textContent='Saving…';
+      distributeToAllRooms(matchId,false,function(){ btn.disabled=false; btn.textContent='Re-Save Corrections'; });
+    });
     hdr.appendChild(approveBtn);
     wrap.appendChild(hdr);
     // Player list
@@ -2852,7 +2864,7 @@ function renderSyncReview(){
   });
 }
 
-function distributeToAllRooms(matchId, autoMode){
+function distributeToAllRooms(matchId, autoMode, onDone){
   var staged = stagedResults[matchId];
   if(!staged){ toast('No staged data for this match'); return; }
   // Rebuild results from edited playerPts
@@ -3016,10 +3028,10 @@ function distributeToAllRooms(matchId, autoMode){
     logSync('Applying '+Object.keys(updates).length+' Firebase updates for '+count+' room(s)...','info');
     if(Object.keys(updates).length===0){
       logSync('All rooms already synced by Worker. Points up to date!','ok');
-      done(); return;
+      if(onDone) onDone(); done(); return;
     }
     db.ref().update(updates,function(err){
-      if(err){ logSync('Distribution error: '+err,'err'); return; }
+      if(err){ logSync('Distribution error: '+err,'err'); if(onDone) onDone(); return; }
       logSync('Distributed to '+count+' team(s) across all rooms!','ok');
       syncedIds[matchId]=true;
       if(!autoMode) delete stagedResults[matchId];
@@ -3047,6 +3059,7 @@ function distributeToAllRooms(matchId, autoMode){
       // Show corrections panel (admin only)
       if(autoMode) renderSyncReview();
       else { delete stagedResults[matchId]; renderSyncReview(); }
+      if(onDone) onDone();
     });
   }); // rooms
   }); // fantasy

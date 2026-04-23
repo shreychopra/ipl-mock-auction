@@ -2492,21 +2492,31 @@ function placeBid(){
       }
     }
   }
-  roomRef.once('value',function(snap){
-    var data=snap.val(); if(!data) return;
-    if(!data.currentPlayerId){toast('No active player!');return;}
+  roomRef.transaction(function(data){
+    if(data===null) return data; // null = Firebase has no local cache; let it retry with server data
+    if(!data.currentPlayerId) return; // abort — no active player
     var bi=data.currentBidderIdx;
-    var hasLeader=(bi && bi!=="NONE");
-    if(hasLeader && parseInt(bi)===myIdx2){toast('You are already the highest bidder!');return;}
+    if(bi&&bi!=='NONE'&&parseInt(bi)===myIdx2) return; // abort — already leading
     var cb=data.currentBid||0;
-    var p0=(data.players||[]).find(function(x){return x.id===data.currentPlayerId;});
-    if(!p0){toast('Player not found!');return;}
+    var p0=null;
+    var pl=data.players||[];
+    for(var i=0;i<pl.length;i++){if(pl[i]&&pl[i].id===data.currentPlayerId){p0=pl[i];break;}}
+    if(!p0) return; // abort — player not found
     var nb=(cb===0)?p0.base:nextBid(cb);
     var mt=getTeam(data.teams,myIdx2);
-    if(!mt){toast('Team not found!');return;}
-    if(nb>mt.budget-mt.spent){toast('Not enough budget!');return;}
-    console.log('PLACING BID: team='+myIdx2+' bidderIdx="'+String(myIdx2)+'" amount='+nb);
-    roomRef.update({currentBid:nb, currentBidderIdx:String(myIdx2)});
+    if(!mt) return; // abort — team not found
+    if(nb>mt.budget-mt.spent) return; // abort — over budget
+    data.currentBid=nb;
+    data.currentBidderIdx=String(myIdx2);
+    return data;
+  },function(err,committed){
+    if(err){toast('Bid failed — try again');return;}
+    if(!committed){
+      var bi=G.currentBidderIdx;
+      if(bi&&bi!=='NONE'&&parseInt(bi)===myIdx2) toast('You are already the highest bidder!');
+      else if(!G.currentPlayerId) toast('No active player!');
+      else toast('Could not place bid — try again');
+    }
   });
 }
 
