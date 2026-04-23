@@ -2081,6 +2081,12 @@ function soldNow(){
     document.getElementById('soldOverlay').classList.add('show');
     pushRoom({players:players,teams:teams,currentPlayerId:null,currentBid:0,currentBidderIdx:"NONE",
       lastSold:{player:players[pidx].name,team:team.name,price:cb}});
+    // Append-only bid history — never overwritten, safe audit log
+    roomRef.child('bidHistory').push({
+      pid:players[pidx].id, name:players[pidx].name, role:players[pidx].role,
+      ti:biIdx, team:team.name, price:cb,
+      ts:firebase.database.ServerValue.TIMESTAMP
+    });
   });
 }
 

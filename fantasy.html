@@ -304,6 +304,15 @@
   <div class="lb-hdr" style="grid-template-columns:28px 1fr 68px 80px 80px"><div>#</div><div>Team</div><div style="text-align:center">Trend</div><div style="text-align:right">Match</div><div style="text-align:right">Total</div></div>
     <div id="syncAlert" style="display:none;background:linear-gradient(135deg,rgba(245,184,0,.12),rgba(245,184,0,.06));border-bottom:2px solid rgba(245,184,0,.3);padding:10px 16px;"></div>
     <div id="lbList"></div>
+    <!-- Season Best XI -->
+    <div id="bestXICard" style="display:none;margin:14px 14px 32px">
+      <div style="font-family:var(--fd);font-size:10px;font-weight:700;letter-spacing:2.5px;
+        text-transform:uppercase;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:8px">
+        <span style="width:3px;height:12px;background:linear-gradient(180deg,var(--gold),rgba(245,184,0,.3));border-radius:2px;display:inline-block"></span>
+        Season Best XI
+      </div>
+      <div id="bestXIList"></div>
+    </div>
   </div>
 
   <!-- SQUADS PANE -->
@@ -1757,6 +1766,54 @@ function renderLeaderboard(){
       +'<div style="font-size:10px;color:var(--text3);text-align:right">This match</div></div>'
       +'<div><div class="lb-pts">'+r.total+'</div>'
       +'<div style="font-size:10px;color:var(--text3);text-align:right">Total</div></div>'
+      +'</div>';
+  }).join('');
+  renderBestXI();
+}
+
+function renderBestXI(){
+  var card=document.getElementById('bestXICard');
+  var list=document.getElementById('bestXIList');
+  if(!card||!list) return;
+  var matchKeys=Object.keys(G.matchData||{});
+  if(!matchKeys.length){card.style.display='none';return;}
+  var allPlayers=[];
+  Object.keys(G.teams).forEach(function(ti){
+    var team=G.teams[ti];
+    if(!team||!team.players) return;
+    (team.players).forEach(function(player,pi){
+      var totalPts=0;
+      matchKeys.forEach(function(mk){
+        var mt=G.matchData[mk]&&G.matchData[mk][ti];
+        if(mt&&mt[pi]!=null) totalPts+=ptsVal(mt[pi]);
+      });
+      if(totalPts>0) allPlayers.push({
+        name:player.name,role:player.role,
+        teamName:team.name,color:team.color||'#5091CD',
+        pts:totalPts,photo:player.photo||''
+      });
+    });
+  });
+  if(!allPlayers.length){card.style.display='none';return;}
+  allPlayers.sort(function(a,b){return b.pts-a.pts;});
+  var xi=allPlayers.slice(0,11);
+  card.style.display='block';
+  list.innerHTML=xi.map(function(p,i){
+    var photoHtml=p.photo
+      ? '<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'
+      : '';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;'
+      +'background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--rsm);'
+      +'margin-bottom:6px;box-shadow:0 2px 8px rgba(0,0,0,.2)">'
+      +'<div style="font-family:var(--fn);font-size:18px;color:'+(i<3?'var(--gold)':'var(--text3)')+';width:20px;text-align:center;flex-shrink:0">'+(i+1)+'</div>'
+      +'<div style="width:34px;height:34px;border-radius:50%;overflow:hidden;flex-shrink:0;'
+        +'border:2px solid '+p.color+';background:rgba(255,255,255,.04)">'+photoHtml+'</div>'
+      +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+p.name+'</div>'
+        +'<div style="font-size:11px;color:var(--text3)">'
+          +'<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+p.color+';margin-right:4px;vertical-align:middle"></span>'
+          +p.teamName+' · '+p.role+'</div></div>'
+      +'<div style="font-family:var(--fn);font-size:22px;color:var(--gold);text-shadow:0 0 10px rgba(245,184,0,.3)">'+p.pts+'</div>'
       +'</div>';
   }).join('');
 }

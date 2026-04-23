@@ -1,4 +1,4 @@
-const CACHE = 'ipl-v2';
+const CACHE = 'ipl-v3';
 const STATIC = ['./index.html', './fantasy.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function(e){
@@ -17,10 +17,19 @@ self.addEventListener('activate', function(e){
 
 self.addEventListener('fetch', function(e){
   var url = e.request.url;
-  // Never intercept navigation requests - let browser handle page transitions
-  if(e.request.mode === 'navigate') return;
   // Never intercept Firebase or API calls
   if(url.includes('firebase') || url.includes('workers.dev') || url.includes('googleapis')) return;
+  // Navigation: serve cached shell when offline
+  if(e.request.mode === 'navigate'){
+    e.respondWith(
+      fetch(e.request).catch(function(){
+        return caches.match(e.request).then(function(cached){
+          return cached || caches.match('./index.html');
+        });
+      })
+    );
+    return;
+  }
   // Cache-first for images
   if(url.includes('/images/')){
     e.respondWith(
